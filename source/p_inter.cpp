@@ -986,13 +986,10 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount, bo
     // give the health
     if(effect->getInt("sethealth", 0))
         player.health = amount; // some items set health directly
+    else if(givemax)
+        player.health = maxamount;
     else
-    {
-        if(givemax)
-            player.health = maxamount;
-        else
-            player.health += amount * itemamount; // most items add to health
-    }
+        player.health += amount * itemamount; // most items add to health
 
     // cap to maxamount
     if(player.health > maxamount)
