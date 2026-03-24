@@ -869,7 +869,7 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
     return false;
 }
 
-static ScriptableInventoryItem getScriptableItem(const char *itemname)
+static ScriptedInventoryItem getScriptableItem(const char *itemname)
 {
     itemeffect_t *item = E_ItemEffectForName(itemname);
     if(item)
@@ -885,7 +885,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     auto        info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
 
-    ScriptableInventoryItem item = getScriptableItem(itemname);
+    ScriptedInventoryItem item = getScriptableItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2700,7 +2700,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
 
-    ScriptableInventoryItem item = getScriptableItem(itemname);
+    ScriptedInventoryItem item = getScriptableItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))

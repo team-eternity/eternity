@@ -547,7 +547,7 @@ static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
 // Gives the player an inventory item or power directly
 // Negative itemamount means give max
 //
-bool P_GiveInventory(player_t *player, const ScriptableInventoryItem &iitem, const int itemamount)
+bool P_GiveInventory(player_t *player, const ScriptedInventoryItem &iitem, const int itemamount)
 {
     if(!player || !P_IsValid(iitem))
         return false;
@@ -711,7 +711,7 @@ bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount,
     return true;
 }
 
-bool P_IsValid(const ScriptableInventoryItem &item)
+bool P_IsValid(const ScriptedInventoryItem &item)
 {
     return std::visit(
         [](auto &&arg) {
@@ -729,7 +729,7 @@ bool P_IsValid(const ScriptableInventoryItem &item)
 //
 // Checks the player inventory for an item or power directly
 //
-int P_CheckInventory(player_t *player, const ScriptableInventoryItem &iitem)
+int P_CheckInventory(player_t *player, const ScriptedInventoryItem &iitem)
 {
     if(!player || !P_IsValid(iitem))
         return 0;
