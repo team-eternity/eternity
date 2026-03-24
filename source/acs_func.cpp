@@ -869,7 +869,7 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
     return false;
 }
 
-static ScriptedInventoryItem getScriptableItem(const char *itemname)
+static ScriptedInventoryItem getScriptedItem(const char *itemname)
 {
     itemeffect_t *item = E_ItemEffectForName(itemname);
     if(item)
@@ -885,7 +885,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     auto        info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
 
-    ScriptedInventoryItem item = getScriptableItem(itemname);
+    ScriptedInventoryItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2700,7 +2700,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
 
-    ScriptedInventoryItem item = getScriptableItem(itemname);
+    ScriptedInventoryItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2736,14 +2736,13 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    const auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int           amount   = argV[1];
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
-    const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+    const auto            info     = &static_cast<ACSThread *>(thread)->info;
+    char const           *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int             amount   = argV[1];
+    ScriptedInventoryItem item     = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
-    if(!item && powernum == NUMPOWERS)
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_TakeInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
@@ -2758,14 +2757,14 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            P_TakeInventory(info->mo->player, item, amount, powernum);
+            P_TakeInventory(info->mo->player, item, amount);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                P_TakeInventory(&players[pnum], item, amount, powernum);
+                P_TakeInventory(&players[pnum], item, amount);
         }
     }
     return false;

@@ -47,13 +47,11 @@ enum
 
 bool P_IsValid(const ScriptedInventoryItem &item);
 bool P_GiveInventory(player_t *player, const ScriptedInventoryItem &item, int itemamount);
-bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount = 1, const int power = NUMPOWERS);
+bool P_TakeInventory(player_t *player, const ScriptedInventoryItem &item, int itemamount);
 int  P_CheckInventory(player_t *player, const ScriptedInventoryItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
 int  P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power = NUMPOWERS);
-
-bool P_TakeWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
 
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1, bool givemax = false);
 bool P_TakeAmmoPickup(player_t &, const itemeffect_t *, int itemamount = 1);
