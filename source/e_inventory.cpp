@@ -2514,19 +2514,15 @@ void E_InventoryEndHub(player_t *player)
 // If undroppable is true, undroppable items will be kept.
 // If setemptyweapon is true, the player will be given an empty weapon when done.
 //
-void E_ClearInventory(player_t *player, bool undroppable, bool setemptyweapon)
+void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon)
 {
     invbarstate_t &invbarstate = player->invbarstate;
 
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
-        if(!undroppable)
-        {
-            itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
-            if(!(item &&
-                 !(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON)))
-                continue;
-        }
+        itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
+        if(!(item && !(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON)))
+            continue;
 
         player->inventory[i].amount = 0;
         player->inventory[i].item   = -1;
@@ -2539,7 +2535,7 @@ void E_ClearInventory(player_t *player, bool undroppable, bool setemptyweapon)
     invbarstate     = { false, 0 };
 
     // Select an empty weapon if player has no weapons left (without giving dummy weapon)
-    if(setemptyweapon)
+    if(setemptyweapon == SetEmptyWeapon::yes)
         E_DefaultToUnknownWeapon(*player);
 }
 

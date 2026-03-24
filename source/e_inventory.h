@@ -322,7 +322,12 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
 void E_InventoryEndHub(player_t *player);
 
 // Call to completely clear a player's inventory.
-void E_ClearInventory(player_t *player, bool undroppable = true, bool setemptyweapon = false);
+enum class SetEmptyWeapon : bool
+{
+    no,
+    yes
+};
+void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon = SetEmptyWeapon::no);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
