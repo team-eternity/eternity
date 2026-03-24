@@ -51,7 +51,7 @@ bool P_TakeInventory(player_t *player, const ScriptedInventoryItem &item, int it
 int  P_CheckInventory(player_t *player, const ScriptedInventoryItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
-int  P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power = NUMPOWERS);
+int  P_GetMaxInventory(player_t *player, const ScriptedInventoryItem &item);
 
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1, bool givemax = false);
 bool P_TakeAmmoPickup(player_t &, const itemeffect_t *, int itemamount = 1);

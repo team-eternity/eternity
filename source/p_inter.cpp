@@ -889,66 +889,66 @@ bool P_UseInventory(player_t *player, itemeffect_t *item)
 // Gets the maximum amount of an inventory item or power the player can have
 // For powers, returns -1 for infinite powers or 1 for others
 //
-int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
+int P_GetMaxInventory(player_t *player, const ScriptedInventoryItem &iitem)
 {
-    if(!player || (!item && power == NUMPOWERS))
+    if(!player || !P_IsValid(iitem))
         return false;
 
-    if(power != NUMPOWERS)
+    if(const int *power = std::get_if<int>(&iitem))
     {
         // If power itself is infinite by default, return -1 (infinite)
-        if(power == pw_strength)
+        if(*power == pw_strength)
             return -1;
 
         // Otherwise, return 1
         return 1;
     }
-    else
+
+    int           powerNum, maxAmount, maxSaveAmount;
+    const char   *powerStr;
+    itemeffect_t *wp;
+
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+
+    switch(item->getInt("class", ITEMFX_NONE))
     {
-        int           powerNum, maxAmount, maxSaveAmount;
-        const char   *powerStr;
-        itemeffect_t *wp;
+        // If health, return maxamount if it exists, otherwise amount
+        // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
+    case ITEMFX_HEALTH:
+        maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
+        return maxAmount ? maxAmount : E_GetPClassHealth(*item, "amount", *player->pclass, 0);
 
-        switch(item->getInt("class", ITEMFX_NONE))
-        {
-            // If health, return maxamount if it exists, otherwise amount
-            // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
-        case ITEMFX_HEALTH:
-            maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
-            return maxAmount ? maxAmount : E_GetPClassHealth(*item, "amount", *player->pclass, 0);
+        // If armor, return maxsaveamount if it exists, otherwise saveamount
+    case ITEMFX_ARMOR:
+        maxSaveAmount = item->getInt("maxsaveamount", 0);
+        return maxSaveAmount ? maxSaveAmount : item->getInt("saveamount", 0);
 
-            // If armor, return maxsaveamount if it exists, otherwise saveamount
-        case ITEMFX_ARMOR:
-            maxSaveAmount = item->getInt("maxsaveamount", 0);
-            return maxSaveAmount ? maxSaveAmount : item->getInt("saveamount", 0);
+        // If ammo, return max amount for the ammo type
+    case ITEMFX_AMMO:
+        return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
 
-            // If ammo, return max amount for the ammo type
-        case ITEMFX_AMMO:
-            return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
+        // If power artifact, retrun -1 for permanent powers or strength, otherwise duration in seconds
+    case ITEMFX_POWER:
+        powerStr = item->getString("type", "");
+        if(!powerStr || !strcmp(powerStr, ""))
+            return 0; // There hasn't been a designated power type
+        if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+            return 0; // There's no power for the type provided
 
-            // If power artifact, retrun -1 for permanent powers or strength, otherwise duration in seconds
-        case ITEMFX_POWER:
-            powerStr = item->getString("type", "");
-            if(!powerStr || !strcmp(powerStr, ""))
-                return 0; // There hasn't been a designated power type
-            if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
-                return 0; // There's no power for the type provided
+        // If power is permanent or it's strength, return -1 (infinite)
+        if(item->getInt("permanent", 0) || powerNum == pw_strength)
+            return -1;
 
-            // If power is permanent or it's strength, return -1 (infinite)
-            if(item->getInt("permanent", 0) || powerNum == pw_strength)
-                return -1;
+        // Otherwise, return duration of the power artifact in seconds
+        return item->getInt("duration", 0);
 
-            // Otherwise, return duration of the power artifact in seconds
-            return item->getInt("duration", 0);
+        // If weapon giver, return max amount for the weapon designated
+    case ITEMFX_WEAPONGIVER:
+        wp = E_ItemEffectForName(item->getString("weapon", ""));
+        return wp ? E_GetMaxAmountForArtifact(*player, wp) : 0;
 
-            // If weapon giver, return max amount for the weapon designated
-        case ITEMFX_WEAPONGIVER:
-            wp = E_ItemEffectForName(item->getString("weapon", ""));
-            return wp ? E_GetMaxAmountForArtifact(*player, wp) : 0;
-
-            // If another artifact, return max amount for that artifact
-        default: return E_GetMaxAmountForArtifact(*player, item);
-        }
+        // If another artifact, return max amount for that artifact
+    default: return E_GetMaxAmountForArtifact(*player, item);
     }
 
     return true;

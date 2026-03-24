@@ -2825,15 +2825,15 @@ bool ACS_CF_UseInventory(ACS_CF_ARGS)
 //
 bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
 {
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    const int     tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
-    Mobj         *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
-    char const   *itemname = thread->scopeMap->getString(argV[1])->str;
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
-    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    const int   tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
+    Mobj       *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
+    char const *itemname = thread->scopeMap->getString(argV[1])->str;
+
+    ScriptedInventoryItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
-    if(!item && powernum == NUMPOWERS)
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_GetMaxInventory: Inventory item '%s' not found\a\n", itemname);
         thread->dataStk.push(0);
@@ -2843,7 +2843,7 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
     if(!mo || !mo->player)
         thread->dataStk.push(0);
     else
-        thread->dataStk.push(P_GetMaxInventory(mo->player, item, powernum));
+        thread->dataStk.push(P_GetMaxInventory(mo->player, item));
 
     return false;
 }
