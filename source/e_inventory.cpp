@@ -425,7 +425,8 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 
 // Autouse options
 static const char *autouseHealthModeNames[(int)AutoUseHealthMode::MAX] = {
-    "none", "heretic",
+    "none",
+    "heretic",
 
     // TODO: add this when we support strife
     //   "strife"
@@ -2472,7 +2473,7 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
     }
 
     // Select an empty weapon if player has no weapons left (without giving dummy weapon)
-    E_PlayerHasAnyWeapons(player, false, true);
+    E_DefaultToUnknownWeapon(player);
 
     return ret;
 }
@@ -2539,7 +2540,7 @@ void E_ClearInventory(player_t *player, bool undroppable, bool setemptyweapon)
 
     // Select an empty weapon if player has no weapons left (without giving dummy weapon)
     if(setemptyweapon)
-        E_PlayerHasAnyWeapons(*player, false, true);
+        E_DefaultToUnknownWeapon(*player);
 }
 
 //

@@ -376,20 +376,18 @@ bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
 // Check if player has any weapons left
 // if not and setemptyweapon is true, select the "Unknown" dummy weapon (without giving it)
 //
-bool E_PlayerHasAnyWeapons(player_t &player, bool onlyWithAmmo, bool setemptyweapon)
+void E_DefaultToUnknownWeapon(player_t &player)
 {
-    bool hasanyweapon = E_PlayerHasAnyWeapons(player, onlyWithAmmo);
-    if(!hasanyweapon && setemptyweapon)
-    {
-        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
-        if(emptyWeapon != nullptr)
-        {
-            player.pendingweapon     = emptyWeapon;
-            player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
-        }
-    }
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player, false);
+    if(hasanyweapon)
+        return;
 
-    return hasanyweapon;
+    weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+    if(emptyWeapon != nullptr)
+    {
+        player.pendingweapon     = emptyWeapon;
+        player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
+    }
 }
 
 //
