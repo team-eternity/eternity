@@ -979,10 +979,8 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount, bo
             maxamount = effect->getInt("compatmaxamount", 0);
     }
 
-    // if not alwayspickup, and have more health than the max, don't pick it u.p
-    // Also if the alwayspickup flag is set and the player picks up health that
-    // has a maxamount less than what the player already has, do nothing.
-    if(!effect->getInt("alwayspickup", 0) || player.health >= maxamount)
+    // if not alwayspickup, and have more health than the max, don't pick it up
+    if(!effect->getInt("alwayspickup", 0) && player.health >= maxamount)
         return false;
 
     // give the health
