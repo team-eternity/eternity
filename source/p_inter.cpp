@@ -113,7 +113,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
         num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-    if(!E_GiveInventoryItem(player, ammo, num, givemax))
+    if(!E_GiveInventoryItem(player, ammo, num, static_cast<GiveMax>(givemax)))
         return false; // don't need this ammo
 
     // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -525,7 +525,7 @@ static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
 
         if(givemax)
         {
-            result |= E_GiveInventoryItem(player, ammo, 1, true);
+            result |= E_GiveInventoryItem(player, ammo, 1, GiveMax::yes);
             continue;
         }
 
@@ -601,7 +601,7 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
         // If another artifact, just give it to the player
         // If givemax is true, give max amount of the item
     default:
-        E_GiveInventoryItem(*player, item, itemamount, givemax);
+        E_GiveInventoryItem(*player, item, itemamount, static_cast<GiveMax>(givemax));
 
         // If backpack, give backpack ammo as well
         // If itemamount < -1, give full ammo for all ammo types
@@ -616,7 +616,7 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
                 for(size_t i = 0; i < numAmmo; i++)
                 {
                     auto ammo = E_AmmoTypeForIndex(i);
-                    E_GiveInventoryItem(*player, ammo, 1, true);
+                    E_GiveInventoryItem(*player, ammo, 1, GiveMax::yes);
                 }
             }
             else if(itemamount > 0)

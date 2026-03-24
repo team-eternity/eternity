@@ -2331,7 +2331,7 @@ bool E_PlayerHasPowerName(const player_t &player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, bool givemax)
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, GiveMax givemax)
 {
     if(!artifact)
         return false;
@@ -2347,7 +2347,7 @@ bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amo
     int              amountToGive = artifact->getInt(keyAmount, 1);
     int              maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
-    if(givemax)
+    if(givemax == GiveMax::yes)
         amountToGive = maxAmount;
     else if(amount > 0) // may override amount to give via parameter "amount", if > 0
         amountToGive = amount;
