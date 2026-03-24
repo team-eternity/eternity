@@ -225,7 +225,7 @@ bool P_TakeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamou
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
         amount = static_cast<int>(floor(amount * GameModeInfo->skillAmmoMultiplier));
 
-    E_RemoveInventoryItem(player, ammotype, amount * itemamount, true);
+    E_RemoveInventoryItem(player, ammotype, amount * itemamount, RemoveMore::yes);
 
     return true;
 }
@@ -279,7 +279,7 @@ static bool P_takeBackpackAmmo(player_t &player, bool ignoreskill = false, int i
         if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
             giveamount = static_cast<int>(floor(giveamount * GameModeInfo->skillAmmoMultiplier));
 
-        given |= E_RemoveInventoryItem(player, ammoType, giveamount * itemamount, true);
+        given |= E_RemoveInventoryItem(player, ammoType, giveamount * itemamount, RemoveMore::yes);
     }
 
     return given;
@@ -645,7 +645,7 @@ static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
     // Take weapon, if can
     itemeffect_t *wp = E_ItemEffectForName(giver->getString("weapon", ""));
     if(wp)
-        E_RemoveInventoryItem(player, wp, -1, true);
+        E_RemoveInventoryItem(player, wp, -1, RemoveMore::yes);
 
     // Take ammo
     itemeffect_t *ammogiven = nullptr;
@@ -663,7 +663,7 @@ static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
         {
             // If itemamount is negative, take all ammo of this type
             if(itemamount < 0)
-                return E_RemoveInventoryItem(player, ammo, -1, true);
+                return E_RemoveInventoryItem(player, ammo, -1, RemoveMore::yes);
 
             doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                                  "'%s', ammo: '%s'\a\n",
@@ -675,7 +675,7 @@ static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
         if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
             takeammo = static_cast<int>(floor(takeammo * GameModeInfo->skillAmmoMultiplier));
 
-        result |= takeammo ? E_RemoveInventoryItem(player, ammo, takeammo, true) : false;
+        result |= takeammo ? E_RemoveInventoryItem(player, ammo, takeammo, RemoveMore::yes) : false;
     }
 
     return result;
@@ -746,7 +746,7 @@ bool P_TakeInventory(player_t *player, const ScriptedItem &iitem, const int item
                 for(size_t i = 0; i < numAmmo; i++)
                 {
                     auto ammo = E_AmmoTypeForIndex(i);
-                    E_RemoveInventoryItem(*player, ammo, -1, true);
+                    E_RemoveInventoryItem(*player, ammo, -1, RemoveMore::yes);
                 }
             }
             else if(itemamount > 0)
@@ -755,7 +755,7 @@ bool P_TakeInventory(player_t *player, const ScriptedItem &iitem, const int item
             }
         }
         else
-            E_RemoveInventoryItem(*player, item, itemamount, true);
+            E_RemoveInventoryItem(*player, item, itemamount, RemoveMore::yes);
         break;
     }
 

@@ -2432,7 +2432,7 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 // in the inventory, everything will be removed. For compatibility reasons,
 // this parameter is false by default.
 //
-itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, bool removemore)
+itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, RemoveMore removemore)
 {
     inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
@@ -2446,7 +2446,7 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
 
     if(slot->amount < amount)
     {
-        if(removemore)
+        if(removemore == RemoveMore::yes)
             amount = slot->amount;
         else
             // don't own that many?
