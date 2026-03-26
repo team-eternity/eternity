@@ -179,7 +179,11 @@ void A_Spawn(actionargs_t *actionargs)
 
         newmobj = P_SpawnMobj(mo->x, mo->y, (mo->state->misc2 << FRACBITS) + mo->z, thingtype);
         if(newmobj)
+        {
             P_transferFriendship(*newmobj, *mo);
+            if(demo_version >= 406)
+                P_IncrementCountKill(*newmobj);
+        }
     }
 }
 
@@ -426,6 +430,9 @@ void A_SpawnAbove(actionargs_t *actionargs)
 
     if(statenum >= 0 && statenum < NUMSTATES)
         P_SetMobjState(mo, statenum);
+
+    if(demo_version >= 406)
+        P_IncrementCountKill(*mo);
 }
 
 //
@@ -565,6 +572,8 @@ void A_SpawnEx(actionargs_t *actionargs)
     else
     {
         P_transferFriendship(*mo, *actor);
+        if(demo_version >= 406)
+            P_IncrementCountKill(*mo);
         mo->angle = angle;
         mo->momx  = xvel;
         mo->momy  = yvel;
@@ -1306,6 +1315,9 @@ void A_ThingSummon(actionargs_t *actionargs)
         }
         return;
     }
+
+    if(demo_version >= 406)
+        P_IncrementCountKill(*newmobj);
 
     // give same target
     P_SetTarget<Mobj>(&newmobj->target, actor->target);

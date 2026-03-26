@@ -617,8 +617,9 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds,
-                bool pushmasked, pwindow_t *window)
+void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, bspcontext_t &bspcontext,
+                spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds, bool pushmasked,
+                pwindow_t *window)
 {
     drawseg_t     *&drawsegs     = bspcontext.drawsegs;
     drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -689,6 +690,14 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
 
         memcpy(post->masked->ceilingclip, portaltop + bounds.startcolumn, sizeof(*portaltop) * bounds.numcolumns);
         memcpy(post->masked->floorclip, portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
+
+        post->masked->viewsin    = viewpoint.sin;
+        post->masked->viewcos    = viewpoint.cos;
+        post->masked->viewpos.x  = viewpoint.x;
+        post->masked->viewpos.y  = viewpoint.y;
+        post->masked->viewpos.z  = viewpoint.z;
+        post->masked->viewzfloat = cb_viewpoint.z;
+        post->masked->heightsec  = viewpoint.sector->heightsec;
     }
     else
         post->masked = nullptr;
@@ -1348,7 +1357,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext, spritecontext_t &spritec
     if(heightsec != -1) // only clip things which are in special sectors
     {
         auto &hsec = sectors[heightsec];
-        int   phs  = view.sector->heightsec;
+        int   phs  = viewpoint.sector->heightsec;
 
         if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
                thing->z >= hsec.srf.floor.getZAt(spritepos.x, spritepos.y) :
@@ -1511,6 +1520,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
     // Well, now it will be done.
     spritecontext.sectorvisited[sec - sectors] = true;
 
+    // Only use the MBF average light when the compatibility flag is set by user.
     const int lightnum = (lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
@@ -1546,9 +1556,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
             // otherwise the lighting behaviour will look incorrect
             const lighttable_t *const *mobjspritelights;
             {
-                const int mobjlightlevel = comp[comp_thingsectorlight] ?
-                                               R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector) :
-                                               thing->subsector->sector->lightlevel;
+                const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector);
                 const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
                 if(mobjlightnum < 0)
@@ -1683,7 +1691,7 @@ static void R_drawPSprite(const pspdef_t *psp, const lighttable_t *const *const 
     vis->scale        = view.pspriteyscale;
     vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
     vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
-    vis->sector       = int(view.sector - sectors);
+    vis->sector       = int(view.boomcolorsector - sectors);
 
     // haleyjd 07/01/07: use actual pixel range to scale graphic
     if(flip)
@@ -1754,23 +1762,21 @@ void R_DrawPlayerSprites()
     const pspdef_t            *psp;
     sector_t                   tmpsec;
     Surfaces<pslope_t>         tempslopes;
-    int                        floorlightlevel, ceilinglightlevel;
+    transferredLights_t        transferredLights;
     const lighttable_t *const *spritelights;
 
     // sf: psprite switch
     if(!showpsprites || viewcamera)
         return;
 
-    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.sector);
+    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.boomcolorsector);
 
     // get light level
     // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
     // (see r_bsp.c for similar calculations for non-player sprites)
 
-    R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, 0);
-    lightnum = (comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) :
-                                              (view.sector->lightlevel) >> (LIGHTSEGSHIFT + 1)) +
-               (extralight * LIGHTBRIGHT);
+    R_FakeFlat(r_globalcontext.view, view.boomcolorsector, &tmpsec, tempslopes, &transferredLights, 0);
+    lightnum = (transferredLights.sprite >> LIGHTSEGSHIFT) + extralight * LIGHTBRIGHT;
 
     if(lightnum < 0)
         spritelights = r_globalcontext.cmapcontext.scalelight[0];
@@ -1894,9 +1900,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
-                                  int firstds, int lastds, float *ptop, float *pbottom)
+                                  int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
+                                  const fixed_t viewcos, const v3fixed_t &viewpos, float viewzfloat,
+                                  const int heightsec)
 {
     drawseg_t *ds;
     int        x;
@@ -1907,8 +1914,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     //
     // Common handler both for the optimized and basic loops
     //
-    auto handleOverlappingDrawSeg = [](cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds,
-                                       const vissprite_t *spr) {
+    auto handleOverlappingDrawSeg = [viewsin, viewcos, &viewpos, heightsec](cmapcontext_t &cmapcontext, drawseg_t *ds,
+                                                                            const vissprite_t *spr) {
         // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
         uint32_t     s1, s2;
         divline_t    sprite_clip;
@@ -1916,8 +1923,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         sprite_clip.x  = spr->gx;
         sprite_clip.y  = spr->gy;
-        sprite_clip.dx = viewpoint.sin;
-        sprite_clip.dy = -viewpoint.cos;
+        sprite_clip.dx = viewsin;
+        sprite_clip.dy = -viewcos;
 
         s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
         s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
@@ -1932,7 +1939,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             {
                 r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                 r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-                R_RenderMaskedSegRange(cmapcontext, viewpoint, ds, r1, r2);
+                R_RenderMaskedSegRange(cmapcontext, viewpos, ds, r1, r2, heightsec);
             }
             return; // seg is behind sprite
         }
@@ -1982,7 +1989,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             }
             ++dsx;
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
     else
@@ -1996,7 +2003,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             if(ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && !ds->maskedtexturecol))
                 continue; // does not cover sprite
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
 
@@ -2006,15 +2013,19 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     {
         float h, mh;
 
-        const int phs = view.sector->heightsec;
+        const int phs = heightsec;
 
         fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
-        fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) : 0;
+        fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
-        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        // Don't use the sprite scale as it will give erroneous results if scaled in EDF. Recalculate it without the EDF
+        // component.
+        const float distyscale = spr->dist * view.yfoc;
+
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
+        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
-            if(mh <= 0.0 || (phs != -1 && viewpoint.z > phsheight))
+            if(mh <= 0.0 || (phs != -1 && viewpos.z > phsheight))
             {
                 // clip bottom
                 for(x = spr->x1; x <= spr->x2; x++)
@@ -2025,7 +2036,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             }
             else // clip top
             {
-                if(phs != -1 && viewpoint.z <= phsheight) // killough 11/98
+                if(phs != -1 && viewpos.z <= phsheight) // killough 11/98
                 {
                     for(x = spr->x1; x <= spr->x2; x++)
                     {
@@ -2037,12 +2048,12 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         }
 
         heightsecheight = sectors[spr->heightsec].srf.ceiling.getZAt(spr->gx, spr->gy);
-        phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) : 0;
+        phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
-        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
+        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
-            if(phs != -1 && viewpoint.z >= phsheight)
+            if(phs != -1 && viewpos.z >= phsheight)
             {
                 // clip bottom
                 for(x = spr->x1; x <= spr->x2; x++)
@@ -2076,7 +2087,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         // component.
         float distyscale = spr->dist * view.yfoc;
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
         {
             h = eclamp(view.ycenter - (mh * distyscale), 0.0f, view.height - 1);
@@ -2090,7 +2101,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         sectorheight = sector->srf.ceiling.getZAt(spr->gx, spr->gy);
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
         {
             // Add +1 to avoid overdrawing with the bottomclip of the above part
@@ -2191,9 +2202,10 @@ void R_DrawPostBSP(rendercontext_t &context)
 
                 for(int i = lastsprite - firstsprite; --i >= 0;)
                 {
-                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.cb_view,
-                                          context.bounds, drawsegs, spritecontext.vissprite_ptrs[i], firstds, lastds,
-                                          masked->ceilingclip, masked->floorclip); // killough
+                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.bounds, drawsegs,
+                                          spritecontext.vissprite_ptrs[i], firstds, lastds, masked->ceilingclip,
+                                          masked->floorclip, masked->viewsin, masked->viewcos, masked->viewpos,
+                                          masked->viewzfloat, masked->heightsec); // killough
                 }
             }
 
@@ -2206,7 +2218,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;) // new -- killough
             {
                 if(ds->maskedtexturecol)
-                    R_RenderMaskedSegRange(context.cmapcontext, context.view, ds, ds->x1, ds->x2);
+                    R_RenderMaskedSegRange(context.cmapcontext, masked->viewpos, ds, ds->x1, ds->x2, masked->heightsec);
             }
 
             // Done with the masked range
@@ -2715,7 +2727,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
     // only clip particles which are in special sectors
     if(heightsec != -1)
     {
-        int phs = view.sector->heightsec;
+        const int phs = viewpoint.sector->heightsec;
 
         if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
                particle->z >= sectors[heightsec].srf.floor.getZAt(particle->x, particle->y) :
@@ -2768,12 +2780,13 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
             const lighttable_t *const             *ltable;
             static thread_local rendersector_t     tmpsec;
             static thread_local Surfaces<pslope_t> tempslopes;
-            int                                    floorlightlevel, ceilinglightlevel, lightnum, index;
+            transferredLights_t                    transferredLights;
+            int                                    lightnum, index;
 
-            R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
+            R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &transferredLights, false);
 
-            lightnum = comp[comp_thingsectorlight] ? ((floorlightlevel + ceilinglightlevel) / 2) : sector->lightlevel;
-            lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+            lightnum = transferredLights.sprite;
+            lightnum = (lightnum >> LIGHTSEGSHIFT) + extralight * LIGHTBRIGHT;
 
             if(lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap)
                 ltable = cmapcontext.scalelight[LIGHTLEVELS - 1];

@@ -19,10 +19,14 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
-* Added new ACS functions: GetSectorColormap and SetSectorColormap. Now it's possible to change the colormap of a 
-  sector during the gameplay.
+* Added new cheat codes for automap: iddkt, iddit and iddst (Doom); ravkmap, ravimap and ravsmap (Heretic).
+  Each one only works inside the automap, and moves the cursor to a remaining count-kill monster, count-item object or
+  unexplored secret in the level. They're inspired from equivalent cheat codes from other ports. Thanks to DRON12261 for
+  the contribution!
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* Added new ACS functions: GetSectorColormap and SetSectorColormap. Now it's possible to change the colormap of a 
+  sector during the gameplay.
 
 Improvements
 ------------
@@ -30,6 +34,12 @@ Improvements
 * Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
   for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
 * Reimplemented the key automap colour.
+* Boom fake floor/ceiling transfers and colormaps now render correctly via portals.
+* Now under coop and solo-net, all monster deaths are counted for the HUD, not just current player's
+  kills.
+* Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
+  level exit score. This was needed because otherwise it would become useless on heavily scripted
+  maps.
 
 Bug fixes
 ---------
@@ -48,3 +58,15 @@ Bug fixes
 * Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
 * Fixed A_PlaySound (and a few other triggers) not playing DSDHacked newly defined sounds.
 * Fixed EDF gameproperties sound.titlemusic not working.
+* Fixed empty MIDIs (easily used in mods to silence the music) causing infinite loop errors with the FluidSynth backend
+  under some Linux distros.
+* Fixed very large maps having potential collision issues.
+* Fixed blocklist start being ignored when building portal map.
+* Fixed memory corruption when running ACS functions early in the game.
+* Fixed sprites being missed when looking through a rotated portal.
+* Fixed comp_thingsectorlight having no effect on "fast" (not "thorough") sprite projection mode.
+* Fixed bug with z-offset anchored portals not rendering lower/upper textures correctly for 1-sided portal walls.
+* Fixed crashing on openings overflow.
+* Fixed a possible memory corruption when saving.
+* Hopefully reduced a crash on thing frame recursion, by catching it earlier.
+* Fixed wrong scaled sprite rendering on Boom fake floors.

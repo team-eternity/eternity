@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley et al.
+// Copyright (C) 2026 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -93,6 +93,9 @@ int map_secret_after;
 
 // Antialias map drawing
 bool map_antialias;
+
+MobjLookupCheat         am_mobjLookupCheat;
+SecretSectorLookupCheat am_secretSectorLookupCheat;
 
 // haleyjd 05/17/08: ability to draw node lines on map
 static bool am_drawnodelines;
@@ -725,6 +728,9 @@ static void AM_LevelInit()
     if(scale_mtof > max_scale_mtof)
         scale_mtof = min_scale_mtof;
     scale_ftom = 1.0 / scale_mtof;
+
+    am_mobjLookupCheat.levelInit();
+    am_secretSectorLookupCheat.levelInit();
 }
 
 //
@@ -1089,6 +1095,110 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
         y = pos.y;
         z = sector.groupid == mo->groupid ? sector.srf.floor.getZAt(pos) : 0;
     }
+}
+
+static v2fixed_t AM_getMapCoords(const PointThinker &thinker)
+{
+    v2fixed_t point = { thinker.x, thinker.y };
+
+    if(mapportal_overlay && thinker.groupid != plr->mo->groupid)
+    {
+        const linkoffset_t *link = P_GetLinkOffset(thinker.groupid, plr->mo->groupid);
+
+        point.x += link->x;
+        point.y += link->y;
+    }
+    return point;
+}
+
+static void AM_moveCenterToPoint(v2fixed_t point)
+{
+    if(!automapactive)
+        return;
+
+    followplayer = false;
+
+    m_x = M_FixedToDouble(point.x) - m_w / 2;
+    m_y = M_FixedToDouble(point.y) - m_h / 2;
+
+    AM_changeWindowLoc();
+}
+
+//
+// Used by player cheat codes to find tally-relevant objects on the map.
+//
+void MobjLookupCheat::showNext(type_e type)
+{
+    if(!automapactive)
+        return;
+
+    bool     mustBeAlive;
+    unsigned flags;
+    switch(type)
+    {
+    default:
+    case kills:
+        mustBeAlive = true;
+        flags       = MF_COUNTKILL;
+        break;
+    case items:
+        mustBeAlive = false;
+        flags       = MF_COUNTITEM;
+        break;
+    }
+
+    const Thinker *start_th;
+    Thinker       *th;
+
+    if(current)
+        start_th = th = static_cast<Thinker *>(current);
+    else
+        start_th = th = &thinkercap;
+
+    th = th->next;
+
+    while(th != start_th)
+    {
+        Mobj *mo = thinker_cast<Mobj *>(th);
+
+        if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
+        {
+            AM_moveCenterToPoint(AM_getMapCoords(*mo));
+            P_SetTarget(&current, mo);
+            break;
+        }
+
+        th = th->next;
+    }
+}
+
+void SecretSectorLookupCheat::showNext()
+{
+    if(!automapactive || !numsectors)
+        return;
+
+    int i = current + 1;
+    if(i >= numsectors)
+        i = 0;
+    const int endI = i;
+
+    do
+    {
+        const sector_t *sec = &sectors[i];
+
+        if(P_IsSecret(sec))
+        {
+            AM_moveCenterToPoint(AM_getMapCoords(sec->soundorg));
+            current = i;
+            break;
+        }
+
+        i++;
+
+        if(i >= numsectors)
+            i = 0;
+    }
+    while(i != endI);
 }
 
 //
@@ -2246,8 +2356,6 @@ static void AM_drawPlayers()
 //
 static void AM_drawThings(int colors, int colorrange)
 {
-    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
-
     // for all sectors
     for(int i = 0; i < numsectors; i++)
     {
@@ -2255,15 +2363,8 @@ static void AM_drawThings(int colors, int colorrange)
 
         while(t) // for all things in that sector
         {
-            tx = t->x;
-            ty = t->y;
-
-            if(mapportal_overlay && t->subsector->sector->groupid != plr->mo->groupid)
-            {
-                auto link  = P_GetLinkOffset(t->subsector->sector->groupid, plr->mo->groupid);
-                tx        += link->x;
-                ty        += link->y;
-            }
+            // SoM: Moved thing coords to variables for linked portals
+            const v2fixed_t tpoint = AM_getMapCoords(*t);
 
             // jff 1/5/98 case over doomednum of thing being drawn
             const mline_t *keyglyph  = nullptr; // shut up compiler
@@ -2306,7 +2407,7 @@ static void AM_drawThings(int colors, int colorrange)
                 }
 
                 AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
-                                     keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
+                                     keycolour != -1 ? keycolour : mapcolor_sprt, tpoint.x, tpoint.y);
                 t = t->snext;
                 continue;
             }
@@ -2316,7 +2417,8 @@ static void AM_drawThings(int colors, int colorrange)
             if(ddt_cheating == 2)
                 AM_drawLineCharacter(thintriangle_guy, earrlen(thintriangle_guy), 16.0, t->angle,
                                      // killough 8/8/98: mark friends specially
-                                     t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt, tx, ty);
+                                     t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt, tpoint.x,
+                                     tpoint.y);
             t = t->snext;
         } // end if
     } // end for

@@ -65,7 +65,7 @@ struct MIDI /* a midi file */
 bool mmuscheckformat(UBYTE *mus, int size);
 int  mmus2mid(UBYTE *mus, size_t size, MIDI *mid, UWORD division, int nocomp);
 int  MIDIToMidi(const MIDI *mididata, UBYTE **mid, int *midlen);
-int  MidiToMIDI(UBYTE *mid, MIDI *mididata);
+int  MidiToMIDI(const UBYTE *mid, MIDI *mididata);
 void FreeMIDIData(MIDI *mididata);
 
 #endif
