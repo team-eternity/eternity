@@ -25,6 +25,8 @@ Features
   the contribution!
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* Added new ACS functions: GetSectorColormap and SetSectorColormap. Now it's possible to change the colormap of a 
+  sector during the gameplay.
 
 Improvements
 ------------
