@@ -69,3 +69,5 @@ Bug fixes
 * Hopefully reduced a crash on thing frame recursion, by catching it earlier.
 * Fixed wrong scaled sprite rendering on Boom fake floors.
 * Fixed crash when submerging under in a Boom water with sloped floor.
+* Fixed "zombie" player effect when using SetActorProperty with APROP_Health on players. Thanks to DRON12261 for finding
+  it.

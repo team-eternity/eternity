@@ -2237,7 +2237,11 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
     // clang-format off
     switch(var)
     {
-    case ACS_TP_Health:       thing->health = val; break;
+    case ACS_TP_Health:
+        thing->health = val;
+        if (thing->player)
+            thing->player->health = val;
+        break;
     case ACS_TP_Speed:        break;
     case ACS_TP_Damage:       thing->damage = val; break;
     case ACS_TP_Alpha:        thing->translucency = val; break;
