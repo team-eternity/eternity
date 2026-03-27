@@ -622,7 +622,7 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
         if(permament)
             player.powers[power] = { 0, true };
         else
-            player.powers[power].tics = additiveTime ? players->powers[power].tics + duration * itemamount : duration;
+            player.powers[power].tics = additiveTime ? player.powers[power].tics + duration * itemamount : duration;
     }
 
     return true;

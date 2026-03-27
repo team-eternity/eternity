@@ -71,3 +71,4 @@ Bug fixes
 * Fixed crash when submerging under in a Boom water with sloped floor.
 * Fixed "zombie" player effect when using SetActorProperty with APROP_Health on players. Thanks to DRON12261 for finding
   it.
+* Fixed wrong additive powerup time on multiplayers for players other than 1.
