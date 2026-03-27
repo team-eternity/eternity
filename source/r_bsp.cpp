@@ -557,7 +557,7 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *o
             if(sec->srf.floor.slope)
             {
                 tempsec->srf.floor.slope = &tempslopes.floor;
-                tempslopes.floor         = *s->srf.floor.slope;
+                tempslopes.floor         = *sec->srf.floor.slope;
             }
             else
                 tempsec->srf.floor.slope = nullptr;
