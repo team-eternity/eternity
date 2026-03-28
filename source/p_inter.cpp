@@ -496,12 +496,11 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 // Give the player a weapon and ammo based on a weapongiver itemeffect
 // Skill levels affect how much ammo is given
 //
-static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, bool ignoreskill, int itemamount,
-                                bool givemax)
+static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, int itemamount, bool givemax)
 {
     bool result = false;
 
-    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+    const weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
     if(!wp)
     {
         doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
@@ -532,7 +531,7 @@ static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
         int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
 
         // apply ammo multiplier for baby/nightmare skill
-        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+        if(gameskill == sk_baby || gameskill == sk_nightmare)
             giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
 
         result |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
@@ -595,7 +594,7 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
         // Skill levels affect how much ammo is given
         // If givemax is true, give max ammo of ammo types
     case ITEMFX_WEAPONGIVER:
-        P_giveWeaponByGiver(*player, item, false, itemamount, givemax);
+        P_giveWeaponByGiver(*player, item, itemamount, givemax);
         break;
 
         // If another artifact, just give it to the player
@@ -1086,13 +1085,6 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount, b
                                                 (hits == 0 && (!player.armorfactor || !setabsorption))))
     {
         return false; // don't pick up
-    }
-
-    // If the alwayspickup flag is set and the player picks up armor with
-    // a maxsaveamount lower than what the player already has, do nothing.
-    if(effect->getInt("alwayspickup", 0) && player.armorpoints >= (additive ? maxsaveamount : hits))
-    {
-        return false;
     }
 
     if(additive)
