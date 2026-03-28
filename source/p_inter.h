@@ -48,7 +48,7 @@ enum
 bool P_IsValid(const ScriptedItem &item);
 bool P_GiveInventory(player_t *player, const ScriptedItem &item, int itemamount);
 bool P_TakeInventory(player_t *player, const ScriptedItem &item, int itemamount);
-int  P_CheckInventory(player_t *player, const ScriptedItem &item);
+int  P_CheckInventory(const player_t *player, const ScriptedItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
 int  P_GetMaxInventory(player_t *player, const ScriptedItem &item);

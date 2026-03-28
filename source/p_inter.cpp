@@ -783,12 +783,12 @@ bool P_IsValid(const ScriptedItem &item)
 //
 // Checks the player inventory for an item or power directly
 //
-int P_CheckInventory(player_t *player, const ScriptedItem &iitem)
+int P_CheckInventory(const player_t *player, const ScriptedItem &iitem)
 {
     if(!player || !P_IsValid(iitem))
         return 0;
 
-    auto checkPower = [](player_t *player, int power) -> int {
+    auto checkPower = [](const player_t *player, int power) -> int {
         return player->powers[power].infinite || (player->powers[power].tics != 0 && power == pw_strength) ?
                    -1 :
                    player->powers[power].tics;
