@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -895,7 +895,7 @@ bool P_UseInventory(player_t *player, itemeffect_t *item)
 int P_GetMaxInventory(player_t *player, const ScriptedItem &iitem)
 {
     if(!player || !P_IsValid(iitem))
-        return false;
+        return 0;
 
     if(const int *power = std::get_if<int>(&iitem))
     {
@@ -930,7 +930,7 @@ int P_GetMaxInventory(player_t *player, const ScriptedItem &iitem)
     case ITEMFX_AMMO:
         return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
 
-        // If power artifact, retrun -1 for permanent powers or strength, otherwise duration in seconds
+        // If power artifact, return -1 for permanent powers or strength, otherwise duration in seconds
     case ITEMFX_POWER:
         powerStr = item->getString("type", "");
         if(!powerStr || !strcmp(powerStr, ""))
@@ -953,8 +953,6 @@ int P_GetMaxInventory(player_t *player, const ScriptedItem &iitem)
         // If another artifact, return max amount for that artifact
     default: return E_GetMaxAmountForArtifact(*player, item);
     }
-
-    return true;
 }
 
 //
@@ -1251,34 +1249,9 @@ bool P_TakePower(player_t &player, int powernum, int itemamount)
     }
 
     // If power is now inactive, remove its effects
+    // Don't wait for P_PlayerThink because that will be caught with tics 0 and miss
     if(!currentpower->isActive())
-    {
-        switch(powernum)
-        {
-        case pw_invisibility: player.mo->flags &= ~MF_SHADOW; break;
-        case pw_totalinvis:
-            player.mo->flags2 &= ~MF2_DONTDRAW;
-            player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
-            break;
-        case pw_ghost:  player.mo->flags3 &= ~MF3_GHOST; break;
-        case pw_flight: P_PlayerStopFlight(player); break;
-        case pw_weaponlevel2:
-            if(E_IsPoweredVariant(player.readyweapon))
-            {
-                weaponinfo_t *sister = player.readyweapon->sisterWeapon;
-                if(!E_IsPoweredVariant(sister))
-                {
-                    if(sister->readystate != player.readyweapon->readystate || sister->flags & WPF_FORCETOREADY)
-                    {
-                        P_SetPsprite(player, ps_weapon, sister->readystate);
-                        player.refire = 0;
-                    }
-                    player.readyweapon = sister;
-                }
-            }
-            break;
-        }
-    }
+        P_RemovePower(player, powernum);
 
     return true;
 }

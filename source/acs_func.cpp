@@ -2821,7 +2821,7 @@ bool ACS_CF_UseInventory(ACS_CF_ARGS)
 }
 
 //
-// void GetMaxInventory(int tid, str itemname);
+// int GetMaxInventory(int tid, str itemname);
 //
 bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
 {

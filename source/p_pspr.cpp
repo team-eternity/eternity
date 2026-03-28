@@ -273,7 +273,7 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 
     // Check ahead: does the player have any weapon with ammo?
     // If not, we can allow any owned weapon.
-    // It needs to awoid infinite loop if only weapons without ammo are owned.
+    // It needs to avoid infinite loop if only weapons without ammo are owned.
     bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
@@ -345,7 +345,7 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 
     // Check ahead: does the player have any weapon with ammo?
     // If not, we can allow any owned weapon.
-    // It needs to awoid infinite loop if only weapons without ammo are owned.
+    // It needs to avoid infinite loop if only weapons without ammo are owned.
     bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
