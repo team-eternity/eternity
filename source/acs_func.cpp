@@ -66,6 +66,7 @@
 #include "v_misc.h"
 #include "doomstat.h"
 #include "metaapi.h"
+#include "e_lib.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -868,17 +869,26 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
     return false;
 }
 
+static ScriptedItem getScriptedItem(const char *itemname)
+{
+    itemeffect_t *item = E_ItemEffectForName(itemname);
+    if(item)
+        return item;
+    return E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+}
+
 //
 // int CheckInventory(str itemname);
 //
 bool ACS_CF_CheckInventory(ACS_CF_ARGS)
 {
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
 
-    // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
-    if(!item)
+    ScriptedItem item = getScriptedItem(itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
         thread->dataStk.push(0);
@@ -888,7 +898,8 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     if(!info->mo || !info->mo->player)
         thread->dataStk.push(0);
     else
-        thread->dataStk.push(E_GetItemOwnedAmount(*info->mo->player, item));
+        thread->dataStk.push(P_CheckInventory(info->mo->player, item));
+
     return false;
 }
 

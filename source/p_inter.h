@@ -26,12 +26,15 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
+#include <variant>
+
 struct emodmorph_t;
 struct player_t;
 class Mobj;
 class MetaTable;
 
 using itemeffect_t = MetaTable;
+using ScriptedItem = std::variant<itemeffect_t *, int>;
 
 // follow a player exlusively for 3 seconds
 static constexpr int16_t BASETHRESHOLD = 100;
@@ -45,6 +48,9 @@ enum
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1);
 bool P_GiveBody(player_t &, const itemeffect_t *, int itemamount = 1);
 bool P_GiveArmor(player_t &, const itemeffect_t *, int itemamount = 1);
+bool P_IsValid(const ScriptedItem &item);
+int  P_CheckInventory(const player_t *player, const ScriptedItem &item);
+
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean
 // that P_GivePowerForItem can be used.

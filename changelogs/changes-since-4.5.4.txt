@@ -19,6 +19,10 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Next ACS functions has been heavily improved (thanks to DRON12261):
+  - int CheckInventory(str item_name):
+    Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects with the player.
 * Added new cheat codes for automap: iddkt, iddit and iddst (Doom); ravkmap, ravimap and ravsmap (Heretic).
   Each one only works inside the automap, and moves the cursor to a remaining count-kill monster, count-item object or
   unexplored secret in the level. They're inspired from equivalent cheat codes from other ports. Thanks to DRON12261 for
@@ -69,6 +73,6 @@ Bug fixes
 * Hopefully reduced a crash on thing frame recursion, by catching it earlier.
 * Fixed wrong scaled sprite rendering on Boom fake floors.
 * Fixed crash when submerging under in a Boom water with sloped floor.
-* Fixed "zombie" player effect when using SetActorProperty with APROP_Health on players. Thanks to DRON12261 for finding
-  it.
+* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
+  (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.

@@ -434,6 +434,85 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
     return gaveammo;
 }
 
+bool P_IsValid(const ScriptedItem &item)
+{
+    return std::visit(
+        [](auto &&arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr(std::is_same_v<T, itemeffect_t *>)
+                return !!arg;
+            if constexpr(std::is_same_v<T, int>)
+                return arg != NUMPOWERS;
+        },
+        item);
+}
+
+//
+// P_CheckInventory
+//
+// Checks the player inventory for an item or power directly
+//
+int P_CheckInventory(const player_t *player, const ScriptedItem &iitem)
+{
+    if(!player || !P_IsValid(iitem))
+        return 0;
+
+    auto checkPower = [](const player_t *player, int power) -> int {
+        return player->powers[power].infinite || (player->powers[power].tics != 0 && power == pw_strength) ?
+                   -1 :
+                   player->powers[power].tics;
+    };
+
+    if(const int *power = std::get_if<int>(&iitem))
+    {
+        // Check power directly
+        return checkPower(player, *power);
+    }
+
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+
+    int           powerNum;
+    const char   *powerStr;
+    itemeffect_t *wp;
+
+    // Check item based on its class and properties
+    switch(item->getInt("class", ITEMFX_NONE))
+    {
+        // If health, return player current health
+    case ITEMFX_HEALTH:
+        return player->health;
+
+        // If armor, return player current armor
+    case ITEMFX_ARMOR:
+        return player->armorpoints;
+
+        // If ammo, return current ammo amount for the ammo type designated
+    case ITEMFX_AMMO:
+        return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+        // If power artifact, return remaining duration
+        // If power is infinite or strength, return -1
+    case ITEMFX_POWER:
+        powerStr = item->getString("type", "");
+        if(!powerStr || !strcmp(powerStr, ""))
+            return 0; // There hasn't been a designated power type
+        if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+            return 0; // There's no power for the type provided
+
+        // If the power is infinite, return -1, otherwise return remaining tics
+        return checkPower(player, powerNum);
+
+        // If weapon giver, return current weapon amount for the weapon designated
+    case ITEMFX_WEAPONGIVER:
+        wp = E_ItemEffectForName(item->getString("weapon", ""));
+        return wp ? E_GetItemOwnedAmount(*player, wp) : 0;
+
+        // If another artifact, return current amount owned
+    default: return E_GetItemOwnedAmount(*player, item);
+    }
+}
+
+
 //
 // P_GiveBody
 //
