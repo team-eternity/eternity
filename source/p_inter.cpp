@@ -1186,10 +1186,13 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
         player.mo->flags3 |= MF3_GHOST;
         break;
     case pw_flight: // haleyjd: flight
-        // If the player already has power, prevent the start of the jump
-        if(!player.powers[pw_flight].isActive())
+    {
+        // If the player already has power, prevent the start of the jump (unless nearing its end)
+        const powerduration_t &duration = player.powers[pw_flight];
+        if(!duration.isActive() || (duration.shouldCount() && duration.tics <= 4 * 32))
             P_PlayerStartFlight(player, true);
         break;
+    }
     case pw_weaponlevel2:
         if(!E_IsPoweredVariant(player.readyweapon))
         {
