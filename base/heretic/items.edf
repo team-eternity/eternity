@@ -10,8 +10,6 @@
 //
 
 //
-// HealthBonus
-//
 // An atomic health unit that can be used with inventory functions (such as 
 // ACS GiveInventory and ACS TakeInventory). It is not used in Heretic itself.
 //
@@ -46,8 +44,6 @@ healtheffect MysticUrn
 // Armor Effects
 //
 
-//
-// ArmorBonus
 //
 // An atomic armor unit that can be used with inventory functions (such as 
 // ACS GiveInventory and ACS TakeInventory). It is not used in Heretic itself.

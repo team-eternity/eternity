@@ -39,7 +39,7 @@ Features
     Allows to directly get information about the current state of the player's armor. If infotype = 0, the current
     amount of armor will be returned; if 1, savefactor will be returned; if 2, savedivisor will be returned.
     Otherwise, 0.
-* Next ACS functions has been heavily improved:
+* Next ACS functions has been heavily improved (thanks to DRON12261):
   - void TakeInventory(str item_name, int amount):
     Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of
     power effects from the player.
@@ -87,7 +87,6 @@ Bug fixes
   additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will
   it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite
   regardless of duration settings.
-* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health.
 * Fixed a bug with the “alwayspickup” flag for HealthEffect and ArmorEffect. Previously, if a player picked up a
   health/armor item with this flag, whose maxamount/maxsaveamount was less than the player's current amount, the
   player's health/armor would be reset to the maxamount/maxsaveamount of the picked up item. Now, in such a situation,
@@ -114,6 +113,6 @@ Bug fixes
 * Hopefully reduced a crash on thing frame recursion, by catching it earlier.
 * Fixed wrong scaled sprite rendering on Boom fake floors.
 * Fixed crash when submerging under in a Boom water with sloped floor.
-* Fixed "zombie" player effect when using SetActorProperty with APROP_Health on players. Thanks to DRON12261 for finding
-  it.
+* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
+  (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.
