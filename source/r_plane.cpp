@@ -300,9 +300,10 @@ static void R_slopeLights(const cb_plane_t &plane, int x1, int x2, double startc
 
     for(i = 0; i < len; i++)
     {
-        int index = (int)(map >> FRACBITS) + 1;
-
-        index -= (extralight * LIGHTBRIGHT);
+        // The factor of 2 was introduced here based on empirical testing — with this formula, 
+        // lighting on slopes is calculated visually correctly regardless of how much the area 
+        // with the slopes is brightened or darkened.
+        int index = (int)(map >> FRACBITS) + (1 - (extralight * LIGHTBRIGHT)) * 2;
 
         if(index < 0)
             cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap);
