@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -1260,6 +1260,18 @@ void A_Light2(actionargs_t *actionargs)
 
     if(LevelInfo.useFullBright) // haleyjd
         mo->player->extralight = 2;
+}
+
+void A_LightEx(actionargs_t *actionargs)
+{
+    Mobj     *mo         = actionargs->actor;
+    int const lightdelta = E_ArgAsInt(actionargs->args, 0, 0);
+
+    if(!mo->player)
+        return;
+
+    if(LevelInfo.useFullBright) // haleyjd
+        mo->player->extralight = lightdelta;
 }
 
 //
