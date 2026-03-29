@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 David Hill, James Haley, et al.
 //
@@ -368,6 +368,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addFuncDataACS0(303, addCallFunc(ACS_CF_SetPolyobjXY));
     addFuncDataACS0(304, addCallFunc(ACS_CF_GetSectorColormap));
     addFuncDataACS0(305, addCallFunc(ACS_CF_SetSectorColormap));
+    addFuncDataACS0(306, addCallFunc(ACS_CF_IsSectorColormapBoomkind));
 
     // clang-format on
 }
