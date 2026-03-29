@@ -245,13 +245,13 @@ VALLOCATION(pstack)
             {
                 if(pstack[i].masked)
                 {
-                    zhfree(heap, pstack[i].masked->ceilingclip);
-                    zhfree(heap, pstack[i].masked);
+                    heap.free(pstack[i].masked->ceilingclip);
+                    heap.free(pstack[i].masked);
                 }
             }
 
             // free the pstack
-            zhfree(heap, pstack);
+            heap.free(pstack);
         }
 
         // free the maskedrange freelist
@@ -259,8 +259,8 @@ VALLOCATION(pstack)
         while(mr)
         {
             maskedrange_t *next = mr->next;
-            zhfree(heap, mr->ceilingclip);
-            zhfree(heap, mr);
+            heap.free(mr->ceilingclip);
+            heap.free(mr);
             mr = next;
         }
 
@@ -607,7 +607,7 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
         while(mark)
         {
             drawnsprite_t *next = mark->next;
-            zhfree(heap, mark);
+            heap.free(mark);
             mark = next;
         }
         chain = nullptr;
@@ -633,7 +633,7 @@ void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
     if(pstacksize == pstackmax)
     {
         pstackmax += 10;
-        pstack     = zhrealloc(heap, poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
+        pstack     = heap.realloc<poststack_t>(pstack, sizeof(poststack_t) * pstackmax);
     }
 
     post = pstack + pstacksize;
@@ -661,12 +661,12 @@ void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
         }
         else
         {
-            post->masked = zhstructalloc(heap, maskedrange_t, 1);
+            post->masked = heap.structAlloc<maskedrange_t>(1);
 
             // Need to allocate it by video.width, because it will only be managed by VALLOCATION when
             // video width changes.
-            float *buf                = zhmalloc(heap, float *,
-                                                 2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
+            float *buf =
+                heap.malloc<float>(2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
             post->masked->ceilingclip = buf;
             post->masked->floorclip   = buf + video.width;
         }
@@ -717,7 +717,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
     if(num_vissprite >= num_vissprite_alloc) // killough
     {
         num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc * 2 : 128;
-        vissprites          = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc * sizeof(*vissprites));
+        vissprites          = heap.realloc<vissprite_t>(vissprites, num_vissprite_alloc * sizeof(*vissprites));
     }
 
     return vissprites + num_vissprite++;
@@ -1487,12 +1487,12 @@ inline static bool R_checkAndMarkSprite(spritecontext_t &spritecontext, ZoneHeap
             return true;
 
         I_Assert(prevSprite != nullptr, "prevSprite should have been set");
-        prevSprite->next        = zhstructalloc(heap, drawnsprite_t, 1);
+        prevSprite->next        = heap.structAlloc<drawnsprite_t>(1);
         prevSprite->next->thing = thing;
     }
     else
     {
-        spritecontext.drawnSpriteHash[thing_hash]        = zhstructalloc(heap, drawnsprite_t, 1);
+        spritecontext.drawnSpriteHash[thing_hash]        = heap.structAlloc<drawnsprite_t>(1);
         spritecontext.drawnSpriteHash[thing_hash]->thing = thing;
     }
 
@@ -1863,9 +1863,9 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 
         if(num_vissprite_ptrs < numsprites * 2)
         {
-            zhfree(heap, vissprite_ptrs); // better than realloc -- no preserving needed
+            heap.free(vissprite_ptrs); // better than realloc -- no preserving needed
             num_vissprite_ptrs = num_vissprite_alloc * 2;
-            vissprite_ptrs     = zhmalloc(heap, vissprite_t **, num_vissprite_ptrs * sizeof *vissprite_ptrs);
+            vissprite_ptrs     = heap.malloc<vissprite_t *>(num_vissprite_ptrs * sizeof *vissprite_ptrs);
         }
 
         while(--i >= 0)
@@ -2183,8 +2183,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                     {
                         // haleyjd: fix reallocation to track 2x size
                         drawsegs_xrange_size = 2 * (maxdrawsegs + 1);
-                        drawsegs_xrange      = zhrealloc(heap, drawsegs_xrange_t *, drawsegs_xrange,
-                                                         drawsegs_xrange_size * sizeof(*drawsegs_xrange));
+                        drawsegs_xrange      = heap.realloc<drawsegs_xrange_t>(
+                            drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                     }
                     for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;)
                     {

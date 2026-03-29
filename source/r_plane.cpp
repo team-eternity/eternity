@@ -82,7 +82,7 @@ VALLOCATION(mainhash)
         context.freehead   = &context.freetail;
         context.floorplane = context.ceilingplane = nullptr;
 
-        context.mainchains = zhcalloctag(heap, visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr);
+        context.mainchains = heap.calloc<visplane_t *>(MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr);
         context.mainhash   = { MAINHASHCHAINS, context.mainchains, nullptr };
     });
 }
@@ -158,7 +158,7 @@ VALLOCATION(overlayfclip)
 VALLOCATION(spanstart)
 {
     R_ForEachContext([h](rendercontext_t &context) {
-        context.planecontext.spanstart = zhcalloctag(*context.heap, int *, h, sizeof(int), PU_VALLOC, nullptr);
+        context.planecontext.spanstart = context.heap->calloc<int>(h, sizeof(int), PU_VALLOC, nullptr);
     });
 }
 
@@ -496,9 +496,9 @@ planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount)
         chaincount = c;
     }
 
-    ret             = zhmalloctag(heap, planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
+    ret             = heap.malloc<planehash_t>(sizeof(planehash_t), PU_LEVEL, nullptr);
     ret->chaincount = chaincount;
-    ret->chains     = zhmalloctag(heap, visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
+    ret->chains     = heap.malloc<visplane_t *>(sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
     ret->next       = nullptr;
 
     for(i = 0; i < chaincount; i++)
@@ -573,7 +573,7 @@ static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap, unsigne
     visplane_t *check = freetail;
 
     if(!check)
-        check = zhcalloctag(heap, visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
+        check = heap.calloc<visplane_t>(1, sizeof *check, PU_VALLOC, nullptr);
     else if(!(freetail = freetail->next))
         freehead = &freetail;
 
@@ -588,7 +588,7 @@ static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap, unsigne
 
         // THREAD_TODO: Try make this use context.numcolumns again
         check->max_width = static_cast<unsigned int>(video.width);
-        paddedTop        = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+        paddedTop        = heap.calloc<int>(2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
         paddedBottom     = paddedTop + video.width + 2;
 
         check->top    = paddedTop + 1;
