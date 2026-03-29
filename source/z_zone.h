@@ -238,7 +238,7 @@ public:
     template<typename T>
     inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
     {
-        return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc));
+        return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, loc));
     }
     template<typename T>
     inline T *structAlloc(size_t n, int tag = PU_STATIC,
