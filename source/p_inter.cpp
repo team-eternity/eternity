@@ -97,7 +97,7 @@ int bfgcells = 40; // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill, bool givemax = false)
+static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill, GiveMax givemax = GiveMax::no)
 {
     if(!ammo)
         return false;
@@ -113,7 +113,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
         num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-    if(!E_GiveInventoryItem(player, ammo, num, static_cast<GiveMax>(givemax)))
+    if(!E_GiveInventoryItem(player, ammo, num, givemax))
         return false; // don't need this ammo
 
     // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -201,7 +201,7 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 
     bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
 
-    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill, givemax);
+    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill, static_cast<GiveMax>(givemax));
 }
 
 //
@@ -298,11 +298,18 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
     }
 }
 
+enum class ItemOrigin
+{
+    placed,
+    dropped,
+    scripted
+};
+
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special,
-                               const char *sound)
+static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, ItemOrigin origin, Mobj *special,
+                               const char *sound, GiveMax giveMaxAmmo)
 {
     bool          gaveweapon = false;
     weaponinfo_t *wp         = E_WeaponForName(giver->getString("weapon", ""));
@@ -328,7 +335,7 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
         giveammo = dropammo = dmstayammo = coopstayammo = 0;
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped)
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
     {
         // leave placed weapons forever on net games
         if(E_PlayerOwnsWeapon(player, wp))
@@ -350,10 +357,14 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
     }
 
     // give one clip with a dropped weapon, two clips with a found weapon
-    int amount = dropped ? dropammo : giveammo;
+    int amount = origin == ItemOrigin::dropped ? dropammo : giveammo;
 
     // FIXME: no way to ignoreskill?
-    bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
+    bool gaveammo;
+    if(giveMaxAmmo == GiveMax::yes)
+        gaveammo = (ammo ? P_GiveAmmo(player, ammo, 1, false, GiveMax::yes) : false);
+    else
+        gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
 
     // haleyjd 10/4/11: de-Killoughized
     if(!E_PlayerOwnsWeapon(player, wp))
@@ -397,21 +408,23 @@ static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special, const char *sound)
+static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin origin, Mobj *special,
+                         const char *sound, GiveMax giveMaxAmmo)
 {
     if(demo_version < 401 && !vanilla_heretic)
-        return P_giveWeaponCompat(player, giver, dropped, special, sound);
+        return P_giveWeaponCompat(player, giver, origin, special, sound, giveMaxAmmo);
 
     bool          gaveammo = false;
     weaponinfo_t *wp       = E_WeaponForName(giver->getString("weapon", ""));
     if(!wp)
     {
         doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
-        special->remove();
+        if(special)
+            special->remove();
         return false;
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed && E_PlayerOwnsWeapon(player, wp))
         return false;
 
     itemeffect_t *ammogiven = nullptr;
@@ -423,7 +436,8 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
         {
             doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
-            special->remove();
+            if(special)
+                special->remove();
             return false;
         }
         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
@@ -431,7 +445,8 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
             doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                                  "'%s', ammo: '%s'\a\n",
                         giver->getKey(), ammo->getKey());
-            special->remove();
+            if(special)
+                special->remove();
             return false;
         }
         // Congrats, the user didn't screw up defining their ammogiven
@@ -443,7 +458,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
             coopstayammo = giveammo;
 
-        if((dmflags & DM_WEAPONSTAY) && !dropped)
+        if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
         {
             if(ammogiven && ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
             {
@@ -453,14 +468,20 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         }
         else
         {
+            if (giveMaxAmmo == GiveMax::yes)
+            {
+                gaveammo |= P_GiveAmmo(player, ammo, 1, false, GiveMax::yes);
+                continue;
+            }
+
             // give one clip with a dropped weapon, two clips with a found weapon
-            const int amount = dropped ? dropammo : giveammo;
+            const int amount = origin == ItemOrigin::dropped ? dropammo : giveammo;
             // FIXME: no way to ignoreskill?
             gaveammo |= amount ? P_GiveAmmo(player, ammo, amount, false) : false;
         }
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped)
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
     {
         player.bonuscount += BONUSADD;
         E_GiveWeapon(player, wp);
@@ -488,56 +509,6 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 
     // Deathmatch w/ weapons stay always returns false
     return gaveammo;
-}
-
-//
-// P_GiveWeaponByGiver
-//
-// Give the player a weapon and ammo based on a weapongiver itemeffect
-// Skill levels affect how much ammo is given
-//
-static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, int itemamount, bool givemax)
-{
-    bool result = false;
-
-    const weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
-    if(!wp)
-    {
-        doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
-        return false;
-    }
-
-    // Give weapon
-    E_GiveWeapon(player, wp);
-
-    // Give ammo
-    itemeffect_t *ammogiven = nullptr;
-    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
-    {
-        itemeffect_t *ammo = nullptr;
-
-        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
-        {
-            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
-            return false;
-        }
-
-        if(givemax)
-        {
-            result |= E_GiveInventoryItem(player, ammo, 1, GiveMax::yes);
-            continue;
-        }
-
-        int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
-
-        // apply ammo multiplier for baby/nightmare skill
-        if(gameskill == sk_baby || gameskill == sk_nightmare)
-            giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
-
-        result |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
-    }
-
-    return result;
 }
 
 //
@@ -594,7 +565,7 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
         // Skill levels affect how much ammo is given
         // If givemax is true, give max ammo of ammo types
     case ITEMFX_WEAPONGIVER:
-        P_giveWeaponByGiver(*player, item, itemamount, givemax);
+        P_giveWeapon(*player, item, ItemOrigin::scripted, nullptr, nullptr, static_cast<GiveMax>(givemax));
         break;
 
         // If another artifact, just give it to the player
@@ -1496,7 +1467,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
             pickedup |= P_GivePowerForItem(*player, effect);
             break;
         case ITEMFX_WEAPONGIVER: // Weapons - give the player a weapon and possibly ammo
-            pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
+            pickedup |= P_giveWeapon(*player, effect, dropped ? ItemOrigin::dropped : ItemOrigin::placed,
+                                     special, sound, GiveMax::no);
             break;
         case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
             pickedup |= E_GiveInventoryItem(*player, effect);
