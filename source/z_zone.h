@@ -154,16 +154,16 @@ void  Z_SysFree(void *p);
 
 // clang-format on
 
-#define emalloc(type, n)                    zhmalloc(z_globalheap, type, n)
-#define emalloctag(type, n1, tag, user)     zhmalloctag(z_globalheap, type, n1, tag, user)
-#define ecalloc(type, n1, n2)               zhcalloc(z_globalheap, type, n1, n2)
-#define ecalloctag(type, n1, n2, tag, user) zhcalloctag(z_globalheap, type, n1, n2, tag, user)
-#define erealloc(type, p, n)                zhrealloc(z_globalheap, type, p, n)
-#define erealloctag(type, p, n, tag, user)  zhrealloctag(z_globalheap, type, p, n, tag, user)
-#define estructalloc(type, n)               zhstructalloc(z_globalheap, type, n)
-#define estructalloctag(type, n, tag)       zhstructalloctag(z_globalheap, type, n, tag)
-#define estrdup(s)                          zhstrdup(z_globalheap, s)
-#define efree(p)                            zhfree(z_globalheap, p)
+#define emalloc(type, n)                    static_cast<type>(z_globalheap.malloc(n, PU_STATIC, 0))
+#define emalloctag(type, n1, tag, user)     static_cast<type>(z_globalheap.malloc(n1, tag, user))
+#define ecalloc(type, n1, n2)               static_cast<type>(z_globalheap.calloc(n1, n2, PU_STATIC, 0))
+#define ecalloctag(type, n1, n2, tag, user) static_cast<type>(z_globalheap.calloc(n1, n2, tag, user))
+#define erealloc(type, p, n)                static_cast<type>(z_globalheap.realloc(p, n, PU_STATIC, 0))
+#define erealloctag(type, p, n, tag, user)  static_cast<type>(z_globalheap.realloc(p, n, tag, user))
+#define estructalloc(type, n)               static_cast<type *>(z_globalheap.calloc(n, sizeof(type), PU_STATIC, 0))
+#define estructalloctag(type, n, tag)       static_cast<type *>(z_globalheap.calloc(n, sizeof(type), tag, 0))
+#define estrdup(s)                          z_globalheap.strdup(s, PU_STATIC, 0)
+#define efree(p)                            z_globalheap.free(p)
 
 //
 // Globally useful macros
