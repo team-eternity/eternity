@@ -181,8 +181,8 @@ static void Z_IDCheck(bool err, const char *errmsg, memblock_t *block, const std
 
 #define IDCHECK(a)
 #define IDBOOL(a) false
-#define Z_IDCheckNB(err, errmsg, file, line)
-#define Z_IDCheck(err, errmsg, block, file, line)
+#define Z_IDCheckNB(err, errmsg, loc)
+#define Z_IDCheck(err, errmsg, block, loc)
 
 #endif
 
