@@ -104,37 +104,8 @@ void *Z_SysRealloc(void *ptr, size_t size);
 void  Z_SysFree(void *p);
 
 //
-// Context-specific Heap alloc Macros
-//
-#define zhmalloc(zoneheap, type, n) \
-    static_cast<type>((zoneheap).malloc(n, PU_STATIC, 0))
-
-#define zhmalloctag(zoneheap, type, n1, tag, user) \
-    static_cast<type>((zoneheap).malloc(n1, tag, user))
-
-#define zhcalloc(zoneheap, type, n1, n2) \
-    static_cast<type>((zoneheap).calloc(n1, n2, PU_STATIC, 0))
-
-#define zhcalloctag(zoneheap, type, n1, n2, tag, user) \
-    static_cast<type>((zoneheap).calloc(n1, n2, tag, user))
-
-#define zhrealloc(zoneheap, type, p, n) \
-    static_cast<type>((zoneheap).realloc(p, n, PU_STATIC, 0))
-
-#define zhrealloctag(zoneheap, type, p, n, tag, user) \
-    static_cast<type>((zoneheap).realloc(p, n, tag, user))
-
-#define zhstructalloc(zoneheap, type, n) \
-    static_cast<type *>((zoneheap).calloc(n, sizeof(type), PU_STATIC, 0))
-
-#define zhstructalloctag(zoneheap, type, n, tag) \
-    static_cast<type *>((zoneheap).calloc(n, sizeof(type), tag, 0))
-
-#define zhstrdup(zoneheap, s) (zoneheap).strdup(s, PU_STATIC, 0)
-
-#define zhfree(zoneheap, p)   (zoneheap).free(p)
-
 // Global Heap alloc Macros
+//
 
 // clang-format off
 
@@ -240,36 +211,41 @@ class ZoneHeap final : public ZoneHeapBase
 public:
     ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE); };
 
-    // TODO: Re-enable when C++20 is a thing and kill the zh macros
     // THREAD_FIXME: Guard against any and all PU_STATIC (and maybe PU_PERMANENT) allocations?
-    // template <typename T>
-    // inline T *malloc(const size_t size, const int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *calloc(size_t n, size_t n2, int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *realloc(void *p, size_t n, int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc.file_name(), loc.line()));
-    //}
+    template<typename T>
+    inline T *malloc(const size_t size, const int tag = PU_STATIC, void **user = nullptr,
+                     const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc));
+    }
+    template<typename T>
+    inline T *calloc(size_t n, size_t n2, int tag = PU_STATIC, void **user = nullptr,
+                     const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc));
+    }
+    template<typename T>
+    inline T *realloc(void *p, size_t n, int tag = PU_STATIC, void **user = nullptr,
+                      const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc));
+    }
+    template<typename T>
+    inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc));
+    }
+    template<typename T>
+    inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc));
+    }
+    template<typename T>
+    inline T *structAlloc(size_t n, int tag = PU_STATIC,
+                          const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::calloc(n, sizeof(T), tag, nullptr, loc));
+    }
 };
 
 //

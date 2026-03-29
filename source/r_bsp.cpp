@@ -880,7 +880,7 @@ VALLOCATION(slopemark)
         bspcontext_t &context = basecontext.bspcontext;
         ZoneHeap     &heap    = *basecontext.heap;
 
-        context.slopemark = zhcalloctag(heap, float *, w, sizeof(float), PU_VALLOC, nullptr);
+        context.slopemark = heap.calloc<float>(w, sizeof(float), PU_VALLOC, nullptr);
     });
 }
 

@@ -753,7 +753,7 @@ static void P_createSectorInterps()
 static void P_createSectorBoundingBoxVisitIDs()
 {
     R_ForEachContext([](rendercontext_t &context) {
-        context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+        context.portalcontext.visitids = context.heap->structAlloc<sectorboxvisit_t>(numsectors, PU_LEVEL);
     });
 }
 

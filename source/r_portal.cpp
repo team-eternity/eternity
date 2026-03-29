@@ -113,8 +113,8 @@ VALLOCATION(portals)
                 if((hash = child->poverlay))
                     for(int i = 0; i < hash->chaincount; ++i)
                         hash->chains[i] = nullptr;
-                zhfree(heap, child->top);
-                zhfree(heap, child);
+                heap.free(child->top);
+                heap.free(child);
                 child = next;
             }
 
@@ -123,8 +123,8 @@ VALLOCATION(portals)
             if((hash = rover->poverlay))
                 for(int i = 0; i < hash->chaincount; ++i)
                     hash->chains[i] = nullptr;
-            zhfree(heap, rover->top);
-            zhfree(heap, rover);
+            heap.free(rover->top);
+            heap.free(rover);
             rover = next;
         }
 
@@ -136,8 +136,8 @@ VALLOCATION(portals)
             if((hash = rover->poverlay))
                 for(int i = 0; i < hash->chaincount; ++i)
                     hash->chains[i] = nullptr;
-            zhfree(heap, rover->top);
-            zhfree(heap, rover);
+            heap.free(rover->top);
+            heap.free(rover);
             rover = next;
         }
 
@@ -197,9 +197,9 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
     }
     else
     {
-        ret = zhstructalloctag(heap, pwindow_t, 1, PU_LEVEL);
+        ret = heap.structAlloc<pwindow_t>(1, PU_LEVEL);
 
-        float *buf  = zhmalloctag(heap, float *, 2 * video.width * sizeof(float), PU_LEVEL, nullptr);
+        float *buf  = heap.malloc<float>(2 * video.width * sizeof(float), PU_LEVEL, nullptr);
         ret->top    = buf;
         ret->bottom = buf + video.width;
     }
