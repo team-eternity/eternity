@@ -896,7 +896,8 @@ void ZoneHeapBase::freeAllocAuto()
     {
         memblock_t *next = block->next;
 
-        Z_IDCheckNB(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeAllocAuto: Freed a tag without ZONEID");
+        Z_IDCheckNB(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeAllocAuto: Freed a tag without ZONEID",
+                    std::source_location::current());
 
         ZoneHeapBase::free((byte *)block + header_size);
         block = next; // Advance to next block
