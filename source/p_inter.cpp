@@ -113,7 +113,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, GiveAmount amount, 
     // give double ammo in trainer mode, you'll need in nightmare
     if(int *numAmount = std::get_if<int>(&amount))
         if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
-            *numAmount = static_cast<int>(floor(*numAmount * GameModeInfo->skillAmmoMultiplier));
+            amount = static_cast<int>(floor(*numAmount * GameModeInfo->skillAmmoMultiplier));
 
     if(!E_GiveInventoryItem(player, ammo, amount))
         return false; // don't need this ammo
@@ -191,10 +191,10 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, ItemOrigin o
 
     itemeffect_t *give = E_ItemEffectForName(pickup->getString("ammo", ""));
 
-    if(const SpecialAmount *special = std::get_if<SpecialAmount>(&amount))
-        if(*special == SpecialAmount::defined)
-            amount = 1; // "defined" means same as "1" in this function
+    if(equals(amount, SpecialAmount::defined))
+        amount = 1;
 
+    // Convert item amount from argument to actual ammo clip amount
     if(int *itemamountPtr = std::get_if<int>(&amount))
     {
         const int itemamount = *itemamountPtr;
@@ -364,9 +364,8 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, Item
     bool gaveammo;
     if(ammo)
     {
-        if(const SpecialAmount *specialAmount = std::get_if<SpecialAmount>(&itemamount))
-            if(*specialAmount == SpecialAmount::defined)
-                itemamount = 1;
+        if(equals(itemamount, SpecialAmount::defined))
+            itemamount = 1;
         if(int *value = std::get_if<int>(&itemamount))
             *value *= origin == ItemOrigin::dropped ? dropammo : giveammo;
         // FIXME: no way to ignoreskill?
@@ -1311,8 +1310,10 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount 
             additiveTime = power->getInt("additivetime", 0) ? true : false;
 
             if(additiveTime)
+            {
                 duration = std::get<int>(duration) *
-                           (std::holds_alternative<SpecialAmount>(itemamount) ? 1 : std::get<int>(itemamount));
+                           (equals(itemamount, SpecialAmount::defined) ? 1 : std::get<int>(itemamount));
+            }
         }
 
         if(powerNum == pw_weaponlevel2 && player.morphTics)
