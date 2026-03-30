@@ -1195,6 +1195,7 @@ bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additive
             }
         }
         break;
+    default: break;
     }
 
     // Unless player has infinite duration cheat, set duration (killough)
@@ -1206,11 +1207,15 @@ bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additive
                 player.powers[power] = { 0, true };
             // there's no defined value at this level
         }
-        else
+        else if (additiveTime)
         {
-            player.powers[power].tics =
-                additiveTime ? player.powers[power].tics + std::get<int>(duration) : std::get<int>(duration);
+            int newTics = player.powers[power].tics + std::get<int>(duration);
+            if (newTics < player.powers[power].tics && demo_version >= 406)
+                newTics = INT32_MAX;  // prevent overflowing wrapping around
+            player.powers[power].tics = newTics;
         }
+        else
+            player.powers[power].tics = std::get<int>(duration);
     }
 
     return true;
