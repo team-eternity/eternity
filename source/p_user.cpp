@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -1004,11 +1004,8 @@ void P_PlayerThink(player_t &player)
         case pw_strength: player.powers[powernum].tics++; break;
         default:          player.powers[powernum].tics--; break;
         }
-<<<<<<< HEAD
-
-        == == == =
->>>>>>> master
-                     if(!player.powers[powernum].tics) P_RemovePower(player, powernum);
+        if(!player.powers[powernum].tics)
+            P_RemovePower(player, powernum);
     }
 
     if(player.damagecount)

@@ -1,4 +1,4 @@
-## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
 ##
 ## This software is free software; you can redistribute it and/or
@@ -50,7 +50,7 @@ endfunction()
 ################################################################################
 ######################### Compiler: Features  ##################################
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-   try_c_compiler_flag(-std=c++17 FLAG_CXX_stdcxx17)
+   try_c_compiler_flag(-std=c++20 FLAG_CXX_stdcxx20)
 endif()
 
 # Crappy hack for GCC because it's a bad compiler
