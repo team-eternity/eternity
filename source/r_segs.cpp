@@ -637,7 +637,7 @@ static void R_checkDSAlloc(bspcontext_t &context, ZoneHeap &heap)
     if(ds_p == drawsegs + maxdrawsegs)
     {
         unsigned int newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-        drawsegs            = zhrealloc(heap, drawseg_t *, drawsegs, sizeof(drawseg_t) * newmax);
+        drawsegs            = heap.realloc<drawseg_t>(drawsegs, sizeof(drawseg_t) * newmax);
         ds_p                = drawsegs + maxdrawsegs;
         maxdrawsegs         = newmax;
     }
@@ -816,7 +816,7 @@ static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const 
             const size_t length = (*curData)->bufferEnd - (*curData)->buffer;
 
             renderbuffer_t *const newData =
-                zhmalloctag(heap, renderbuffer_t *, sizeof(*newData) + length * sizeof(float), PU_VALLOC, nullptr);
+                heap.malloc<renderbuffer_t>(sizeof(*newData) + length * sizeof(float), PU_VALLOC, nullptr);
             newData->buffer    = reinterpret_cast<float *>(newData + 1);
             newData->bufferEnd = newData->buffer + length;
             newData->next      = nullptr;

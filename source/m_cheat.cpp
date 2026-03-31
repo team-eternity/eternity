@@ -357,19 +357,20 @@ static void cheat_pw(const void *arg)
         plyr->powers[pw] = { pw != pw_strength, false }; // killough
     else
     {
-        static const int tics[NUMPOWERS] = {
+        static const GiveAmount tics[NUMPOWERS] = {
             INVULNTICS,
-            1, // strength
-            INVISTICS,  IRONTICS,
-            1, // allmap
+            1, // strength: note, this counts up
+            INVISTICS,
+            IRONTICS,
+            SpecialAmount::maximum, // allmap
             INFRATICS,
-            INVISTICS,  // haleyjd: totalinvis
-            INVISTICS,  // haleyjd: ghost
-            1,          // haleyjd: silencer
-            FLIGHTTICS, // haleyjd: flight
-            INFRATICS,  // haleyjd: torch
+            INVISTICS,              // haleyjd: totalinvis
+            INVISTICS,              // haleyjd: ghost
+            SpecialAmount::maximum, // haleyjd: silencer
+            FLIGHTTICS,             // haleyjd: flight
+            INFRATICS,              // haleyjd: torch
         };
-        P_GivePower(*plyr, pw, tics[pw], pw == pw_allmap || pw == pw_silencer, false);
+        P_GivePower(*plyr, pw, tics[pw], false);
         if(!getComp(comp_infcheat))
             plyr->powers[pw] = { 0, true };
     }

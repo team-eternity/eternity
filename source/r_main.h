@@ -24,8 +24,10 @@
 #ifndef R_MAIN_H__
 #define R_MAIN_H__
 
+#if __has_include(<bit>)
 // NEEDED BY R_doubleToUint32 below
-#include "SDL_endian.h"
+#include <bit>
+#endif
 
 #include "tables.h"
 
@@ -285,11 +287,10 @@ uint64_t R_GetVisitID(const rendercontext_t &context);
 //
 inline static uint32_t R_doubleToUint32(double d)
 {
-#ifdef SDL_BYTEORDER
-    // TODO: Use C++ std::endian when C++20 can be used
+#if __has_include(<bit>)
     // This bit (and the ifdef) isn't from SpiderMonkey.
     // Credit goes to Marrub and David Hill
-    return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+    return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[std::endian::native == std::endian::big];
 #else
     int32_t i;
     bool    neg;

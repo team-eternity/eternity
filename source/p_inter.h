@@ -26,7 +26,7 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
-#include <variant>
+#include "e_inventory.h"
 
 struct emodmorph_t;
 struct player_t;
@@ -48,27 +48,33 @@ enum
 bool P_IsValid(const ScriptedItem &item);
 bool P_GiveInventory(player_t *player, const ScriptedItem &item, int itemamount);
 bool P_TakeInventory(player_t *player, const ScriptedItem &item, int itemamount);
-int  P_CheckInventory(player_t *player, const ScriptedItem &item);
+int  P_CheckInventory(const player_t *player, const ScriptedItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
 int  P_GetMaxInventory(player_t *player, const ScriptedItem &item);
 
-bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1, bool givemax = false);
+bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, ItemOrigin, int, GiveAmount amount = 1);
 bool P_TakeAmmoPickup(player_t &, const itemeffect_t *, int itemamount = 1);
 
-bool P_GiveBody(player_t &, const itemeffect_t *, int itemamount = 1, bool givemax = false);
+bool P_GiveBody(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
 bool P_TakeBody(player_t &, const itemeffect_t *, int itemamount = 1);
 
-bool P_GiveArmor(player_t &, const itemeffect_t *, int itemamount = 1, bool givemax = false);
+bool P_GiveArmor(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
 bool P_TakeArmor(player_t &, const itemeffect_t *, int itemamount = 1);
+
+bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, ItemOrigin, int, GiveAmount amount = 1);
+
+bool P_GiveBody(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
+
+bool P_GiveArmor(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
 
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean
 // that P_GivePowerForItem can be used.
-bool P_GivePowerForItem(player_t &, const itemeffect_t *, int itemamount = 1, bool givemax = false);
+bool P_GivePowerForItem(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
 bool P_TakePowerForItem(player_t &, const itemeffect_t *, int itemamount = 1);
 
-bool P_GivePower(player_t &player, int power, int duration, bool permanent, bool additiveTime);
+bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additiveTime);
 bool P_TakePower(player_t &player, int power, int itemamount = 1);
 
 e_pickupfx_t *P_GetPickUpEffect(const Mobj *special);

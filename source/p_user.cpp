@@ -693,6 +693,53 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
     return true;
 }
 
+void P_RemovePower(player_t &player, int powernum)
+{
+    switch(powernum)
+    {
+    case pw_invisibility: //
+        player.mo->flags &= ~MF_SHADOW;
+        break;
+    case pw_ghost: //
+        player.mo->flags3 &= ~MF3_GHOST;
+        break;
+    case pw_totalinvis: //
+        player.mo->flags2 &= ~MF2_DONTDRAW;
+        player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
+        break;
+    case pw_flight: //
+        P_PlayerStopFlight(player);
+        break;
+    case pw_weaponlevel2: //
+        // switch back to normal weapon if need be
+        if(E_IsPoweredVariant(player.readyweapon))
+        {
+            // Note: sisterWeapon is guaranteed to != nullptr elsewhere
+            weaponinfo_t *unpowered = player.readyweapon->sisterWeapon;
+            if(player.readyweapon->flags & WPF_PHOENIXRESET &&
+               player.psprites[ps_weapon].state->index != player.readyweapon->readystate &&
+               player.psprites[ps_weapon].state->index != player.readyweapon->upstate)
+            {
+                P_SetPsprite(player, ps_weapon, unpowered->readystate);
+                P_SubtractAmmo(player, -1);
+                player.refire = 0;
+            }
+            else if(unpowered->flags & WPF_FORCETOREADY || player.attackdown == AT_NONE)
+            {
+                // TODO: Figure out if should be || (player.attackdown == AT_NONE &&
+                // current-state-isireadystate)
+                P_SetPsprite(player, ps_weapon, unpowered->readystate);
+                player.refire = 0;
+            }
+            else if(player.readyweapon->flags & WPF_DEPOWERSWITCH)
+                player.pendingweapon = unpowered;
+
+            player.readyweapon = unpowered;
+        }
+        break;
+    }
+}
+
 //
 // P_PlayerThink
 //
@@ -957,53 +1004,11 @@ void P_PlayerThink(player_t &player)
         case pw_strength: player.powers[powernum].tics++; break;
         default:          player.powers[powernum].tics--; break;
         }
+<<<<<<< HEAD
 
-        if(!player.powers[powernum].tics)
-        {
-            switch(powernum)
-            {
-            case pw_invisibility: //
-                player.mo->flags &= ~MF_SHADOW;
-                break;
-            case pw_ghost: //
-                player.mo->flags3 &= ~MF3_GHOST;
-                break;
-            case pw_totalinvis: //
-                player.mo->flags2 &= ~MF2_DONTDRAW;
-                player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
-                break;
-            case pw_flight: //
-                P_PlayerStopFlight(player);
-                break;
-            case pw_weaponlevel2: //
-                // switch back to normal weapon if need be
-                if(E_IsPoweredVariant(player.readyweapon))
-                {
-                    // Note: sisterWeapon is guaranteed to != nullptr elsewhere
-                    weaponinfo_t *unpowered = player.readyweapon->sisterWeapon;
-                    if(player.readyweapon->flags & WPF_PHOENIXRESET &&
-                       player.psprites[ps_weapon].state->index != player.readyweapon->readystate &&
-                       player.psprites[ps_weapon].state->index != player.readyweapon->upstate)
-                    {
-                        P_SetPsprite(player, ps_weapon, unpowered->readystate);
-                        P_SubtractAmmo(player, -1);
-                        player.refire = 0;
-                    }
-                    else if(unpowered->flags & WPF_FORCETOREADY || player.attackdown == AT_NONE)
-                    {
-                        // TODO: Figure out if should be || (player.attackdown == AT_NONE &&
-                        // current-state-isireadystate)
-                        P_SetPsprite(player, ps_weapon, unpowered->readystate);
-                        player.refire = 0;
-                    }
-                    else if(player.readyweapon->flags & WPF_DEPOWERSWITCH)
-                        player.pendingweapon = unpowered;
-
-                    player.readyweapon = unpowered;
-                }
-                break;
-            }
-        }
+        == == == =
+>>>>>>> master
+                     if(!player.powers[powernum].tics) P_RemovePower(player, powernum);
     }
 
     if(player.damagecount)

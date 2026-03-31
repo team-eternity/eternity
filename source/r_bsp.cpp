@@ -557,7 +557,7 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *o
             if(sec->srf.floor.slope)
             {
                 tempsec->srf.floor.slope = &tempslopes.floor;
-                tempslopes.floor         = *s->srf.floor.slope;
+                tempslopes.floor         = *sec->srf.floor.slope;
             }
             else
                 tempsec->srf.floor.slope = nullptr;
@@ -880,7 +880,7 @@ VALLOCATION(slopemark)
         bspcontext_t &context = basecontext.bspcontext;
         ZoneHeap     &heap    = *basecontext.heap;
 
-        context.slopemark = zhcalloctag(heap, float *, w, sizeof(float), PU_VALLOC, nullptr);
+        context.slopemark = heap.calloc<float>(w, sizeof(float), PU_VALLOC, nullptr);
     });
 }
 
