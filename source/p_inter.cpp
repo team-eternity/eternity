@@ -52,6 +52,7 @@
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "m_random.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -97,7 +98,7 @@ int bfgcells = 40; // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill)
+static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, GiveAmount amount, bool ignoreskill)
 {
     if(!ammo)
         return false;
@@ -110,10 +111,11 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
         return false;
 
     // give double ammo in trainer mode, you'll need in nightmare
-    if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
-        num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
+    if(int *numAmount = std::get_if<int>(&amount))
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            amount = static_cast<int>(floor(*numAmount * GameModeInfo->skillAmmoMultiplier));
 
-    if(!E_GiveInventoryItem(player, ammo, num))
+    if(!E_GiveInventoryItem(player, ammo, amount))
         return false; // don't need this ammo
 
     // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -181,26 +183,36 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount, int itemamount)
+bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, ItemOrigin origin, int dropamount,
+                      GiveAmount amount)
 {
     if(!pickup)
         return false;
 
-    itemeffect_t *give       = E_ItemEffectForName(pickup->getString("ammo", ""));
-    int           giveamount = pickup->getInt("amount", 0);
+    itemeffect_t *give = E_ItemEffectForName(pickup->getString("ammo", ""));
 
-    if(dropped)
+    if(equals(amount, SpecialAmount::defined))
+        amount = 1;
+
+    // Convert item amount from argument to actual ammo clip amount
+    if(int *itemamountPtr = std::get_if<int>(&amount))
     {
-        // actor may override dropamount
-        if(dropamount)
-            giveamount = dropamount;
-        else
-            giveamount = pickup->getInt("dropamount", giveamount);
+        const int itemamount = *itemamountPtr;
+        int       giveamount = pickup->getInt("amount", 0);
+        if(origin == ItemOrigin::dropped)
+        {
+            // actor may override dropamount
+            if(dropamount)
+                giveamount = dropamount;
+            else
+                giveamount = pickup->getInt("dropamount", giveamount);
+        }
+        amount = giveamount * itemamount;
     }
 
     bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
 
-    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill);
+    return P_GiveAmmo(player, give, amount, ignoreskill);
 }
 
 //
@@ -210,7 +222,7 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static bool P_giveBackpackAmmo(player_t &player)
+static bool P_giveBackpackAmmo(player_t &player, int itemamount = 1)
 {
     static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -223,7 +235,7 @@ static bool P_giveBackpackAmmo(player_t &player)
         if(!giveamount)
             continue;
         // FIXME: no way to ignoreskill for backpack?
-        given |= P_GiveAmmo(player, ammoType, giveamount, false);
+        given |= P_GiveAmmo(player, ammoType, giveamount * itemamount, false);
     }
 
     return given;
@@ -245,8 +257,8 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special,
-                               const char *sound)
+static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, ItemOrigin origin, Mobj *special,
+                               const char *sound, GiveAmount itemamount)
 {
     bool          gaveweapon = false;
     weaponinfo_t *wp         = E_WeaponForName(giver->getString("weapon", ""));
@@ -272,7 +284,7 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
         giveammo = dropammo = dmstayammo = coopstayammo = 0;
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped)
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
     {
         // leave placed weapons forever on net games
         if(E_PlayerOwnsWeapon(player, wp))
@@ -294,10 +306,18 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
     }
 
     // give one clip with a dropped weapon, two clips with a found weapon
-    int amount = dropped ? dropammo : giveammo;
-
-    // FIXME: no way to ignoreskill?
-    bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
+    bool gaveammo;
+    if(ammo)
+    {
+        if(equals(itemamount, SpecialAmount::defined))
+            itemamount = 1;
+        if(int *value = std::get_if<int>(&itemamount))
+            *value *= origin == ItemOrigin::dropped ? dropammo : giveammo;
+        // FIXME: no way to ignoreskill?
+        gaveammo = P_GiveAmmo(player, ammo, itemamount, false);
+    }
+    else
+        gaveammo = false;
 
     // haleyjd 10/4/11: de-Killoughized
     if(!E_PlayerOwnsWeapon(player, wp))
@@ -341,21 +361,23 @@ static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special, const char *sound)
+static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin origin, Mobj *special,
+                         const char *sound, GiveAmount itemamount)
 {
     if(demo_version < 401 && !vanilla_heretic)
-        return P_giveWeaponCompat(player, giver, dropped, special, sound);
+        return P_giveWeaponCompat(player, giver, origin, special, sound, itemamount);
 
     bool          gaveammo = false;
     weaponinfo_t *wp       = E_WeaponForName(giver->getString("weapon", ""));
     if(!wp)
     {
         doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
-        special->remove();
+        if(special)
+            special->remove();
         return false;
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed && E_PlayerOwnsWeapon(player, wp))
         return false;
 
     itemeffect_t *ammogiven = nullptr;
@@ -367,7 +389,8 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
         {
             doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
-            special->remove();
+            if(special)
+                special->remove();
             return false;
         }
         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
@@ -375,7 +398,8 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
             doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                                  "'%s', ammo: '%s'\a\n",
                         giver->getKey(), ammo->getKey());
-            special->remove();
+            if(special)
+                special->remove();
             return false;
         }
         // Congrats, the user didn't screw up defining their ammogiven
@@ -387,7 +411,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
             coopstayammo = giveammo;
 
-        if((dmflags & DM_WEAPONSTAY) && !dropped)
+        if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
         {
             if(ammogiven && ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
             {
@@ -397,14 +421,26 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
         }
         else
         {
+            if(const SpecialAmount *specialAmount = std::get_if<SpecialAmount>(&itemamount))
+            {
+                if(*specialAmount == SpecialAmount::defined)
+                    itemamount = 1;
+                else
+                {
+                    // maximum
+                    gaveammo |= P_GiveAmmo(player, ammo, SpecialAmount::maximum, false);
+                    continue;
+                }
+            }
+            
             // give one clip with a dropped weapon, two clips with a found weapon
-            const int amount = dropped ? dropammo : giveammo;
+            const int amount = (origin == ItemOrigin::dropped ? dropammo : giveammo) * std::get<int>(itemamount);
             // FIXME: no way to ignoreskill?
             gaveammo |= amount ? P_GiveAmmo(player, ammo, amount, false) : false;
         }
     }
 
-    if((dmflags & DM_WEAPONSTAY) && !dropped)
+    if((dmflags & DM_WEAPONSTAY) && origin == ItemOrigin::placed)
     {
         player.bonuscount += BONUSADD;
         E_GiveWeapon(player, wp);
@@ -432,6 +468,96 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 
     // Deathmatch w/ weapons stay always returns false
     return gaveammo;
+}
+
+//
+// P_GiveInventory
+//
+// Gives the player an inventory item or power directly
+// Negative itemamount means give max
+//
+bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int itemamount)
+{
+    if(!player || !P_IsValid(iitem) || !itemamount)
+        return false;
+
+    const GiveAmount giveAmount = itemamount < 0 ? SpecialAmount::maximum : GiveAmount(itemamount);
+
+    if(const int *power = std::get_if<int>(&iitem))
+    {
+        // Give power directly with amount as duration in tics
+        // If givemax is true, give infinite power
+        P_GivePower(*player, *power, giveAmount, true);
+        return true;
+    }
+
+    // Give item based on its class and properties
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+    switch(item->getInt("class", ITEMFX_NONE))
+    {
+        // If health, give healthamount * itemamount, as usually
+        // If givemax is true, set maxamount of health item
+    case ITEMFX_HEALTH:
+        P_GiveBody(*player, item, giveAmount);
+        break;
+
+        // If armor, give saveamount * itemamount, as usually
+        // If givemax is true, set maxsaveamount of armor item
+    case ITEMFX_ARMOR:
+        P_GiveArmor(*player, item, giveAmount);
+        break;
+
+        // If ammo, give ammoamount * itemamount, skill levels affect how much is given
+        // If givemax is true, give max ammo of ammo type
+    case ITEMFX_AMMO:
+        P_GiveAmmoPickup(*player, item, ItemOrigin::scripted, 0, giveAmount);
+        break;
+
+        // If power artifact, give duration * itemamount
+        // If power artifact is not additive, amount is igored and power has fixed duration
+        // If givemax is true, give infinite power
+    case ITEMFX_POWER:
+        P_GivePowerForItem(*player, item, giveAmount);
+        break;
+
+        // If weapon giver, give the weapon and ammo * itemamount
+        // Skill levels affect how much ammo is given
+        // If givemax is true, give max ammo of ammo types
+    case ITEMFX_WEAPONGIVER:
+        P_giveWeapon(*player, item, ItemOrigin::scripted, nullptr, nullptr, giveAmount);
+        break;
+
+        // If another artifact, just give it to the player
+        // If givemax is true, give max amount of the item
+    default:
+        E_GiveInventoryItem(*player, item, giveAmount);
+
+        // If backpack, give backpack ammo as well
+        // If itemamount < -1, give full ammo for all ammo types
+        // If itemamount = -1, do not give any ammo, only give backpack
+        // If itemamount > 0, give backpack ammo * itemamount
+        if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+        {
+            if(itemamount < -1)
+            {
+                size_t numAmmo = E_GetNumAmmoTypes();
+
+                for(size_t i = 0; i < numAmmo; i++)
+                {
+                    auto ammo = E_AmmoTypeForIndex(i);
+                    E_GiveInventoryItem(*player, ammo, SpecialAmount::maximum);
+                }
+            }
+            else if(itemamount > 0)
+            {
+                P_giveBackpackAmmo(*player, itemamount);
+            }
+        }
+
+        break;
+    }
+
+    return true;
 }
 
 bool P_IsValid(const ScriptedItem &item)
@@ -518,7 +644,7 @@ int P_CheckInventory(const player_t *player, const ScriptedItem &iitem)
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
+bool P_GiveBody(player_t &player, const itemeffect_t *effect, GiveAmount itemamount)
 {
     if(!effect)
         return false;
@@ -545,8 +671,15 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
     // give the health
     if(effect->getInt("sethealth", 0))
         player.health = amount; // some items set health directly
+    else if(std::holds_alternative<SpecialAmount>(itemamount))
+    {
+        if(std::get<SpecialAmount>(itemamount) == SpecialAmount::maximum)
+            player.health = maxamount;
+        else
+            player.health += amount; // 1
+    }
     else
-        player.health += amount * itemamount; // most items add to health
+        player.health += amount * std::get<int>(itemamount); // most items add to health
 
     // cap to maxamount
     if(player.health > maxamount)
@@ -587,7 +720,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+bool P_GiveArmor(player_t &player, const itemeffect_t *effect, GiveAmount itemamount)
 {
     if(!effect)
         return false;
@@ -612,9 +745,19 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 
     if(additive)
     {
-        player.armorpoints += hits * itemamount;
-        if(player.armorpoints > maxsaveamount)
-            player.armorpoints = maxsaveamount;
+        if(std::holds_alternative<SpecialAmount>(itemamount))
+        {
+            if(std::get<SpecialAmount>(itemamount) == SpecialAmount::maximum)
+                player.armorpoints = maxsaveamount ? maxsaveamount : hits;
+            else
+                itemamount = 1;
+        }
+        if(std::holds_alternative<int>(itemamount))
+        {
+            player.armorpoints += hits * std::get<int>(itemamount);
+            if(player.armorpoints > maxsaveamount)
+                player.armorpoints = maxsaveamount;
+        }
     }
     else
         player.armorpoints = hits;
@@ -651,16 +794,12 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime, int itemamount)
+bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additiveTime)
 {
     switch(power)
     {
     case pw_invisibility: //
         player.mo->flags |= MF_SHADOW;
-        break;
-    case pw_allmap:
-        if(player.powers[pw_allmap].isActive())
-            return false;
         break;
     case pw_totalinvis: // haleyjd: total invisibility
         player.mo->flags2 |= MF2_DONTDRAW;
@@ -669,15 +808,14 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     case pw_ghost: // haleyjd: heretic ghost
         player.mo->flags3 |= MF3_GHOST;
         break;
-    case pw_silencer:
-        if(player.powers[pw_silencer].isActive())
-            return false;
-        break;
     case pw_flight: // haleyjd: flight
-        if(player.powers[pw_flight].tics < 0 || player.powers[pw_flight].tics > 4 * 32)
-            return false;
-        P_PlayerStartFlight(player, true);
+    {
+        // If the player already has power, prevent the start of the jump (unless nearing its end)
+        const powerduration_t &duration = player.powers[pw_flight];
+        if(!duration.isActive() || (duration.shouldCount() && duration.tics <= 4 * 32))
+            P_PlayerStartFlight(player, true);
         break;
+    }
     case pw_weaponlevel2:
         if(!E_IsPoweredVariant(player.readyweapon))
         {
@@ -693,15 +831,27 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
             }
         }
         break;
+    default: break;
     }
 
     // Unless player has infinite duration cheat, set duration (killough)
     if(!player.powers[power].infinite)
     {
-        if(permament)
-            player.powers[power] = { 0, true };
+        if(const SpecialAmount *special = std::get_if<SpecialAmount>(&duration))
+        {
+            if(*special == SpecialAmount::maximum)
+                player.powers[power] = { 0, true };
+            // there's no defined value at this level
+        }
+        else if(additiveTime)
+        {
+            int newTics = player.powers[power].tics + std::get<int>(duration);
+            if(newTics < player.powers[power].tics && demo_version >= 406)
+                newTics = INT32_MAX; // prevent overflowing wrapping around
+            player.powers[power].tics = newTics;
+        }
         else
-            player.powers[power].tics = additiveTime ? player.powers[power].tics + duration * itemamount : duration;
+            player.powers[power].tics = std::get<int>(duration);
     }
 
     return true;
@@ -727,8 +877,11 @@ const char *powerStrings[NUMPOWERS] = {
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount itemamount)
 {
+    if(!power)
+        return false;
+    
     int         powerNum;
     const char *powerStr;
     bool        additiveTime = false;
@@ -741,22 +894,30 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
 
     const powerduration_t &currentpower = player.powers[powerNum];
 
-    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
-    if(!power->getInt("overridesself", 0) &&
-       (currentpower.tics > 4 * 32 || currentpower.tics < 0 || currentpower.infinite))
+    // EDF_FEATURES_FIXME: Strength counts up.
+    if(!power->getInt("overridesself", 0) && !power->getInt("additivetime", 0) &&
+        (currentpower.tics > 4 * 32 || currentpower.tics < 0 || currentpower.infinite))
         return false;
 
     // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
     if(!currentpower.infinite)
     {
-        bool permanent = false;
-        int  duration  = power->getInt("duration", 0);
-        if(power->getInt("permanent", 0))
-            permanent = true;
+        GiveAmount duration;
+        if(power->getInt("permanent", 0) || equals(itemamount, SpecialAmount::maximum))
+        {
+            duration = SpecialAmount::maximum;
+        }
         else
         {
-            duration     = duration * TICRATE; // Duration is given in seconds
+            duration     = power->getInt("duration", 0) * TICRATE; // Duration is given in seconds
+
             additiveTime = power->getInt("additivetime", 0) ? true : false;
+
+            if(additiveTime)
+            {
+                duration = std::get<int>(duration) *
+                           (equals(itemamount, SpecialAmount::defined) ? 1 : std::get<int>(itemamount));
+            }
         }
 
         if(powerNum == pw_weaponlevel2 && player.morphTics)
@@ -774,7 +935,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
             return true;
         }
 
-        return P_GivePower(player, powerNum, duration, permanent, additiveTime, itemamount);
+        return P_GivePower(player, powerNum, duration, additiveTime);
     }
 
     return true;
@@ -861,7 +1022,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
     player_t           *player;
     const e_pickupfx_t *pickup, *temp;
     bool                pickedup = false;
-    bool                dropped  = false;
     const char         *message  = nullptr;
     const char         *sound    = nullptr;
 
@@ -893,7 +1053,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
     sound   = pickup->sound;
 
     // set defaults
-    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
+    ItemOrigin origin = ((special->flags & MF_DROPPED) == MF_DROPPED) ? ItemOrigin::dropped : ItemOrigin::placed;
 
     for(unsigned int i = 0; i < pickup->numEffects; i++)
     {
@@ -913,13 +1073,13 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
             pickedup |= P_GiveArmor(*player, effect);
             break;
         case ITEMFX_AMMO: // Ammo - give the player some ammo
-            pickedup |= P_GiveAmmoPickup(*player, effect, dropped, special->dropamount);
+            pickedup |= P_GiveAmmoPickup(*player, effect, origin, special->dropamount);
             break;
         case ITEMFX_POWER: // Powers - power-ups such as invulnv, radsuit, etc.
             pickedup |= P_GivePowerForItem(*player, effect);
             break;
         case ITEMFX_WEAPONGIVER: // Weapons - give the player a weapon and possibly ammo
-            pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
+            pickedup |= P_giveWeapon(*player, effect, origin, special, sound, SpecialAmount::defined);
             break;
         case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
             pickedup |= E_GiveInventoryItem(*player, effect);
@@ -1084,7 +1244,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
             HU_FragsUpdate();
 
             if(source->player->morphTics && target != source) // Make a super chicken
-                P_GivePower(*source->player, pw_weaponlevel2, MORPHTICS, false, false);
+                P_GivePower(*source->player, pw_weaponlevel2, MORPHTICS, false);
         }
     }
     else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -1547,7 +1707,7 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
         if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
         {
             // Make a super chicken
-            P_GivePower(player, pw_weaponlevel2, MORPHTICS, false, false);
+            P_GivePower(player, pw_weaponlevel2, MORPHTICS, false);
             return true;
         }
         return false;

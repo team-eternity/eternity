@@ -32,6 +32,8 @@
 #include "d_player.h"
 #include "m_collection.h"
 
+#include <variant>
+
 class MetaKeyIndex;
 class MetaTable;
 
@@ -73,6 +75,13 @@ enum class AutoUseHealthMode : int
     // TODO: add this when we support strife
     //   strife,
     MAX
+};
+
+enum class ItemOrigin
+{
+    placed,
+    dropped,
+    scripted
 };
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
@@ -277,8 +286,13 @@ int E_GetItemOwnedAmountName(const player_t &player, const char *name);
 
 bool E_PlayerHasPowerName(const player_t &player, const char *name);
 
-// Place an item into a player's inventory.
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1);
+enum class SpecialAmount
+{
+    defined,
+    maximum
+};
+using GiveAmount = std::variant<SpecialAmount, int>;
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, GiveAmount amount = SpecialAmount::defined);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);

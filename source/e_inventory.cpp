@@ -1912,7 +1912,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                     success = P_GiveArmor(player, effect);
                     break;
                 case ITEMFX_AMMO: //
-                    success = P_GiveAmmoPickup(player, effect, false, 0);
+                    success = P_GiveAmmoPickup(player, effect, ItemOrigin::placed, 0);
                     break;
                 case ITEMFX_POWER: //
                     success = P_GivePowerForItem(player, effect);
@@ -2322,7 +2322,7 @@ bool E_PlayerHasPowerName(const player_t &player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount)
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, GiveAmount amount)
 {
     if(!artifact)
         return false;
@@ -2335,12 +2335,17 @@ bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amo
         return false;
 
     inventoryindex_t newSlot      = -1;
-    int              amountToGive = artifact->getInt(keyAmount, 1);
+    int              amountToGive;
     int              maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
-    // may override amount to give via parameter "amount", if > 0
-    if(amount > 0)
-        amountToGive = amount;
+    if(const SpecialAmount *special = std::get_if<SpecialAmount>(&amount))
+        amountToGive = *special == SpecialAmount::defined ? artifact->getInt(keyAmount, 1) : maxAmount;
+    else
+    {
+        amountToGive = std::get<int>(amount);
+        if(amountToGive <= 0) // compatibility fallback
+            amountToGive = artifact->getInt(keyAmount, 1);
+    }
 
     // Does the player already have this item?
     inventoryslot_t       *slot     = E_InventorySlotForItemID(player, itemid);

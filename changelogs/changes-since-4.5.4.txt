@@ -6,7 +6,6 @@ Features
 * Added support for the "author" property in UMAPINFO.
 * Added DEMOLOOP id24 lump support.
 * Added support for non-power-of-two flats.
-* Added new ACS function: GiveInventory.
 * Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
   "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
 * Made A_VileAttack codepointer paremeterized. Added the following args:
@@ -19,6 +18,11 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added new ACS functions:
+  - void GiveInventory(str item_name, int amount):
+    Can be used to give all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects to the player.
+    Negative value of amount will mean to give maximum.
 * Next ACS functions has been heavily improved (thanks to DRON12261):
   - int CheckInventory(str item_name):
     Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of
@@ -51,6 +55,10 @@ Bug fixes
 * Fixed bad implementation of TakeInventory.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
+* PowerFlight, PowerAllMap, and PowerSilencer can now have limited duration and be modded in EDF using the permanent,
+  additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will
+  it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite
+  regardless of duration settings.
 * Fixed EDF includes from lumps included by lumps in the same folder.
 * Fixed translucent PNGs that use a separate palette from the current WAD.
 * Fixed bug with ACS functions CheckActorCeilingTexture, CheckActorFloorTexture, CheckActorProperty,
