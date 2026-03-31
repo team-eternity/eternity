@@ -62,6 +62,12 @@ bool P_TakeBody(player_t &, const itemeffect_t *, int itemamount = 1);
 bool P_GiveArmor(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
 bool P_TakeArmor(player_t &, const itemeffect_t *, int itemamount = 1);
 
+bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, ItemOrigin, int, GiveAmount amount = 1);
+
+bool P_GiveBody(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
+
+bool P_GiveArmor(player_t &, const itemeffect_t *, GiveAmount itemamount = 1);
+
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean
 // that P_GivePowerForItem can be used.

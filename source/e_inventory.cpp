@@ -2344,16 +2344,16 @@ bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, GiveAmo
     if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
         return false;
 
-    inventoryindex_t newSlot      = -1;
+    inventoryindex_t newSlot = -1;
     int              amountToGive;
-    int              maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
+    int              maxAmount = E_GetMaxAmountForArtifact(player, artifact);
 
     if(const SpecialAmount *special = std::get_if<SpecialAmount>(&amount))
         amountToGive = *special == SpecialAmount::defined ? artifact->getInt(keyAmount, 1) : maxAmount;
     else
     {
         amountToGive = std::get<int>(amount);
-        if(amountToGive <= 0)   // compatibility fallback
+        if(amountToGive <= 0) // compatibility fallback
             amountToGive = artifact->getInt(keyAmount, 1);
     }
 

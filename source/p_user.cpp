@@ -693,7 +693,7 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
     return true;
 }
 
-void P_RemovePower(player_t& player, int powernum)
+void P_RemovePower(player_t &player, int powernum)
 {
     switch(powernum)
     {
@@ -1004,9 +1004,11 @@ void P_PlayerThink(player_t &player)
         case pw_strength: player.powers[powernum].tics++; break;
         default:          player.powers[powernum].tics--; break;
         }
+<<<<<<< HEAD
 
-        if(!player.powers[powernum].tics)
-            P_RemovePower(player, powernum);
+        == == == =
+>>>>>>> master
+                     if(!player.powers[powernum].tics) P_RemovePower(player, powernum);
     }
 
     if(player.damagecount)

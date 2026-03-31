@@ -476,7 +476,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
         }
         else
         {
-            if (const SpecialAmount* specialAmount = std::get_if<SpecialAmount>(&itemamount))
+            if(const SpecialAmount *specialAmount = std::get_if<SpecialAmount>(&itemamount))
             {
                 if(*specialAmount == SpecialAmount::defined)
                     itemamount = 1;
@@ -487,7 +487,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
                     continue;
                 }
             }
-            
+
             // give one clip with a dropped weapon, two clips with a found weapon
             const int amount = (origin == ItemOrigin::dropped ? dropammo : giveammo) * std::get<int>(itemamount);
             // FIXME: no way to ignoreskill?
@@ -976,7 +976,7 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, GiveAmount itemamo
         if(std::get<SpecialAmount>(itemamount) == SpecialAmount::maximum)
             player.health = maxamount;
         else
-            player.health += amount;    // 1
+            player.health += amount; // 1
     }
     else
         player.health += amount * std::get<int>(itemamount); // most items add to health
@@ -1079,7 +1079,7 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, GiveAmount itemam
 
     if(additive)
     {
-        if (std::holds_alternative<SpecialAmount>(itemamount))
+        if(std::holds_alternative<SpecialAmount>(itemamount))
         {
             if(std::get<SpecialAmount>(itemamount) == SpecialAmount::maximum)
                 player.armorpoints = maxsaveamount ? maxsaveamount : hits;
@@ -1207,11 +1207,11 @@ bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additive
                 player.powers[power] = { 0, true };
             // there's no defined value at this level
         }
-        else if (additiveTime)
+        else if(additiveTime)
         {
             int newTics = player.powers[power].tics + std::get<int>(duration);
-            if (newTics < player.powers[power].tics && demo_version >= 406)
-                newTics = INT32_MAX;  // prevent overflowing wrapping around
+            if(newTics < player.powers[power].tics && demo_version >= 406)
+                newTics = INT32_MAX; // prevent overflowing wrapping around
             player.powers[power].tics = newTics;
         }
         else
@@ -1282,7 +1282,6 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount 
 {
     if(!power)
         return false;
-
     int         powerNum;
     const char *powerStr;
     bool        additiveTime = false;
@@ -1304,7 +1303,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount 
     if(!currentpower.infinite)
     {
         GiveAmount duration;
-        if (power->getInt("permanent", 0) || equals(itemamount, SpecialAmount::maximum))
+        if(power->getInt("permanent", 0) || equals(itemamount, SpecialAmount::maximum))
         {
             duration = SpecialAmount::maximum;
         }
