@@ -259,7 +259,7 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
     // If player has no weapons or only dummy weapon, no need to search
     // Also avoids infinite loop in case player has only dummy weapon
-    if(!E_PlayerHasAnyWeapons(player, false))
+    if(!E_PlayerHasAnyWeapons(player, WeaponFilter::any))
         return demo_version >= 401 ? -1 : wp_nochange;
 
     const weaponinfo_t             *currentweapon = player.readyweapon;
@@ -274,7 +274,7 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
     // Check ahead: does the player have any weapon with ammo?
     // If not, we can allow any owned weapon.
     // It needs to avoid infinite loop if only weapons without ammo are owned.
-    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::withAmmo);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do
@@ -331,7 +331,7 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
     // If player has no weapons or only dummy weapon, no need to search
     // Also avoids infinite loop in case player has only dummy weapon
-    if(!E_PlayerHasAnyWeapons(player, false))
+    if(!E_PlayerHasAnyWeapons(player, WeaponFilter::any))
         return demo_version >= 401 ? -1 : wp_nochange;
 
     const weaponinfo_t             *currentweapon = player.readyweapon;
@@ -346,7 +346,7 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
     // Check ahead: does the player have any weapon with ammo?
     // If not, we can allow any owned weapon.
     // It needs to avoid infinite loop if only weapons without ammo are owned.
-    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::withAmmo);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do

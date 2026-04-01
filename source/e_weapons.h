@@ -197,11 +197,17 @@ int          *E_GetIndexedWepCtrForPlayer(const player_t *player, int index);
 
 bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
 
+enum class WeaponFilter
+{
+    any,
+    withAmmo,
+};
+
 bool E_PlayerOwnsWeapon(const player_t &player, const weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(const player_t &player, const int dehnum);
 bool E_PlayerOwnsWeaponInSlot(const player_t &player, const int slot);
 int  E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot);
-bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo);
+bool E_PlayerHasAnyWeapons(const player_t &player, WeaponFilter filter);
 void E_DefaultToUnknownWeapon(player_t &player);
 
 state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label);

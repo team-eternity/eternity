@@ -272,23 +272,23 @@ static bool P_takeBackpackAmmo(player_t &player, bool ignoreskill = false, int i
 {
     static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
-    bool   given   = false;
+    bool   taken   = false;
     size_t numAmmo = E_GetNumAmmoTypes();
     for(size_t i = 0; i < numAmmo; ++i)
     {
         auto ammoType   = E_AmmoTypeForIndex(i);
-        int  giveamount = ammoType->getInt(keyBackpackAmount, 0);
-        if(!giveamount)
+        int  takeamount = ammoType->getInt(keyBackpackAmount, 0);
+        if(!takeamount)
             continue;
 
         // apply ammo multiplier for baby/nightmare skill
         if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
-            giveamount = static_cast<int>(floor(giveamount * GameModeInfo->skillAmmoMultiplier));
+            takeamount = static_cast<int>(floor(takeamount * GameModeInfo->skillAmmoMultiplier));
 
-        given |= E_RemoveInventoryItem(player, ammoType, giveamount * itemamount, RemoveMore::yes) != INV_NOTREMOVED;
+        taken |= E_RemoveInventoryItem(player, ammoType, takeamount * itemamount, RemoveMore::yes) != INV_NOTREMOVED;
     }
 
-    return given;
+    return taken;
 }
 
 //
@@ -763,7 +763,7 @@ static bool P_takePowerForItem(player_t &player, const itemeffect_t &power, int 
     int         powerNum;
     const char *powerStr = power.getString("type", "");
 
-    if(!powerStr || !strcmp(powerStr, ""))
+    if(estrempty(powerStr))
         return false; // There hasn't been a designated power type
 
     if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)

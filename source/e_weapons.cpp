@@ -350,9 +350,9 @@ int E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot)
 //
 // Check if player has any weapons left
 //
-bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
+bool E_PlayerHasAnyWeapons(const player_t &player, WeaponFilter filter)
 {
-    for(weaponslot_t *&slot : player.pclass->weaponslots)
+    for(const weaponslot_t *slot : player.pclass->weaponslots)
     {
         if(!slot)
             continue;
@@ -361,8 +361,10 @@ bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
         do
         {
             if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon) &&
-               (!onlyWithAmmo || P_WeaponHasAmmo(player, weaponslot->bdObject->weapon)))
+               (filter == WeaponFilter::any || P_WeaponHasAmmo(player, weaponslot->bdObject->weapon)))
+            {
                 return true;
+            }
 
             weaponslot = weaponslot->bdNext;
         }
@@ -378,7 +380,7 @@ bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
 //
 void E_DefaultToUnknownWeapon(player_t &player)
 {
-    bool hasanyweapon = E_PlayerHasAnyWeapons(player, false);
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player, WeaponFilter::any);
     if(hasanyweapon)
         return;
 
