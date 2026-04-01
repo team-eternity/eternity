@@ -216,13 +216,11 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, ItemOrigin o
 }
 
 //
-// P_TakeAmmoPickup
-//
 // Takes from the player a amount of ammo equal to that given by this
 // AmmoPickup. The skill multiplier is also taken into account
 // If itemamount is negative, take all ammo of this type
 //
-bool P_TakeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamount)
+static bool P_takeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamount)
 {
     if(!pickup)
         return false;
@@ -669,7 +667,125 @@ static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
 }
 
 //
-// P_TakeInventory
+// Subtracts a player's power effect duration equal to itemamount in ticks
+// If itemamount is negative or power is infinite, removes the entire effect,
+// otherwise only removes the number of ticks equal to itemamount from the current duration
+// Also sister weapon becomes unpowered if power pw_weaponlevel2 is lost
+//
+static bool P_takePower(player_t &player, int powernum, int itemamount)
+{
+    if(powernum == NUMPOWERS || itemamount == 0)
+    {
+        return false;
+    }
+
+    powerduration_t *currentpower = &player.powers[powernum];
+
+    if(itemamount > 0 && !currentpower->infinite && powernum != pw_strength)
+    {
+        currentpower->tics -= itemamount;
+        if(currentpower->tics < 0)
+            currentpower->tics = 0;
+    }
+    else
+    {
+        currentpower->tics     = 0;
+        currentpower->infinite = false;
+    }
+
+    // If power is now inactive, remove its effects
+    // Don't wait for P_PlayerThink because that will be caught with tics 0 and miss
+    if(!currentpower->isActive())
+        P_RemovePower(player, powernum);
+
+    return true;
+}
+
+//
+// Takes the player's health equal to the "amount" of the health item
+// A player's health cannot fall below 1 here
+// If itemamount is negative, take all health and leave 1 hp
+//
+static bool P_takeBody(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    // If itemamount is negative, take all health and leave 1 hp
+    if(itemamount < 0)
+    {
+        player.mo->health = player.health = 1;
+        return true;
+    }
+
+    int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+
+    // take the health
+    player.health -= amount * itemamount;
+
+    // cap to minimum
+    if(player.health < 1)
+        player.health = 1;
+
+    // propagate to player's Mobj
+    player.mo->health = player.health;
+
+    return true;
+}
+
+//
+// Takes the player's armor equal to the "saveamount" of the armor item
+// "armorfactor" and "armordivisor" are not taken into account(only if not taking all armor)
+// If itemamount is negative, take all armor
+//
+static bool P_takeArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    // If itemamount is negative, take all armor
+    if(itemamount < 0)
+    {
+        player.armorpoints = player.armorfactor = player.armordivisor = 0;
+        return true;
+    }
+
+    int amount = effect->getInt("saveamount", 0);
+
+    player.armorpoints -= amount * itemamount;
+
+    // if we lost all our armorpoints, we lose all armor properties
+    if(player.armorpoints <= 0)
+        player.armorpoints = player.armorfactor = player.armordivisor = 0;
+
+    return true;
+}
+
+//
+// Subtracts a player's power effect duration equal to that given
+// by the selected power artifact
+// If it is infinite power, the entire effect is removed.
+// If itemamount is negative, take all power duration
+//
+static bool P_takePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+{
+    if(!power)
+        return false;
+
+    int         powerNum;
+    const char *powerStr = power->getString("type", "");
+
+    if(!powerStr || !strcmp(powerStr, ""))
+        return false; // There hasn't been a designated power type
+
+    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+        return false; // There's no power for the type provided
+
+    int duration = power->getInt("duration", 0);
+
+    return P_takePower(player, powerNum, itemamount * duration * TICRATE);
+}
+
 //
 // Takes from the player an inventory item or power directly
 // Negative itemamount means take all
@@ -682,7 +798,7 @@ bool P_TakeInventory(player_t *player, const ScriptedItem &iitem, const int item
     if(const int *power = std::get_if<int>(&iitem))
     {
         // Take power directly with amount as duration in tics
-        P_TakePower(*player, *power, itemamount);
+        P_takePower(*player, *power, itemamount);
         return true;
     }
 
@@ -692,22 +808,22 @@ bool P_TakeInventory(player_t *player, const ScriptedItem &iitem, const int item
     {
         // If health, take healthamount * itemamount, but player health can't go below 1
     case ITEMFX_HEALTH:
-        P_TakeBody(*player, item, itemamount);
+        P_takeBody(*player, item, itemamount);
         break;
 
         // If armor, take saveamount * itemamount, if player armor goes below 0, they lose armor properties
     case ITEMFX_ARMOR:
-        P_TakeArmor(*player, item, itemamount);
+        P_takeArmor(*player, item, itemamount);
         break;
 
         // If ammo, take ammoamount * itemamount, skill levels affect how much is taken
     case ITEMFX_AMMO:
-        P_TakeAmmoPickup(*player, item, itemamount);
+        P_takeAmmoPickup(*player, item, itemamount);
         break;
 
         // If power artifact, take duration * itemamount, infinite powers are removed completely
     case ITEMFX_POWER:
-        P_TakePowerForItem(*player, item, itemamount);
+        P_takePowerForItem(*player, item, itemamount);
         break;
 
         // If weapon giver, take the weapon and ammo * itemamount, if no weapons are left, take ammo only
@@ -845,7 +961,7 @@ bool P_ClearInventory(player_t *player)
 
     // Take all powers
     for(int i = 0; i < NUMPOWERS; i++)
-        P_TakePower(*player, i, -1);
+        P_takePower(*player, i, -1);
 
     // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
     E_ClearInventory(player, SetEmptyWeapon::yes);
@@ -991,40 +1107,6 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, GiveAmount itemamo
 }
 
 //
-// P_TakeBody
-//
-// Takes the player's health equal to the "amount" of the health item
-// A player's health cannot fall below 1 here
-// If itemamount is negative, take all health and leave 1 hp
-//
-bool P_TakeBody(player_t &player, const itemeffect_t *effect, int itemamount)
-{
-    if(!effect)
-        return false;
-
-    // If itemamount is negative, take all health and leave 1 hp
-    if(itemamount < 0)
-    {
-        player.mo->health = player.health = 1;
-        return true;
-    }
-
-    int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
-
-    // take the health
-    player.health -= amount * itemamount;
-
-    // cap to minimum
-    if(player.health < 1)
-        player.health = 1;
-
-    // propagate to player's Mobj
-    player.mo->health = player.health;
-
-    return true;
-}
-
-//
 // EV_DoHealThing
 //
 // Returns false if the health isn't needed at all
@@ -1103,36 +1185,6 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, GiveAmount itemam
         player.armorfactor  = savefactor;
         player.armordivisor = savedivisor;
     }
-
-    return true;
-}
-
-//
-// P_TakeArmor
-//
-// Takes the player's armor equal to the "saveamount" of the armor item
-// "armorfactor" and "armordivisor" are not taken into account(only if not taking all armor)
-// If itemamount is negative, take all armor
-//
-bool P_TakeArmor(player_t &player, const itemeffect_t *effect, int itemamount)
-{
-    if(!effect)
-        return false;
-
-    // If itemamount is negative, take all armor
-    if(itemamount < 0)
-    {
-        player.armorpoints = player.armorfactor = player.armordivisor = 0;
-        return true;
-    }
-
-    int amount = effect->getInt("saveamount", 0);
-
-    player.armorpoints -= amount * itemamount;
-
-    // if we lost all our armorpoints, we lose all armor properties
-    if(player.armorpoints <= 0)
-        player.armorpoints = player.armorfactor = player.armordivisor = 0;
 
     return true;
 }
@@ -1221,43 +1273,6 @@ bool P_GivePower(player_t &player, int power, GiveAmount duration, bool additive
     return true;
 }
 
-//
-// P_TakePower
-//
-// Subtracts a player's power effect duration equal to itemamount in ticks
-// If itemamount is negative or power is infinite, removes the entire effect,
-// otherwise only removes the number of ticks equal to itemamount from the current duration
-// Also sister weapon becomes unpowered if power pw_weaponlevel2 is lost
-//
-bool P_TakePower(player_t &player, int powernum, int itemamount)
-{
-    if(powernum == NUMPOWERS || itemamount == 0)
-    {
-        return false;
-    }
-
-    powerduration_t *currentpower = &player.powers[powernum];
-
-    if(itemamount > 0 && !currentpower->infinite && powernum != pw_strength)
-    {
-        currentpower->tics -= itemamount;
-        if(currentpower->tics < 0)
-            currentpower->tics = 0;
-    }
-    else
-    {
-        currentpower->tics     = 0;
-        currentpower->infinite = false;
-    }
-
-    // If power is now inactive, remove its effects
-    // Don't wait for P_PlayerThink because that will be caught with tics 0 and miss
-    if(!currentpower->isActive())
-        P_RemovePower(player, powernum);
-
-    return true;
-}
-
 const char *powerStrings[NUMPOWERS] = {
     POWER_INVULNERABLE, //
     POWER_STRENGTH,     //
@@ -1339,33 +1354,6 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount 
     }
 
     return true;
-}
-
-//
-// P_TakePowerForItem
-//
-// Subtracts a player's power effect duration equal to that given
-// by the selected power artifact
-// If it is infinite power, the entire effect is removed.
-// If itemamount is negative, take all power duration
-//
-bool P_TakePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
-{
-    if(!power)
-        return false;
-
-    int         powerNum;
-    const char *powerStr = power->getString("type", "");
-
-    if(!powerStr || !strcmp(powerStr, ""))
-        return false; // There hasn't been a designated power type
-
-    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
-        return false; // There's no power for the type provided
-
-    int duration = power->getInt("duration", 0);
-
-    return P_TakePower(player, powerNum, itemamount * duration * TICRATE);
 }
 
 //
