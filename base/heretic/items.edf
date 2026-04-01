@@ -349,7 +349,6 @@ ammoeffect MaceHefty
 //
 // Power Givers
 //
-
 powereffect SuperMap
 {
   duration 1
