@@ -1,4 +1,4 @@
-﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
 ##
 ## This software is free software; you can redistribute it and/or
