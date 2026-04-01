@@ -220,15 +220,12 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, ItemOrigin o
 // AmmoPickup. The skill multiplier is also taken into account
 // If itemamount is negative, take all ammo of this type
 //
-static bool P_takeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamount)
+static bool P_takeAmmoPickup(player_t &player, const itemeffect_t &pickup, int itemamount)
 {
-    if(!pickup)
-        return false;
+    itemeffect_t *ammotype = E_ItemEffectForName(pickup.getString("ammo", ""));
+    int           amount   = pickup.getInt("amount", 0);
 
-    itemeffect_t *ammotype = E_ItemEffectForName(pickup->getString("ammo", ""));
-    int           amount   = pickup->getInt("amount", 0);
-
-    bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
+    bool ignoreskill = !!pickup.getInt("ignoreskill", 0);
 
     // apply ammo multiplier for baby/nightmare skill
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
@@ -620,25 +617,25 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
 // Skill levels affect how much ammo is taken
 // If itemamount is negative, take all ammo of the given types
 //
-static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, bool ignoreskill, int itemamount)
+static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t &giver, bool ignoreskill, int itemamount)
 {
     bool result = false;
 
     // Take weapon, if can
-    const itemeffect_t *weapon = E_ItemEffectForName(giver->getString("weapon", ""));
+    const itemeffect_t *weapon = E_ItemEffectForName(giver.getString("weapon", ""));
     if(weapon)
         E_RemoveInventoryItem(player, weapon, -1, RemoveMore::yes);
 
     // Take ammo
     const itemeffect_t *ammogiven = nullptr;
-    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    while((ammogiven = giver.getNextKeyAndTypeEx(ammogiven, "ammogiven")))
     {
         const itemeffect_t *ammo     = nullptr;
         int                 takeammo = 0;
 
         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
         {
-            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver.getKey());
             return false;
         }
         else if((takeammo = ammogiven->getInt("ammo.give", -1) * itemamount) < 0)
@@ -652,7 +649,7 @@ static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t *giver, boo
 
             doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                                  "'%s', ammo: '%s'\a\n",
-                        giver->getKey(), ammo->getKey());
+                        giver.getKey(), ammo->getKey());
             return false;
         }
 
@@ -706,11 +703,8 @@ static bool P_takePower(player_t &player, int powernum, int itemamount)
 // A player's health cannot fall below 1 here
 // If itemamount is negative, take all health and leave 1 hp
 //
-static bool P_takeBody(player_t &player, const itemeffect_t *effect, int itemamount)
+static bool P_takeBody(player_t &player, const itemeffect_t &effect, int itemamount)
 {
-    if(!effect)
-        return false;
-
     // If itemamount is negative, take all health and leave 1 hp
     if(itemamount < 0)
     {
@@ -718,7 +712,7 @@ static bool P_takeBody(player_t &player, const itemeffect_t *effect, int itemamo
         return true;
     }
 
-    int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+    int amount = E_GetPClassHealth(effect, "amount", *player.pclass, 0);
 
     // take the health
     player.health -= amount * itemamount;
@@ -738,11 +732,8 @@ static bool P_takeBody(player_t &player, const itemeffect_t *effect, int itemamo
 // "armorfactor" and "armordivisor" are not taken into account(only if not taking all armor)
 // If itemamount is negative, take all armor
 //
-static bool P_takeArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+static bool P_takeArmor(player_t &player, const itemeffect_t &effect, int itemamount)
 {
-    if(!effect)
-        return false;
-
     // If itemamount is negative, take all armor
     if(itemamount < 0)
     {
@@ -750,7 +741,7 @@ static bool P_takeArmor(player_t &player, const itemeffect_t *effect, int itemam
         return true;
     }
 
-    int amount = effect->getInt("saveamount", 0);
+    int amount = effect.getInt("saveamount", 0);
 
     player.armorpoints -= amount * itemamount;
 
@@ -767,13 +758,10 @@ static bool P_takeArmor(player_t &player, const itemeffect_t *effect, int itemam
 // If it is infinite power, the entire effect is removed.
 // If itemamount is negative, take all power duration
 //
-static bool P_takePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+static bool P_takePowerForItem(player_t &player, const itemeffect_t &power, int itemamount)
 {
-    if(!power)
-        return false;
-
     int         powerNum;
-    const char *powerStr = power->getString("type", "");
+    const char *powerStr = power.getString("type", "");
 
     if(!powerStr || !strcmp(powerStr, ""))
         return false; // There hasn't been a designated power type
@@ -781,7 +769,7 @@ static bool P_takePowerForItem(player_t &player, const itemeffect_t *power, int 
     if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
         return false; // There's no power for the type provided
 
-    int duration = power->getInt("duration", 0);
+    int duration = power.getInt("duration", 0);
 
     return P_takePower(player, powerNum, itemamount * duration * TICRATE);
 }
@@ -808,33 +796,33 @@ bool P_TakeInventory(player_t *player, const ScriptedItem &iitem, const int item
     {
         // If health, take healthamount * itemamount, but player health can't go below 1
     case ITEMFX_HEALTH:
-        P_takeBody(*player, item, itemamount);
+        P_takeBody(*player, *item, itemamount);
         break;
 
         // If armor, take saveamount * itemamount, if player armor goes below 0, they lose armor properties
     case ITEMFX_ARMOR:
-        P_takeArmor(*player, item, itemamount);
+        P_takeArmor(*player, *item, itemamount);
         break;
 
         // If ammo, take ammoamount * itemamount, skill levels affect how much is taken
     case ITEMFX_AMMO:
-        P_takeAmmoPickup(*player, item, itemamount);
+        P_takeAmmoPickup(*player, *item, itemamount);
         break;
 
         // If power artifact, take duration * itemamount, infinite powers are removed completely
     case ITEMFX_POWER:
-        P_takePowerForItem(*player, item, itemamount);
+        P_takePowerForItem(*player, *item, itemamount);
         break;
 
         // If weapon giver, take the weapon and ammo * itemamount, if no weapons are left, take ammo only
         // Skill levels affect how much ammo is taken
     case ITEMFX_WEAPONGIVER:
-        P_takeWeaponByGiver(*player, item, false, itemamount);
+        P_takeWeaponByGiver(*player, *item, false, itemamount);
         break;
 
         // If another artifact or backpack, just remove it from inventory
     default:
-        if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+        if(strcasecmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
         {
             E_RemoveBackpack(*player);
 
