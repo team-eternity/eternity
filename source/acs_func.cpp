@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, David Hill, et al.
 //
@@ -2742,7 +2742,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 
                     const auto end = pfx->effects + pfx->numEffects;
 
-                    // If this pickupfx references the item effect, use it for the pickup and 
+                    // If this pickupfx references the item effect, use it for the pickup and
                     // stop searching
                     if(std::find(pfx->effects, end, eff) != end)
                         pickup = pfx;
