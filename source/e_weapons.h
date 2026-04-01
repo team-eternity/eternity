@@ -200,7 +200,7 @@ bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
 enum class WeaponFilter
 {
     any,
-    withAmmo,
+    usable,
 };
 
 bool E_PlayerOwnsWeapon(const player_t &player, const weaponinfo_t *weapon);

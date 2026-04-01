@@ -271,10 +271,10 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
         newweaponslot = P_findFirstNonNullWeaponSlot(player);
     newweaponlink = &newweaponslot->links;
 
-    // Check ahead: does the player have any weapon with ammo?
+    // Check ahead: does the player have any weapon with ammo (or permanently usable, like the fist)?
     // If not, we can allow any owned weapon.
     // It needs to avoid infinite loop if only weapons without ammo are owned.
-    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::withAmmo);
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::usable);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do
@@ -343,10 +343,10 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
         newweaponslot = P_findFirstNonNullWeaponSlot(player);
     newweaponlink = &newweaponslot->links;
 
-    // Check ahead: does the player have any weapon with ammo?
+    // Check ahead: does the player have any weapon with ammo (or permanently usable, like the fist)?
     // If not, we can allow any owned weapon.
     // It needs to avoid infinite loop if only weapons without ammo are owned.
-    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::withAmmo);
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::usable);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do
