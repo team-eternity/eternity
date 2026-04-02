@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -841,6 +841,12 @@ void A_GenTracer(actionargs_t *actionargs)
 
     if(!dest || dest->health <= 0)
         return;
+
+    if(!P_SeekerCanTrack(actor, dest))
+    {
+        P_ClearTarget(actor->tracer);
+        return;
+    }
 
     // ioanch 20151230: portal-aware
     fixed_t dx = getThingX(actor, dest);

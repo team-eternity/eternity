@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Max Waine, et al.
 //
@@ -393,6 +393,9 @@ void A_FindTracer(actionargs_t *actionargs)
         // don't aim for shooter, or for friends of shooter
         if(clip.linetarget)
         {
+            if(!P_SeekerCanTrack(actor, clip.linetarget))
+                continue;
+
             if(clip.linetarget == actor->target || (clip.linetarget->flags & actor->target->flags & MF_FRIEND))
                 continue;
 

@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -3890,6 +3890,12 @@ bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn
         return false;
     }
 
+    if(!P_SeekerCanTrack(actor, dest))
+    {
+        P_ClearTarget(actor->tracer);
+        return false;
+    }
+
     // ioanch 20151230: portal aware
     fixed_t dx = getThingX(actor, dest);
     fixed_t dy = getThingY(actor, dest);
@@ -4430,6 +4436,24 @@ void P_NeutralizeForRemoval(Mobj &mobj)
     mobj.flags3                       &= ~(MF3_PASSMOBJ);
     mobj.player                        = nullptr;
     mobj.health                        = -1000;
+}
+
+//
+// P_SeekerCanTrack
+//
+// Checks if a seeker can track a target, based on the seeker's
+// flags and the target's invisibility status.
+//
+bool P_SeekerCanTrack(const Mobj *actor, const Mobj *target)
+{
+    if(!actor || !target || target->flags5 & MF5_IGNORESEEKER)
+        return false;
+
+    if(actor->flags5 & MF5_NOSEEKINVISIBLE)
+        return !(target->player && (target->player->powers[pw_invisibility].isActive() ||
+                                    target->player->powers[pw_totalinvis].isActive()));
+
+    return true;
 }
 
 #if 0
