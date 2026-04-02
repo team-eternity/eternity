@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -546,6 +546,12 @@ void A_SeekerMissile(actionargs_t *actionargs)
     // adjust direction
     dest = actor->tracer;
 
+    if(dest && !P_SeekerCanTrack(actor, dest))
+    {
+        P_ClearTarget(actor->tracer);
+        dest = nullptr;
+    }
+
     if(!dest || dest->health <= 0)
     {
         if((flags & SMF_LOOK) && P_Random(pr_seekermissile) < chance)
@@ -567,6 +573,9 @@ void A_SeekerMissile(actionargs_t *actionargs)
                 // don't aim for shooter, or for friends of shooter
                 if(clip.linetarget)
                 {
+                    if(!P_SeekerCanTrack(actor, clip.linetarget))
+                        continue;
+
                     if(clip.linetarget == actor->target || //
                        (clip.linetarget->flags & actor->target->flags & MF_FRIEND))
                         continue;

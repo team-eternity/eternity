@@ -1,4 +1,4 @@
-Changes since v4.05.04
+﻿Changes since v4.05.04
 ======================
 
 Features
@@ -19,6 +19,9 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* New thing type flag NOSEEKINVISIBLE for projectiles, which prevents the seeker from targeting players with 
+  invisibility powerup active.
+* New thing type flag IGNORESEEKER for things, which prevents them from being targeted by seekers.
 
 Improvements
 ------------

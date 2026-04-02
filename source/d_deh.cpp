@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -408,6 +408,8 @@ static dehflags_t deh_mobjflags[] = {
     { "NOTAUTOAIMED",       0x00000001, 4 }, // can't be autoaimed (for real)
     { "FULLVOLSOUNDS",      0x00000002, 4 }, // full-volume see/death sounds
     { "ACTLIKEBRIDGE",      0x00000004, 4 }, // unmoved by sector actions, and pickups can sit atop
+    { "NOSEEKINVISIBLE",    0x00000008, 4 }, // seeker missiles ignore invisible targets
+    { "IGNORESEEKER", 	    0x00000010, 4 }, // invisible to seeker missiles
 
     { nullptr,             0 }             // nullptr terminator
 };
