@@ -2736,39 +2736,35 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    const auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int           amount   = argV[1];
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+    const auto   info     = &static_cast<ACSThread *>(thread)->info;
+    char const  *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int    amount   = argV[1];
+    ScriptedItem item     = getScriptedItem(itemname);
 
-    if(!item)
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_TakeInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't remove anything)
-    if(amount <= 0)
+    // if amount is 0, do nothing
+    // if amount is negative, it means take all
+    if(amount == 0)
         return false;
-
-    auto alwaysRemove = [info, item, amount]() {
-        int owned = E_GetItemOwnedAmount(*info->mo->player, item);
-        // If amount exceeds what player has, take all they have
-        E_RemoveInventoryItem(*info->mo->player, item, emin(owned, amount));
-    };
 
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            alwaysRemove();
+            P_TakeInventory(info->mo->player, item, amount);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                alwaysRemove();
+                P_TakeInventory(&players[pnum], item, amount);
         }
     }
     return false;
