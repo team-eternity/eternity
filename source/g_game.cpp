@@ -397,9 +397,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
         // next / prev weapon actions
         if(gameactions[ka_weaponup])
-            newweapon = P_NextWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::next, &cmd->slotIndex);
         else if(gameactions[ka_weapondown])
-            newweapon = P_PrevWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::previous, &cmd->slotIndex);
 
         if(p.readyweapon)
         {
@@ -490,9 +490,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         {
             // haleyjd 03/06/09: next/prev weapon actions
             if(gameactions[ka_weaponup])
-                newweapon = P_NextWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::next);
             else if(gameactions[ka_weapondown])
-                newweapon = P_PrevWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::previous);
 
             const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
