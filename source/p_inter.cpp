@@ -1285,6 +1285,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, GiveAmount 
 {
     if(!power)
         return false;
+
     int         powerNum;
     const char *powerStr;
     bool        additiveTime = false;
