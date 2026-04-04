@@ -2710,7 +2710,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     const auto  info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
-    const bool  silent   = argC > 2 ? argV[2] : false; // if not silent, apply pickup effects (flash, message, sound)
+    const bool  silent   = argC > 2 ? argV[2] : true; // if not silent, apply pickup effects (flash, message, sound)
 
     ScriptedItem item = getScriptedItem(itemname);
 
@@ -2731,12 +2731,34 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
         if(silent || !player)
             return;
 
-        // Resolve pickup effect in inventory layer
-        const itemeffect_t *effect = nullptr;
-        if(const auto *effPtr = std::get_if<itemeffect_t *>(&item))
-            effect = *effPtr;
+        // First try a direct named lookup (standalone pickupeffect definitions)
+        const e_pickupfx_t *pickup = E_PickupFXForName(itemname);
 
-        const e_pickupfx_t *pickup = E_FindBestPickupFX(itemname, effect);
+        // Fall back: scan mobjinfo for a ThingType whose inline PickupEffect
+        // references the given inventory item effect
+        if(!pickup)
+        {
+            // Get the item effect pointer for the given item, if it is an item effect at all
+            if(const auto *effPtr = std::get_if<itemeffect_t *>(&item))
+            {
+                // Scan all ThingTypes for a PickupEffect that references this item effect
+                const itemeffect_t *eff = *effPtr;
+                for(int i = 0; i < NUMMOBJTYPES && !pickup; i++)
+                {
+                    const e_pickupfx_t *pfx = mobjinfo[i]->pickupfx;
+
+                    if(!pfx)
+                        continue;
+
+                    const auto end = pfx->effects + pfx->numEffects;
+
+                    // If this pickupfx references the item effect, use it for the pickup and
+                    // stop searching
+                    if(std::find(pfx->effects, end, eff) != end)
+                        pickup = pfx;
+                }
+            }
+        }
 
         if(!pickup)
             return;
@@ -2815,6 +2837,116 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
                 P_TakeInventory(&players[pnum], item, amount);
         }
     }
+    return false;
+}
+
+//
+// void ClearInventory();
+//
+bool ACS_CF_ClearInventory(ACS_CF_ARGS)
+{
+    const auto info = &static_cast<ACSThread *>(thread)->info;
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            P_ClearInventory(info->mo->player);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                P_ClearInventory(&players[pnum]);
+        }
+    }
+
+    return false;
+}
+
+//
+// void UseInventory(str itemname);
+//
+bool ACS_CF_UseInventory(ACS_CF_ARGS)
+{
+    auto                info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+
+    // If the item doesn't exist, complain
+    if(!item)
+    {
+        doom_printf("ACS_CF_UseInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(P_UseInventory(info->mo->player, item));
+
+    return false;
+}
+
+//
+// int GetMaxInventory(int tid, str itemname);
+//
+bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
+{
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    const int   tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
+    Mobj       *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
+    char const *itemname = thread->scopeMap->getString(argV[1])->str;
+
+    ScriptedItem item = getScriptedItem(itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
+    {
+        doom_printf("ACS_CF_GetMaxInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!mo || !mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(P_GetMaxInventory(mo->player, item));
+
+    return false;
+}
+
+//
+// int GetArmorInfo(int infotype);
+//
+bool ACS_CF_GetArmorInfo(ACS_CF_ARGS)
+{
+    auto      info     = &static_cast<ACSThread *>(thread)->info;
+    int const infotype = argV[0];
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+    {
+        switch(infotype)
+        {
+        case 0: // ARMORINFO_ARMORPOINTS
+            thread->dataStk.push(info->mo->player->armorpoints);
+            break;
+        case 1: // ARMORINFO_ARMORFACTOR
+            thread->dataStk.push(info->mo->player->armorfactor);
+            break;
+        case 2: // ARMORINFO_ARMORDIVISOR
+            thread->dataStk.push(info->mo->player->armordivisor);
+            break;
+        default: // UNKNOWN
+            thread->dataStk.push(0);
+            break;
+        }
+    }
+
     return false;
 }
 
@@ -3102,4 +3234,3 @@ bool ACS_CF_TagWait(ACS_CF_ARGS)
 }
 
 // EOF
-

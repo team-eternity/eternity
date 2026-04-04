@@ -237,7 +237,8 @@ bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const in
 bool E_PlayerHasVisibleInvItem(const player_t &player);
 
 // Tries to use the currently selected item.
-void E_TryUseItem(player_t &player, inventoryitemid_t ID);
+// Returns true if item was successfully used, otherwise false
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
@@ -329,7 +330,12 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
 void E_InventoryEndHub(player_t *player);
 
 // Call to completely clear a player's inventory.
-void E_ClearInventory(player_t *player);
+enum class SetEmptyWeapon : bool
+{
+    no,
+    yes
+};
+void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon = SetEmptyWeapon::no);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();

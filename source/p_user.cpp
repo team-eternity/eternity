@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -680,9 +680,20 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
                              pos.z + GameModeInfo->teleFogHeight, E_SafeThingName(GameModeInfo->teleFogType)),
                  GameModeInfo->teleSound);
 
-    player.pendingweapon = player.readyweapon = player.unmorphWeapon;
-    player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
-    pspdef_t &pspr                                    = player.psprites[ps_weapon];
+    if(player.unmorphWeapon && player.unmorphWeaponSlot)
+    {
+        player.pendingweapon = player.readyweapon = player.unmorphWeapon;
+        player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+    }
+    else
+    {
+        E_DefaultToUnknownWeapon(player);
+    }
+
+    player.unmorphWeapon     = nullptr;
+    player.unmorphWeaponSlot = nullptr;
+
+    pspdef_t &pspr = player.psprites[ps_weapon];
     pspr.playpos.y = pspr.renderpos.y = WEAPONBOTTOM;
     player.extralight                 = 0;
 

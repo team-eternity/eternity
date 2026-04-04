@@ -50,6 +50,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -225,6 +226,7 @@ static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 static MetaKeyIndex keyArgs          (KEY_ARGS          );
+static MetaKeyIndex keyUndroppable   (KEY_UNDROPPABLE   );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -1964,14 +1966,17 @@ static useaction_t *E_addUseAction(itemeffect_t *artifact)
 //
 // E_TryUseItem
 //
-// Tries to use the currently selected item.
+// Tries to use the currently selected item
+// Returns true if item was successfully used, otherwise false
 //
-void E_TryUseItem(player_t &player, inventoryitemid_t ID)
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
     invbarstate_t &invbarstate = player.invbarstate;
     itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
+
     if(!artifact)
-        return;
+        return false;
+
     if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
     {
         if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
@@ -1997,7 +2002,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                     success = P_GivePowerForItem(player, effect);
                     break;
                 default: //
-                    return;
+                    return false;
                 }
             }
 
@@ -2051,8 +2056,12 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                 // FIXME: Make this behaviour optional, or remove
                 E_MoveInventoryCursor(player, -1, player.inv_ptr);
             }
+
+            return success;
         }
     }
+
+    return false;
 }
 
 //
@@ -2581,19 +2590,33 @@ void E_InventoryEndHub(player_t *player)
 // E_ClearInventory
 //
 // Completely clear a player's inventory.
+// If undroppable is true, undroppable items will be kept.
+// If setemptyweapon is true, the player will be given an empty weapon when done.
 //
-void E_ClearInventory(player_t *player)
+void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon)
 {
     invbarstate_t &invbarstate = player->invbarstate;
 
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
+        const itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
+        if(!item || (item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON))
+            continue;
+
         player->inventory[i].amount = 0;
         player->inventory[i].item   = -1;
+
+        // nulling them will trigger special behavior elsewhere
+        player->unmorphWeapon     = nullptr;
+        player->unmorphWeaponSlot = nullptr;
     }
 
     player->inv_ptr = 0;
     invbarstate     = { false, 0 };
+
+    // Select an empty weapon if player has no weapons left (without giving dummy weapon)
+    if(setemptyweapon == SetEmptyWeapon::yes)
+        E_DefaultToUnknownWeapon(*player);
 }
 
 //

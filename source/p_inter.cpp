@@ -939,6 +939,118 @@ int P_CheckInventory(const player_t *player, const ScriptedItem &iitem)
 }
 
 //
+// P_ClearInventory
+//
+// Take armor, backpack, all powers and clear all inventory items except undroppable ones
+//
+bool P_ClearInventory(player_t *player)
+{
+    if(!player)
+        return false;
+
+    // Take player armor
+    player->armorpoints = player->armorfactor = player->armordivisor = 0;
+
+    // Take backpack
+    E_RemoveBackpack(*player);
+
+    // Take all powers
+    for(int i = 0; i < NUMPOWERS; i++)
+        P_takePower(*player, i, -1);
+
+    // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
+    E_ClearInventory(player, SetEmptyWeapon::yes);
+
+    return true;
+}
+
+//
+// P_UseInventory
+//
+// Uses an inventory item from the player's inventory
+//
+bool P_UseInventory(player_t *player, itemeffect_t *item)
+{
+    if(!player || !item)
+        return false;
+
+    // Check if the player has the item and try to use it
+    if(E_GetItemOwnedAmount(*player, item) >= 1)
+        return E_TryUseItem(*player, item->getInt(keyItemID, -1));
+
+    return false;
+}
+
+//
+// P_GetMaxInventory
+//
+// Gets the maximum amount of an inventory item or power the player can have
+// For powers, returns -1 for infinite powers or 1 for others
+//
+int P_GetMaxInventory(player_t *player, const ScriptedItem &iitem)
+{
+    if(!player || !P_IsValid(iitem))
+        return 0;
+
+    if(const int *power = std::get_if<int>(&iitem))
+    {
+        // If power itself is infinite by default, return -1 (infinite)
+        if(*power == pw_strength)
+            return -1;
+
+        // Otherwise, return 1
+        return 1;
+    }
+
+    int           powerNum, maxAmount, maxSaveAmount;
+    const char   *powerStr;
+    itemeffect_t *wp;
+
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+
+    switch(item->getInt("class", ITEMFX_NONE))
+    {
+        // If health, return maxamount if it exists, otherwise amount
+        // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
+    case ITEMFX_HEALTH:
+        maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
+        return maxAmount ? maxAmount : E_GetPClassHealth(*item, "amount", *player->pclass, 0);
+
+        // If armor, return maxsaveamount if it exists, otherwise saveamount
+    case ITEMFX_ARMOR:
+        maxSaveAmount = item->getInt("maxsaveamount", 0);
+        return maxSaveAmount ? maxSaveAmount : item->getInt("saveamount", 0);
+
+        // If ammo, return max amount for the ammo type
+    case ITEMFX_AMMO:
+        return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+        // If power artifact, return -1 for permanent powers or strength, otherwise duration in seconds
+    case ITEMFX_POWER:
+        powerStr = item->getString("type", "");
+        if(!powerStr || !strcmp(powerStr, ""))
+            return 0; // There hasn't been a designated power type
+        if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+            return 0; // There's no power for the type provided
+
+        // If power is permanent or it's strength, return -1 (infinite)
+        if(item->getInt("permanent", 0) || powerNum == pw_strength)
+            return -1;
+
+        // Otherwise, return duration of the power artifact in seconds
+        return item->getInt("duration", 0);
+
+        // If weapon giver, return max amount for the weapon designated
+    case ITEMFX_WEAPONGIVER:
+        wp = E_ItemEffectForName(item->getString("weapon", ""));
+        return wp ? E_GetMaxAmountForArtifact(*player, wp) : 0;
+
+        // If another artifact, return max amount for that artifact
+    default: return E_GetMaxAmountForArtifact(*player, item);
+    }
+}
+
+//
 // P_GiveBody
 //
 // Returns false if the body isn't needed at all
@@ -2873,4 +2985,3 @@ AMX_NATIVE_INFO pinter_Natives[] = {
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-
