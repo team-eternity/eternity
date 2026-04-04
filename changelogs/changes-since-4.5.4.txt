@@ -53,6 +53,7 @@ Improvements
 * Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
   level exit score. This was needed because otherwise it would become useless on heavily scripted
   maps.
+* Updated chicken morphing rules to match Heretic 2025.
 
 Bug fixes
 ---------
