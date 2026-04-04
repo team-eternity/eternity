@@ -40,6 +40,9 @@ Features
   the contribution!
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* New codepointer A_LightEx added, which is an parametrized version of A_Light0/A_Light1/A_Light2. It can be used to 
+  create more complex light sequences, such as a flashlight bright lighting effect. It also can make all darker with 
+  negative brightness values.
 * Added new ACS functions: GetSectorColormap, SetSectorColormap and IsSectorColormapBoomkind. Now it's possible to 
   change the colormap of a sector during the gameplay.
 
