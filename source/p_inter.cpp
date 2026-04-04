@@ -2055,8 +2055,12 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
     player.momx = chicken->momx;
     player.momy = chicken->momy;
 
-    player.powers[pw_ghost].tics        = 0;
-    player.powers[pw_weaponlevel2].tics = 0;
+    // Rules have changed in Heretic 2025, independent on the built-in gameplay mod.
+    if(demo_version <= 405)
+    {
+        player.powers[pw_ghost].tics        = 0;
+        player.powers[pw_weaponlevel2].tics = 0;
+    }
 
     player.unmorphWeapon     = player.readyweapon;
     player.unmorphWeaponSlot = player.readyweaponslot;
