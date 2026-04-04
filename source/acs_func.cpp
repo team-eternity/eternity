@@ -2832,6 +2832,34 @@ bool ACS_CF_UseInventory(ACS_CF_ARGS)
 }
 
 //
+// int GetMaxInventory(int tid, str itemname);
+//
+bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
+{
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    const int   tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
+    Mobj       *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
+    char const *itemname = thread->scopeMap->getString(argV[1])->str;
+
+    ScriptedItem item = getScriptedItem(itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
+    {
+        doom_printf("ACS_CF_GetMaxInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!mo || !mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(P_GetMaxInventory(mo->player, item));
+
+    return false;
+}
+
+//
 // ACS_thingCount
 //
 static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)

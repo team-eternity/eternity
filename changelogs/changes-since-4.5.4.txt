@@ -29,6 +29,12 @@ Features
   - int UseInventory(str item_name):
     Uses and consume the item if the player has it in their inventory. Returns true if the use is successful,
     otherwise false.
+  - int GetMaxInventory(int tid, str item_name):
+    Returns the current maximum number of items a player can carry.
+    If a health/armor item is passed, returns the maximum amount of health/armor that this type of item
+    can heal/repair.
+    If PowerArtifact is passed, it returns the duration of this artifact (if it is infinite, it returns -1).
+    If type of PowerEffect is passed directly, it returns -1 if effect is infinite by default, otherwise 1.
 * Next ACS functions has been heavily improved (thanks to DRON12261):
   - void TakeInventory(str item_name, int amount):
     Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of

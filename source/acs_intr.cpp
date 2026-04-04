@@ -354,7 +354,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addFuncDataACS0( 90, addCallFunc(ACS_CF_GetThingRoll));
   //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
   //addFuncDataACS0( 92, addCallFunc(ACS_CF_Warp));
-  //addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
+    addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
     addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
   //addFuncDataACS0( 95, addCallFunc(ACS_CF_SetSectorTerrain));
   //addFuncDataACS0( 96, addCallFunc(ACS_CF_SpawnParticle));
