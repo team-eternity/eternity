@@ -218,9 +218,6 @@ itemeffect_t *E_KeyItemForIndex(size_t idx);
 // Give all "key" type artifacts to a player
 int E_GiveAllKeys(player_t &player);
 
-// Take all "key" type artifacts from a player
-int E_TakeAllKeys(player_t &player);
-
 // Check if a player is able to unlock a lock, by its lock ID.
 bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote);
 
@@ -268,7 +265,7 @@ bool E_PlayerHasBackpack(const player_t &player);
 bool E_GiveBackpack(player_t &player);
 
 // Special function to remove backpack.
-bool E_RemoveBackpack(player_t &player);
+bool E_RemoveBackpack(const player_t &player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
 int E_GetMaxAmountForArtifact(const player_t &player, const itemeffect_t *artifact);
@@ -316,12 +313,12 @@ enum class RemoveMore : bool
     no,
     yes
 };
-itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount,
+itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount,
                                     RemoveMore removemore = RemoveMore::no);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
-void E_InventoryEndHub(player_t *player);
+void E_InventoryEndHub(const player_t *player);
 
 // Call to completely clear a player's inventory.
 enum class SetEmptyWeapon : bool

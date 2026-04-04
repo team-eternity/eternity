@@ -375,24 +375,6 @@ bool E_PlayerHasAnyWeapons(const player_t &player, WeaponFilter filter)
 }
 
 //
-// Check if player has any weapons left
-// if not and setemptyweapon is true, select the "Unknown" dummy weapon (without giving it)
-//
-void E_DefaultToUnknownWeapon(player_t &player)
-{
-    bool hasanyweapon = E_PlayerHasAnyWeapons(player, WeaponFilter::any);
-    if(hasanyweapon)
-        return;
-
-    weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
-    if(emptyWeapon != nullptr)
-    {
-        player.pendingweapon     = emptyWeapon;
-        player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
-    }
-}
-
-//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)

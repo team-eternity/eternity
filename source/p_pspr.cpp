@@ -294,7 +294,7 @@ int P_CycleWeapon(const player_t &player, CycleDir dir, uint8_t *slotindex)
             const int endpoint   = dir == CycleDir::next ? slotindex + 1 : slotindex - 1;
             auto      step       = dir == CycleDir::next ? [](int i) { return (i + 1) % NUMWEAPONSLOTS; } :
                                                            [](int i) { return i == 0 ? NUMWEAPONSLOTS - 1 : i - 1; };
-            for (int i = startpoint; i != endpoint || firsttime; i = step(i))
+            for(int i = startpoint; i != endpoint || firsttime; i = step(i))
             {
                 if(player.pclass->weaponslots[i] != nullptr)
                 {
@@ -494,7 +494,7 @@ bool P_CheckAmmo(player_t &player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(player_t &player, int compat_amt)
+void P_SubtractAmmo(const player_t &player, int compat_amt)
 {
     weaponinfo_t *weapon = player.readyweapon;
     itemeffect_t *ammo;
@@ -838,7 +838,8 @@ void A_WeaponReady(actionargs_t *actionargs)
     if(!player->pendingweapon && !E_PlayerOwnsWeapon(*player, player->readyweapon) &&
        player->readyweapon->id != UnknownWeaponInfo)
     {
-        player->pendingweapon     = E_FindBestWeapon(*player);
+        if(!(player->pendingweapon = E_FindBestWeapon(*player)))
+            player->pendingweapon = E_WeaponForID(UnknownWeaponInfo);
         player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
     }
 

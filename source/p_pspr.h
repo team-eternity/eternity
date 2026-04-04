@@ -104,7 +104,7 @@ int P_CycleWeapon(const player_t &player, CycleDir dir, uint8_t *slotindex = nul
 
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player);
 bool         P_CheckAmmo(player_t &player);
-void         P_SubtractAmmo(player_t &player, int compat_amt);
+void         P_SubtractAmmo(const player_t &player, int compat_amt);
 void         P_SubtractAmmoAmount(player_t &player, int amount);
 void         P_SetupPsprites(player_t &curplayer);
 void         P_MovePsprites(player_t &curplayer);

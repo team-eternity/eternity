@@ -1414,26 +1414,6 @@ int E_GiveAllKeys(player_t &player)
     return keysGiven;
 }
 
-//
-// E_TakeAllKeys
-//
-// Take away every artifact a player has that is of "key" type.
-// Returns the number of keys taken away.
-//
-int E_TakeAllKeys(player_t &player)
-{
-    size_t numKeys   = E_GetNumKeyItems();
-    int    keysTaken = 0;
-
-    for(size_t i = 0; i < numKeys; i++)
-    {
-        if(E_RemoveInventoryItem(player, E_KeyItemForIndex(i), -1) != INV_NOTREMOVED)
-            ++keysTaken;
-    }
-
-    return keysTaken;
-}
-
 //=============================================================================
 //
 // Effect Hash Table
@@ -2230,7 +2210,7 @@ bool E_GiveBackpack(player_t &player)
 //
 // Special function to remove a backpack.
 //
-bool E_RemoveBackpack(player_t &player)
+bool E_RemoveBackpack(const player_t &player)
 {
     auto          backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
     bool          removed      = false;
@@ -2433,7 +2413,8 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 // in the inventory, everything will be removed. For compatibility reasons,
 // this parameter is false by default.
 //
-itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, RemoveMore removemore)
+itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount,
+                                    RemoveMore removemore)
 {
     inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
@@ -2473,9 +2454,6 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
         }
     }
 
-    // Select an empty weapon if player has no weapons left (without giving dummy weapon)
-    E_DefaultToUnknownWeapon(player);
-
     return ret;
 }
 
@@ -2486,7 +2464,7 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
 // function to strip all inventory items that are not meant to remain across
 // levels to their max hub amount.
 //
-void E_InventoryEndHub(player_t *player)
+void E_InventoryEndHub(const player_t *player)
 {
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
