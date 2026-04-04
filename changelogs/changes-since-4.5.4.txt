@@ -54,6 +54,7 @@ Improvements
   level exit score. This was needed because otherwise it would become useless on heavily scripted
   maps.
 * Updated chicken morphing rules to match Heretic 2025.
+* Updated weapon autoswitch rule to match Heretic 2025.
 
 Bug fixes
 ---------

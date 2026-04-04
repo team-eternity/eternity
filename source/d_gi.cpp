@@ -158,8 +158,7 @@ static constexpr unsigned int DOOM_GIFLAGS = GIF_PRBOOMTALLSKY | GIF_FLIGHTINERT
                                              GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET;
 
 static constexpr unsigned int HERETIC_GIFLAGS = GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES |
-                                                GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST |
-                                                GIF_WPNSWITCHSUPER;
+                                                GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST;
 
 static constexpr unsigned int FINALDOOM_MIFLAGS = MI_DEMOIFDEMO4 | MI_NOTELEPORTZ;
 

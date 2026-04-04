@@ -386,7 +386,8 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, Item
 //
 static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t &newWeapon)
 {
-    if(!(GameModeInfo->flags & GIF_WPNSWITCHSUPER))
+    // NOTE: new Heretic (2025) rules this out: always switch.
+    if(!vanilla_heretic)
         return true; // no limiting flag? Always switch
 
     const weaponinfo_t *curWeapon = player.readyweapon;
