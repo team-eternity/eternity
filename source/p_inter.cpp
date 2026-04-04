@@ -1028,7 +1028,7 @@ int P_GetMaxInventory(player_t *player, const ScriptedItem &iitem)
         // If power artifact, return -1 for permanent powers or strength, otherwise duration in seconds
     case ITEMFX_POWER:
         powerStr = item->getString("type", "");
-        if(!powerStr || !strcmp(powerStr, ""))
+        if(estrempty(powerStr))
             return 0; // There hasn't been a designated power type
         if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
             return 0; // There's no power for the type provided
