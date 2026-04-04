@@ -384,7 +384,7 @@ void E_DefaultToUnknownWeapon(player_t &player)
     if(hasanyweapon)
         return;
 
-    weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+    weaponinfo_t *emptyWeapon = E_WeaponForID(UnknownWeaponInfo);
     if(emptyWeapon != nullptr)
     {
         player.pendingweapon     = emptyWeapon;

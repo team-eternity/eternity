@@ -294,7 +294,7 @@ int P_CycleWeapon(const player_t &player, CycleDir dir, uint8_t *slotindex)
             const int endpoint   = dir == CycleDir::next ? slotindex + 1 : slotindex - 1;
             auto      step       = dir == CycleDir::next ? [](int i) { return (i + 1) % NUMWEAPONSLOTS; } :
                                                            [](int i) { return i == 0 ? NUMWEAPONSLOTS - 1 : i - 1; };
-            for (int i = startpoint; i != endpoint || firsttime; i = step(i))
+            for(int i = startpoint; i != endpoint || firsttime; i = step(i))
             {
                 if(player.pclass->weaponslots[i] != nullptr)
                 {
