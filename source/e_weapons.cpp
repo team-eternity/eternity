@@ -579,8 +579,10 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t &player, const ite
         return ret;
     // Player owns normal weapon always, but check if the powered one has the flag
     if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) && correctammo &&
-       P_WeaponHasAmmo(player, powerChecked))
+       P_WeaponHasAmmo(player, powerChecked) && E_FindFirstWeaponSlot(player, temp))
+    {
         return temp;
+    }
     if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
