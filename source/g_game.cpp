@@ -365,7 +365,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
         if(gameactions[ka_nextweapon])
         {
-            weaponinfo_t *temp = E_FindBestWeapon(p);
+            const weaponinfo_t *temp = E_FindBestWeapon(p);
             if(temp == nullptr)
             {
                 p.attackdown = AT_NONE;

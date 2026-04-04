@@ -680,14 +680,18 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
                              pos.z + GameModeInfo->teleFogHeight, E_SafeThingName(GameModeInfo->teleFogType)),
                  GameModeInfo->teleSound);
 
-    if(player.unmorphWeapon && player.unmorphWeaponSlot)
+    if(E_PlayerOwnsWeapon(player, player.unmorphWeapon)) // it may have been removed by scripts
     {
         player.pendingweapon = player.readyweapon = player.unmorphWeapon;
         player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
     }
     else
     {
-        E_DefaultToUnknownWeapon(player);
+        weaponinfo_t *best = E_FindBestWeapon(player);
+        if(!best)
+            best = E_WeaponForID(UnknownWeaponInfo); // could have lost all weapons while morphed
+        player.pendingweapon = player.readyweapon = best;
+        player.pendingweaponslot = player.readyweaponslot = E_FindFirstWeaponSlot(player, best);
     }
 
     player.unmorphWeapon     = nullptr;

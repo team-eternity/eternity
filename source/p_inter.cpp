@@ -220,7 +220,7 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, ItemOrigin o
 // AmmoPickup. The skill multiplier is also taken into account
 // If itemamount is negative, take all ammo of this type
 //
-static bool P_takeAmmoPickup(player_t &player, const itemeffect_t &pickup, int itemamount)
+static bool P_takeAmmoPickup(const player_t &player, const itemeffect_t &pickup, int itemamount)
 {
     itemeffect_t *ammotype = E_ItemEffectForName(pickup.getString("ammo", ""));
     int           amount   = pickup.getInt("amount", 0);
@@ -268,7 +268,7 @@ static bool P_giveBackpackAmmo(player_t &player, int itemamount = 1)
 // Takes backpack ammo from the player.
 // The skill multiplier is also taken into account
 //
-static bool P_takeBackpackAmmo(player_t &player, bool ignoreskill = false, int itemamount = 1)
+static bool P_takeBackpackAmmo(const player_t &player, bool ignoreskill = false, int itemamount = 1)
 {
     static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -624,7 +624,7 @@ bool P_GiveInventory(player_t *player, const ScriptedItem &iitem, const int item
 // Skill levels affect how much ammo is taken
 // If itemamount is negative, take all ammo of the given types
 //
-static bool P_takeWeaponByGiver(player_t &player, const itemeffect_t &giver, bool ignoreskill, int itemamount)
+static bool P_takeWeaponByGiver(const player_t &player, const itemeffect_t &giver, bool ignoreskill, int itemamount)
 {
     bool result = false;
 
@@ -2189,15 +2189,11 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
 
     P_GiveRebornInventory(player);
 
-    player.readyweapon       = E_FindBestWeapon(player);
+    if(!(player.readyweapon = E_FindBestWeapon(player)))
+        player.readyweapon = E_WeaponForID(UnknownWeaponInfo);
     player.readyweaponslot   = E_FindFirstWeaponSlot(player, player.readyweapon);
-    if(player.readyweapon)
-    {
-        player.pendingweapon     = player.readyweapon;
-        player.pendingweaponslot = player.readyweaponslot;
-    }
-    else
-        E_DefaultToUnknownWeapon(player);
+    player.pendingweapon     = player.readyweapon;
+    player.pendingweaponslot = player.readyweaponslot;
 
     player.extralight = 0;
 
