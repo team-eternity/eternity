@@ -1399,8 +1399,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
         if(pickup->changeweapon != nullptr && player->readyweapon->id != pickup->changeweapon->id &&
            E_PlayerOwnsWeapon(*player, pickup->changeweapon))
         {
-            player->pendingweapon     = pickup->changeweapon;
-            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
+            if(auto slot = E_FindFirstWeaponSlot(*player, pickup->changeweapon))
+            {
+                player->pendingweapon     = pickup->changeweapon;
+                player->pendingweaponslot = slot;
+            }
         }
 
         // Remove the object, provided it doesn't stay in multiplayer games
