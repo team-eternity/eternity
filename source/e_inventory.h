@@ -234,7 +234,8 @@ bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const in
 bool E_PlayerHasVisibleInvItem(const player_t &player);
 
 // Tries to use the currently selected item.
-void E_TryUseItem(player_t &player, inventoryitemid_t ID);
+// Returns true if item was successfully used, otherwise false
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);

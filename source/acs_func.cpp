@@ -2806,6 +2806,32 @@ bool ACS_CF_ClearInventory(ACS_CF_ARGS)
 }
 
 //
+// void UseInventory(str itemname);
+//
+bool ACS_CF_UseInventory(ACS_CF_ARGS)
+{
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
+
+    const itemeffect_t *const item = E_ItemEffectForName(itemname);
+
+    // If the item doesn't exist, complain
+    if(!item)
+    {
+        doom_printf("ACS_CF_UseInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(P_UseInventory(info->mo->player, item));
+
+    return false;
+}
+
+//
 // ACS_thingCount
 //
 static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)

@@ -426,6 +426,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS);
 bool ACS_CF_GiveInventory(ACS_CF_ARGS);
 bool ACS_CF_TakeInventory(ACS_CF_ARGS);
 bool ACS_CF_ClearInventory(ACS_CF_ARGS);
+bool ACS_CF_UseInventory(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
 bool ACS_CF_ThingCountName(ACS_CF_ARGS);
 bool ACS_CF_ThingCountSector(ACS_CF_ARGS);

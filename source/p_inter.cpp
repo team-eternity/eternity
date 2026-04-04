@@ -965,6 +965,23 @@ bool P_ClearInventory(player_t *player)
 }
 
 //
+// P_UseInventory
+//
+// Uses an inventory item from the player's inventory
+//
+bool P_UseInventory(player_t *player, const itemeffect_t *item)
+{
+    if(!player || !item)
+        return false;
+
+    // Check if the player has the item and try to use it
+    if(E_GetItemOwnedAmount(*player, item) >= 1)
+        return E_TryUseItem(*player, item->getInt(keyItemID, -1));
+
+    return false;
+}
+
+//
 // P_GiveBody
 //
 // Returns false if the body isn't needed at all

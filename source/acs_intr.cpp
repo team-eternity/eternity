@@ -252,7 +252,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addCodeDataACS0(333, {"",        1, addCallFunc(ACS_CF_PrintBind)});
     addCodeDataACS0(334, {"",        3, addCallFunc(ACS_CF_SetActorState)});
     addCodeDataACS0(335, {"",        3, addCallFunc(ACS_CF_Thing_Damage2)});
-  //addCodeDataACS0(336, {"",        1, addCallFunc(ACS_CF_UseInventory)});
+    addCodeDataACS0(336, {"",        1, addCallFunc(ACS_CF_UseInventory)});
   //addCodeDataACS0(337, {"",        2, addCallFunc(ACS_CF_UseThingInv)});
     addCodeDataACS0(338, {"",        2, addCallFunc(ACS_CF_CheckActorCeilingTexture)});
     addCodeDataACS0(339, {"",        2, addCallFunc(ACS_CF_CheckActorFloorTexture)});

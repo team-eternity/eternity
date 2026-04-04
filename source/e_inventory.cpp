@@ -1868,13 +1868,14 @@ static useaction_t *E_addUseAction(itemeffect_t *artifact)
 // E_TryUseItem
 //
 // Tries to use the currently selected item.
+// Returns true if item was successfully used, otherwise false
 //
-void E_TryUseItem(player_t &player, inventoryitemid_t ID)
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
     invbarstate_t &invbarstate = player.invbarstate;
     itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
     if(!artifact)
-        return;
+        return false;
     if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
     {
         if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
@@ -1900,7 +1901,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                     success = P_GivePowerForItem(player, effect);
                     break;
                 default: //
-                    return;
+                    return false;
                 }
             }
 
@@ -1954,8 +1955,10 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                 // FIXME: Make this behaviour optional, or remove
                 E_MoveInventoryCursor(player, -1, player.inv_ptr);
             }
+            return success;
         }
     }
+    return false;
 }
 
 //
