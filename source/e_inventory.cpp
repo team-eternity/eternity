@@ -2534,6 +2534,10 @@ void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon)
         // Also unmorph inventory
         player->unmorphInventory[i].amount = 0;
         player->unmorphInventory[i].item   = -1;
+
+        // nulling them will trigger special behavior elsewhere
+        player->unmorphWeapon     = nullptr;
+        player->unmorphWeaponSlot = nullptr;
     }
 
     player->inv_ptr = 0;

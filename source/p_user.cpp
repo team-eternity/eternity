@@ -681,8 +681,16 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
                  GameModeInfo->teleSound);
 
     E_UnstashWeaponsForUnmorphing(player);
-    player.pendingweapon = player.readyweapon = player.unmorphWeapon;
-    player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+
+    if(player.unmorphWeapon && player.unmorphWeaponSlot)
+    {
+        player.pendingweapon = player.readyweapon = player.unmorphWeapon;
+        player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+    }
+    else
+    {
+        E_DefaultToUnknownWeapon(player);
+    }
 
     player.unmorphWeapon     = nullptr;
     player.unmorphWeaponSlot = nullptr;
