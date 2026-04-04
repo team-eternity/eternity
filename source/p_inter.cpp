@@ -386,7 +386,8 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, Item
 //
 static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t &newWeapon)
 {
-    if(!(GameModeInfo->flags & GIF_WPNSWITCHSUPER))
+    // NOTE: new Heretic (2025) rules this out: always switch.
+    if(!vanilla_heretic)
         return true; // no limiting flag? Always switch
 
     const weaponinfo_t *curWeapon = player.readyweapon;
@@ -494,8 +495,11 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
     {
         player.bonuscount += BONUSADD;
         E_GiveWeapon(player, wp);
-        player.pendingweapon     = wp;
-        player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+        if(auto slot = E_FindFirstWeaponSlot(player, wp))
+        {
+            player.pendingweapon     = wp;
+            player.pendingweaponslot = slot;
+        }
         // killough 4/25/98, 12/98
         if(sound)
             S_StartSoundName(player.mo, sound);
@@ -506,11 +510,14 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
     {
         if(P_shouldSwitchToNewWeapon(player, *wp))
         {
-            weaponinfo_t *sister     = wp->sisterWeapon;
-            player.pendingweapon     = wp;
-            player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-            if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-                player.pendingweapon = sister;
+            if(auto slot = E_FindFirstWeaponSlot(player, wp)) // check for class availability!
+            {
+                weaponinfo_t *sister     = wp->sisterWeapon;
+                player.pendingweapon     = wp;
+                player.pendingweaponslot = slot;
+                if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+                    player.pendingweapon = sister;
+            }
         }
         E_GiveWeapon(player, wp);
         return true;
@@ -1504,8 +1511,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
         if(pickup->changeweapon != nullptr && player->readyweapon->id != pickup->changeweapon->id &&
            E_PlayerOwnsWeapon(*player, pickup->changeweapon))
         {
-            player->pendingweapon     = pickup->changeweapon;
-            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
+            if(auto slot = E_FindFirstWeaponSlot(*player, pickup->changeweapon))
+            {
+                player->pendingweapon     = pickup->changeweapon;
+                player->pendingweaponslot = slot;
+            }
         }
 
         // Remove the object, provided it doesn't stay in multiplayer games
@@ -2167,17 +2177,27 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
     player.momx = chicken->momx;
     player.momy = chicken->momy;
 
-    player.powers[pw_ghost].tics        = 0;
-    player.powers[pw_weaponlevel2].tics = 0;
+    // Rules have changed in Heretic 2025, independent on the built-in gameplay mod.
+    if(demo_version <= 405)
+    {
+        player.powers[pw_ghost].tics        = 0;
+        player.powers[pw_weaponlevel2].tics = 0;
+    }
 
     player.unmorphWeapon     = player.readyweapon;
     player.unmorphWeaponSlot = player.readyweaponslot;
 
-    E_StashOriginalMorphWeapons(player);
     P_GiveRebornInventory(player);
 
-    player.pendingweapon     = player.readyweapon;
-    player.pendingweaponslot = player.readyweaponslot;
+    player.readyweapon       = E_FindBestWeapon(player);
+    player.readyweaponslot   = E_FindFirstWeaponSlot(player, player.readyweapon);
+    if(player.readyweapon)
+    {
+        player.pendingweapon     = player.readyweapon;
+        player.pendingweaponslot = player.readyweaponslot;
+    }
+    else
+        E_DefaultToUnknownWeapon(player);
 
     player.extralight = 0;
 

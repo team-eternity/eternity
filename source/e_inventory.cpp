@@ -2067,10 +2067,6 @@ static void E_allocatePlayerInventories()
 
         for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
             players[i].inventory[idx].item = -1;
-
-        if(players[i].unmorphInventory)
-            efree(players[i].unmorphInventory);
-        players[i].unmorphInventory = estructalloc(inventoryslot_t, e_maxitemid);
     }
 }
 
@@ -2531,9 +2527,6 @@ void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon)
 
         player->inventory[i].amount = 0;
         player->inventory[i].item   = -1;
-        // Also unmorph inventory
-        player->unmorphInventory[i].amount = 0;
-        player->unmorphInventory[i].item   = -1;
 
         // nulling them will trigger special behavior elsewhere
         player->unmorphWeapon     = nullptr;
@@ -2574,61 +2567,6 @@ int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerc
 int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass, int def)
 {
     return E_GetPClassHealth(effect, MetaKeyIndex(key), pclass, def);
-}
-
-//
-// Upon a polymorph, stash the current weapons to a separate inventory, since they can't be used by
-// morphing class.
-//
-void E_StashOriginalMorphWeapons(player_t &player)
-{
-    size_t numWeapons = E_getNumWeaponItems();
-
-    // WARNING: this clears existing unmorph inventory
-    memset(player.unmorphInventory, 0, e_maxitemid * sizeof(inventoryslot_t));
-    int pos = 0;
-
-    for(size_t i = 0; i < numWeapons; ++i)
-    {
-        const itemeffect_t *effect = E_weaponItemForIndex(i);
-        inventoryslot_t    *slot   = E_InventorySlotForItem(player, effect);
-
-        if(!slot || slot->amount <= 0)
-            continue;
-
-        // Move the slot to the unmorph inventory
-        player.unmorphInventory[pos++] = *slot;
-        E_RemoveInventoryItem(player, effect, -1);
-    }
-}
-
-//
-// Unstash weapons
-//
-void E_UnstashWeaponsForUnmorphing(player_t &player)
-{
-    size_t numWeapons = E_getNumWeaponItems();
-
-    // First remove all owned weapons (specific to morph class)
-    for(size_t i = 0; i < numWeapons; ++i)
-    {
-        const itemeffect_t *effect = E_weaponItemForIndex(i);
-        inventoryslot_t    *slot   = E_InventorySlotForItem(player, effect);
-
-        if(!slot)
-            continue;
-
-        E_RemoveInventoryItem(player, effect, -1);
-    }
-
-    for(inventoryitemid_t i = 0; i < e_maxitemid; ++i)
-    {
-        const inventoryslot_t &slot = player.unmorphInventory[i];
-        if(!slot.amount)
-            break; // reached end
-
-        E_GiveInventoryItem(player, E_EffectForInventoryItemID(slot.item));
-    }
 }
 
 //

@@ -680,8 +680,6 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
                              pos.z + GameModeInfo->teleFogHeight, E_SafeThingName(GameModeInfo->teleFogType)),
                  GameModeInfo->teleSound);
 
-    E_UnstashWeaponsForUnmorphing(player);
-
     if(player.unmorphWeapon && player.unmorphWeaponSlot)
     {
         player.pendingweapon = player.readyweapon = player.unmorphWeapon;
