@@ -1,4 +1,4 @@
-## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ endfunction()
 ######################### Set Build Targets   ##################################
 add_executable(eecrashreport WIN32)
 
-set_target_properties(eecrashreport PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity")
+set_target_properties(eecrashreport PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity-plus")
 
 set_eecrashreport_source(eecrashreport)
 target_link_libraries(eecrashreport)

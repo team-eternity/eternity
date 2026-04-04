@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -379,18 +379,18 @@ static void MN_FindHelpScreens(void)
 
 enum
 {
+    CAT_FORK,
     CAT_PROGRAMMING,
     CAT_BASEDON,
     CAT_GRAPHICS,
-    CAT_SPECIALTHANKS,
     NUMCATS
 };
 
 static const char *cat_strs[NUMCATS] = {
-    FC_ABSCENTER FC_HI "Programming",
-    FC_ABSCENTER FC_HI "Based On",
-    FC_ABSCENTER FC_HI "Graphics",
-    FC_ABSCENTER FC_HI "Special Thanks",
+    FC_ABSCENTER FC_HI "Fork Author", 
+    FC_ABSCENTER FC_HI "Based On",       
+    FC_ABSCENTER FC_HI "Original Programming",
+    FC_ABSCENTER FC_HI "Original Graphics"
 };
 
 struct val_str_t
@@ -402,6 +402,16 @@ struct val_str_t
     bool isNull() const { return l == nullptr && m == nullptr && r == nullptr; }
 };
 
+static const val_str_t val_fork[] = {
+    { nullptr, FC_ABSCENTER "Andrey Skochko" FC_HI " (" FC_BRICK "DRON12261" FC_HI ")", nullptr },
+    { nullptr, nullptr,     nullptr }
+};
+
+static const val_str_t val_basedon[] = {
+    { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard",                 nullptr },
+    { nullptr, FC_ABSCENTER FC_HI "The Eternity Engine" FC_NORMAL " by Team Eternity", nullptr },
+    { nullptr, nullptr,                                                                nullptr }
+};
 static const val_str_t val_programmers[] = {
     { "James Haley", nullptr,                           "David Hill" },
     { "Ioan Chera",  nullptr,                           "Max Waine"  },
@@ -409,24 +419,12 @@ static const val_str_t val_programmers[] = {
     { nullptr,       nullptr,                           nullptr      }
 };
 
-static const val_str_t val_basedon[] = {
-    { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
-    { nullptr, nullptr,                                                nullptr }
-};
-
 static const val_str_t val_graphics[] = {
     { "Sarah Mancuso", nullptr, "Sven Ruthner" },
     { nullptr,         nullptr, nullptr        }
 };
 
-static const val_str_t val_thanks[] = {
-    { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
-    { "Joel Murdoch", nullptr, "Anders Astrand"   },
-    { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
-    { nullptr,        nullptr, nullptr            }
-};
-
-static const val_str_t *val_strs[NUMCATS] = { val_programmers, val_basedon, val_graphics, val_thanks };
+static const val_str_t *val_strs[NUMCATS] = { val_fork, val_basedon, val_programmers, val_graphics };
 
 extern bool help_prev_menuactive;
 
@@ -459,7 +457,7 @@ void MN_DrawCredits()
     V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
     y   = GameModeInfo->creditY - yOffset;
-    str = FC_ABSCENTER FC_HI "The Eternity Engine";
+    str = FC_ABSCENTER FC_BRICK "The Eternity Engine" FC_GOLD " Plus";
     V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
     y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
 
@@ -498,12 +496,17 @@ void MN_DrawCredits()
 
     // MaxW: I'm going to hell for this. Automatically update copyright year.
     static const char *const copyright_text = []() {
-        static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
-        memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
+        static char temp[] = FC_ABSCENTER FC_GOLD "Copyright YEAR";
+        memcpy(temp + 12, &__DATE__[7], 4); // Overwrite YEAR in temp.
         return temp;
     }();
 
+    static const char *const copyright_author = FC_ABSCENTER FC_GOLD "Team Eternity, DRON12261 et al.";
+
     V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
+    y += V_FontStringHeight(menu_font_normal, "");
+
+    V_FontWriteText(menu_font_normal, copyright_author, 0, y, &subscreen43);
     y += V_FontStringHeight(menu_font_normal, "");
 
     // Scroll the credits

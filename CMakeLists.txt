@@ -1,4 +1,4 @@
-## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
 ## Copyright (C) 2020 Max Waine
 ##
@@ -25,13 +25,13 @@ cmake_minimum_required(VERSION 3.16)
 # Can't set anything below 10.15 now (10.13 would have worked, but we want std::filesystem)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
 
-project("Eternity Engine"
-        VERSION 4.6.0
+project("Eternity Engine Plus"
+        VERSION 0.1.0
         LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "eternity")
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "eternity-plus")
 
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
@@ -145,7 +145,7 @@ if(WIN32 AND MSVC)
    if(MFC_FOUND)
       add_subdirectory(eecrashreport)
 
-      add_dependencies(eternity eecrashreport)
+      add_dependencies(eternity-plus eecrashreport)
    else()
       message("Warning: MFC/ATL not found. eecrashreport will not be built.")
    endif()

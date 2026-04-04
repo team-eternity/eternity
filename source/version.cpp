@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2026 James Haley et al.
 //
@@ -22,6 +22,7 @@
 //
 
 #include "version.h"
+#include <string>
 
 // sf: made int from define
 int version = 406;
@@ -35,9 +36,23 @@ const char version_time[] = __TIME__; // haleyjd
 // sf: version name -- at the suggestion of mystican
 const char version_name[] = "Nidhogg";
 
+// Eternity Engine Plus versioning
+int eep_version_major = 0;
+int eep_version_minor = 1;
+int eep_version_patch = 0;
+int eep_version_num   = (eep_version_major * 10000) + (eep_version_minor * 100) + eep_version_patch;
+
+// Base Eternity Engine versioning
+int ee_version_major = 4;
+int ee_version_minor = 6;
+int ee_version_patch = 0;
+int ee_version_num   = (ee_version_major * 10000) + (ee_version_minor * 100) + ee_version_patch;
+
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Nidhogg\"";
+//const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Nidhogg\"";
+const char ee_wmCaption[] = "Eternity Engine Plus v0.01.00 (Based on Eternity Engine v4.06.00 \"Nidhogg\")"
+;
 #endif
 
 // haleyjd: Eternity release history

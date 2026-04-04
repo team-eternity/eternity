@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -69,8 +69,8 @@ constexpr const char HACXMENUBACK[] = "CONS1_5";
 constexpr const char HTICMENUBACK[] = "FLOOR16";
 
 // credit background flats
-constexpr const char DOOMCREDITBK[] = "NUKAGE1";
-constexpr const char DM2CREDITBK[]  = "SLIME05";
+constexpr const char DOOMCREDITBK[] = "CEIL5_1";
+constexpr const char DM2CREDITBK[]  = "CEIL5_1";
 constexpr const char HACXCREDITBK[] = "SLIME01";
 constexpr const char HTICCREDITBK[] = "FLTWAWA1";
 
