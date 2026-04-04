@@ -32,6 +32,8 @@
 #include "d_player.h"
 #include "m_collection.h"
 
+#include <variant>
+
 class MetaKeyIndex;
 class MetaTable;
 
@@ -73,6 +75,13 @@ enum class AutoUseHealthMode : int
     // TODO: add this when we support strife
     //   strife,
     MAX
+};
+
+enum class ItemOrigin
+{
+    placed,
+    dropped,
+    scripted
 };
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
@@ -210,13 +219,7 @@ itemeffect_t *E_KeyItemForIndex(size_t idx);
 int E_GiveAllKeys(player_t &player);
 
 // Take all "key" type artifacts from a player
-int E_TakeAllKeys(const player_t &player);
-
-// Upon morphing a player, move all original class weapons to a secondary inventory
-void E_StashOriginalMorphWeapons(player_t &player);
-
-// After returning to normal form, restore all weapons. Delete existing weapons
-void E_UnstashWeaponsForUnmorphing(player_t &player);
+int E_TakeAllKeys(player_t &player);
 
 // Check if a player is able to unlock a lock, by its lock ID.
 bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote);
@@ -264,7 +267,7 @@ bool E_PlayerHasBackpack(const player_t &player);
 bool E_GiveBackpack(player_t &player);
 
 // Special function to remove backpack.
-bool E_RemoveBackpack(const player_t &player);
+bool E_RemoveBackpack(player_t &player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
 int E_GetMaxAmountForArtifact(const player_t &player, const itemeffect_t *artifact);
@@ -277,8 +280,13 @@ int E_GetItemOwnedAmountName(const player_t &player, const char *name);
 
 bool E_PlayerHasPowerName(const player_t &player, const char *name);
 
-// Place an item into a player's inventory.
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1);
+enum class SpecialAmount
+{
+    defined,
+    maximum
+};
+using GiveAmount = std::variant<SpecialAmount, int>;
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, GiveAmount amount = SpecialAmount::defined);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
@@ -302,11 +310,17 @@ enum autousehealthrestrict_flags : unsigned
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount);
+enum class RemoveMore : bool
+{
+    no,
+    yes
+};
+itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount,
+                                    RemoveMore removemore = RemoveMore::no);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
-void E_InventoryEndHub(const player_t *player);
+void E_InventoryEndHub(player_t *player);
 
 // Call to completely clear a player's inventory.
 void E_ClearInventory(player_t *player);

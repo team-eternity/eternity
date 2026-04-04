@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Called from CMake
 if [ "$#" -ne 2 ]; then
@@ -18,7 +18,7 @@ for dir in $dirs; do
     cp -R "$game_path/$dir" "$storage_path"
 done
 
-if [ -f "$storage_path/eternity" ]; then
-    rm "$storage_path/eternity"
+if [ -f "$storage_path/eternity-plus" ]; then
+    rm "$storage_path/eternity-plus"
 fi
-cp "$game_path/eternity" "$storage_path"
+cp "$game_path/eternity-plus" "$storage_path"

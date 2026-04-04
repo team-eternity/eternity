@@ -794,8 +794,23 @@ static void P_ArchivePlayers(SaveArchive &arc)
                 P_loadWeaponCounters(arc, p);
             }
             P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
-            if(arc.saveVersion() >= 22)
-                P_ArchiveArray<inventoryslot_t>(arc, p.unmorphInventory, inventorySize);
+            if(arc.saveVersion() >= 22 && arc.saveVersion() <= 23)
+            {
+                PODCollection<inventoryslot_t> unmorphInventory;
+                unmorphInventory.resize(inventorySize);
+                P_ArchiveArray<inventoryslot_t>(arc, &unmorphInventory[0], inventorySize);
+
+                if(arc.isLoading())
+                {
+                    for(const inventoryslot_t &slot : unmorphInventory)
+                    {
+                        if(!slot.amount)
+                            break; // reached end
+
+                        E_GiveInventoryItem(p, E_EffectForInventoryItemID(slot.item));
+                    }
+                }
+            }
 
             for(powerduration_t &power : p.powers)
             {

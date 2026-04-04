@@ -250,13 +250,16 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 }
 
 //
-// P_NextWeapon
-//
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(const player_t &player, uint8_t *slotindex)
+int P_CycleWeapon(const player_t &player, CycleDir dir, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player, WeaponFilter::any))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -266,20 +269,36 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
         newweaponslot = P_findFirstNonNullWeaponSlot(player);
     newweaponlink = &newweaponslot->links;
 
+    // Check ahead: does the player have any weapon with ammo (or permanently usable, like the fist)?
+    // If not, we can allow any owned weapon.
+    // It needs to avoid infinite loop if only weapons without ammo are owned.
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, WeaponFilter::usable);
+
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
+
+    // NOTE: node direction intentionally looks opposite to CycleDir
+    const auto connection =
+        dir == CycleDir::next ? &BDListItem<weaponslot_t>::bdPrev : &BDListItem<weaponslot_t>::bdNext;
+    const auto endInSlot = dir == CycleDir::next ? E_LastInSlot : E_FirstInSlot;
     do
     {
-        newweaponlink = newweaponlink->bdPrev;
+        newweaponlink = newweaponlink->*connection;
         newweapon     = newweaponlink->bdObject->weapon;
         if(newweaponlink->isDummy())
         {
-            const int slotindex = newweaponlink->bdObject->slotindex;
-            bool      firsttime = true;
-            for(int i = (slotindex + 1) % NUMWEAPONSLOTS; i != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
+            const int slotindex  = newweaponlink->bdObject->slotindex;
+            bool      firsttime  = true;
+            const int startpoint = dir == CycleDir::next ? (slotindex + 1) % NUMWEAPONSLOTS :
+                                   slotindex == 0        ? NUMWEAPONSLOTS - 1 :
+                                                           slotindex - 1;
+            const int endpoint   = dir == CycleDir::next ? slotindex + 1 : slotindex - 1;
+            auto      step       = dir == CycleDir::next ? [](int i) { return (i + 1) % NUMWEAPONSLOTS; } :
+                                                           [](int i) { return i == 0 ? NUMWEAPONSLOTS - 1 : i - 1; };
+            for (int i = startpoint; i != endpoint || firsttime; i = step(i))
             {
                 if(player.pclass->weaponslots[i] != nullptr)
                 {
-                    newweaponlink = E_LastInSlot(player.pclass->weaponslots[i]);
+                    newweaponlink = endInSlot(player.pclass->weaponslots[i]);
                     newweapon     = newweaponlink->bdObject->weapon;
                     break;
                 }
@@ -287,8 +306,9 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
             }
         }
 
+        // if no weapon with ammo, allow any owned weapon
+        canfireweapon  = P_WeaponHasAmmo(player, newweapon) || !hasWeaponWithAmmo;
         ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
         sameweapon     = newweapon->id == currentweapon->id;
         sameweaponslot = &newweaponslot->links == newweaponlink;
     }
@@ -296,70 +316,25 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 
     if(demo_version >= 401)
     {
-        if(newweapon != currentweapon)
+        if(dir == CycleDir::next)
         {
-            *slotindex = newweaponlink->bdObject->slotindex;
-            return newweapon->id;
+            if(newweapon != currentweapon)
+            {
+                *slotindex = newweaponlink->bdObject->slotindex;
+                return newweapon->id;
+            }
+            else
+            {
+                *slotindex = -1;
+                return -1;
+            }
         }
         else
         {
-            *slotindex = -1;
-            return -1;
+            if(slotindex != nullptr)
+                *slotindex = newweaponlink->bdObject->slotindex;
+            return newweapon != currentweapon ? newweapon->id : -1;
         }
-    }
-    else
-        return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
-}
-
-//
-// P_PrevWeapon
-//
-// haleyjd 03/06/09: Like the above.
-//
-int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
-{
-    const weaponinfo_t             *currentweapon = player.readyweapon;
-    const weaponinfo_t             *newweapon     = player.readyweapon;
-    const weaponslot_t             *newweaponslot = player.readyweaponslot;
-    const BDListItem<weaponslot_t> *newweaponlink;
-
-    if(newweaponslot == nullptr)
-        newweaponslot = P_findFirstNonNullWeaponSlot(player);
-    newweaponlink = &newweaponslot->links;
-
-    bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
-    do
-    {
-        newweaponlink = newweaponlink->bdNext;
-        newweapon     = newweaponlink->bdObject->weapon;
-        if(newweaponlink->isDummy())
-        {
-            const int slotindex = newweaponlink->bdObject->slotindex;
-            bool      firsttime = true;
-            for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i != slotindex - 1 || firsttime;
-                i     = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
-            {
-                if(player.pclass->weaponslots[i] != nullptr)
-                {
-                    newweaponlink = E_FirstInSlot(player.pclass->weaponslots[i]);
-                    newweapon     = newweaponlink->bdObject->weapon;
-                    break;
-                }
-            }
-        }
-
-        ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
-        sameweapon     = newweapon->id == currentweapon->id;
-        sameweaponslot = &newweaponslot->links == newweaponlink;
-    }
-    while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
-
-    if(demo_version >= 401)
-    {
-        if(slotindex != nullptr)
-            *slotindex = newweaponlink->bdObject->slotindex;
-        return newweapon != currentweapon ? newweapon->id : -1;
     }
     else
         return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
@@ -519,7 +494,7 @@ bool P_CheckAmmo(player_t &player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(const player_t &player, int compat_amt)
+void P_SubtractAmmo(player_t &player, int compat_amt)
 {
     weaponinfo_t *weapon = player.readyweapon;
     itemeffect_t *ammo;

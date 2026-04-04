@@ -1,4 +1,4 @@
-## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2020 Max Waine
 ##
 ## This software is free software; you can redistribute it and/or
@@ -102,7 +102,7 @@ function(eternity_target_sources _TARGET)
       configure_file(Win32/Eternity.rc.in "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc" @ONLY)
       add_sources(
          SOURCE_GROUP "Resource Files"
-         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/ee.ico"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/eep.ico"
          SOURCE_GROUP "Source Files"
          "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
@@ -134,9 +134,9 @@ function(eternity_target_sources _TARGET)
       )
       find_library(FOUNDATION_FRAMEWORK Foundation)
       MESSAGE(${FOUNDATION_FRAMEWORK})
-      target_link_libraries(eternity ${FOUNDATION_FRAMEWORK})
+      target_link_libraries("${_TARGET}" ${FOUNDATION_FRAMEWORK})
       find_library(COCOA_FRAMEWORK Cocoa)
-      target_link_libraries(eternity ${COCOA_FRAMEWORK})
+      target_link_libraries("${_TARGET}" ${COCOA_FRAMEWORK})
    endif(APPLE)
 
    if(LINUX)
@@ -741,79 +741,79 @@ endfunction(eternity_target_sources)
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
-add_executable(eternity)
+add_executable(eternity-plus)
 
-set_target_properties(eternity
+set_target_properties(eternity-plus
    PROPERTIES
    CXX_STANDARD          20
    CXX_STANDARD_REQUIRED ON
-   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity"
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity-plus"
 )
 
-eternity_target_compile_definitions(eternity)
-eternity_target_sources(eternity)
-eternity_copy_libs(eternity)
-eternity_copy_base_and_user(eternity)
+eternity_target_compile_definitions(eternity-plus)
+eternity_target_sources(eternity-plus)
+eternity_copy_libs(eternity-plus)
+eternity_copy_base_and_user(eternity-plus)
 
-target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
-target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
+target_include_directories(eternity-plus PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
+target_link_libraries(eternity-plus ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(APPLE)
    eternity_set_mac_library_output()
    # Fix the lookup to the SDL2 frameworks
-   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F\"${CMAKE_BINARY_DIR}\"")
-   set_target_properties(eternity PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
-                                             INSTALL_RPATH "@loader_path")
+   set_target_properties(eternity-plus PROPERTIES LINK_FLAGS "-Wl,-F\"${CMAKE_BINARY_DIR}\"")
+   set_target_properties(eternity-plus PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
+                                                   INSTALL_RPATH "@loader_path")
 endif()
 
 if(OPENGL_LIBRARY)
-   target_link_libraries(eternity ${OPENGL_LIBRARY})
+   target_link_libraries(eternity-plus ${OPENGL_LIBRARY})
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   target_link_libraries(eternity winmm)
+   target_link_libraries(eternity-plus winmm)
 endif()
 
 # Flatpak support
 option(BUILD_FLATPAK "Build with flatpak-friendly settings." OFF)
 if(BUILD_FLATPAK)
-   target_compile_definitions(eternity PRIVATE BUILD_FLATPAK)
+   target_compile_definitions(eternity-plus PRIVATE BUILD_FLATPAK)
 endif()
 
 if(MSVC)
-   set_property(TARGET eternity PROPERTY VS_DPI_AWARE "PerMonitor")
+   set_property(TARGET eternity-plus PROPERTY VS_DPI_AWARE "PerMonitor")
 
-   target_compile_options(eternity PUBLIC
+   target_compile_options(eternity-plus PUBLIC
                           "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
 
     if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
-        target_compile_options(eternity PUBLIC "/permissive-")
+        target_compile_options(eternity-plus PUBLIC "/permissive-")
     endif()
 
    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      target_compile_options(eternity PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+      target_compile_options(eternity-plus PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
    endif()
 
-   target_link_options(eternity PUBLIC
+   target_link_options(eternity-plus PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"
                        "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>"
                        "$<$<CONFIG:Release>:/DEBUG>")
 
    if(NOT MSVC_VERSION LESS  "1914")
-      target_compile_options(eternity PUBLIC "/std:c++20")
+      target_compile_options(eternity-plus PUBLIC "/std:c++20")
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
-   target_link_libraries(eternity stdc++fs pthread)
+   target_link_libraries(eternity-plus stdc++fs pthread)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   target_link_libraries(eternity version)
+   target_link_libraries(eternity-plus version)
 endif()
 if(APPLE)
-   eternity_set_xcode_attributes(eternity)
+   eternity_set_xcode_attributes(eternity-plus)
 endif()
 
-install(TARGETS eternity
+install(TARGETS eternity-plus
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
         ARCHIVE DESTINATION ${LIB_DIR})

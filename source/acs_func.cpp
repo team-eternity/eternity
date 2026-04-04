@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, David Hill, et al.
 //
@@ -2409,9 +2409,19 @@ bool ACS_CF_SetWeapon(ACS_CF_ARGS)
     player_t *player = info->mo->player;
     if(E_PlayerOwnsWeapon(*player, weapon))
     {
-        player->pendingweapon     = weapon;
-        player->pendingweaponslot = E_FindFirstWeaponSlot(*player, weapon);
-        thread->dataStk.push(1);
+        const auto slot = E_FindFirstWeaponSlot(*player, weapon);
+        if(slot)
+        {
+            if(player->readyweapon != weapon && (!player->readyweapon || !player->readyweapon->sisterWeapon ||
+                                                 player->readyweapon->sisterWeapon != weapon))
+            {
+                player->pendingweapon     = weapon;
+                player->pendingweaponslot = slot;
+            }
+            thread->dataStk.push(1);
+        }
+        else
+            thread->dataStk.push(0);
     }
     else
         thread->dataStk.push(0);
@@ -2696,44 +2706,36 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 //
 bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 {
-    const auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int           amount   = argV[1];
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+    const auto  info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int   amount   = argV[1];
 
-    if(!item)
+    ScriptedItem item = getScriptedItem(itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't give anything)
-    if(amount <= 0)
+    // if amount is 0, do nothing
+    // if amount is negative, it means give maximum
+    if(amount == 0)
         return false;
-
-    auto giveToPlayer = [item, amount](player_t *player) {
-        switch(item->getInt("class", ITEMFX_NONE))
-        {
-        case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
-        case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
-        case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
-        case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
-        default:            E_GiveInventoryItem(*player, item, amount); break;
-        }
-    };
 
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            giveToPlayer(info->mo->player);
+            P_GiveInventory(info->mo->player, item, amount);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                giveToPlayer(&players[pnum]);
+                P_GiveInventory(&players[pnum], item, amount);
         }
     }
     return false;
@@ -2744,39 +2746,35 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    const auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int           amount   = argV[1];
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+    const auto   info     = &static_cast<ACSThread *>(thread)->info;
+    char const  *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int    amount   = argV[1];
+    ScriptedItem item     = getScriptedItem(itemname);
 
-    if(!item)
+    // If the item doesn't exist as an item or a power, complain
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_TakeInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't remove anything)
-    if(amount <= 0)
+    // if amount is 0, do nothing
+    // if amount is negative, it means take all
+    if(amount == 0)
         return false;
-
-    auto alwaysRemove = [info, item, amount]() {
-        int owned = E_GetItemOwnedAmount(*info->mo->player, item);
-        // If amount exceeds what player has, take all they have
-        E_RemoveInventoryItem(*info->mo->player, item, emin(owned, amount));
-    };
 
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            alwaysRemove();
+            P_TakeInventory(info->mo->player, item, amount);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                alwaysRemove();
+                P_TakeInventory(&players[pnum], item, amount);
         }
     }
     return false;
@@ -3063,6 +3061,161 @@ bool ACS_CF_TagWait(ACS_CF_ARGS)
 {
     thread->state = { ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_SECTOR };
     return true;
+}
+
+enum
+{
+    COLORMAP_MID,
+    COLORMAP_TOP,
+    COLORMAP_BOTTOM
+};
+
+//
+// ACS_CF_GetSectorColormap
+//
+// str GetSectorColormap(int tag, int type);
+//
+bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
+{
+    int const tag    = argV[0];
+    int const type   = argV[1];
+    int       secnum = P_FindSectorFromTag(tag, -1); // Get only first sector with tag
+
+    // If sector with the given tag doesn't exist, return null string
+    if(secnum == -1)
+    {
+        doom_warningf("ACS_CF_GetSectorColormap: No sector found with tag %d", tag);
+
+        thread->dataStk.push(~ACSenv.getString("")->idx);
+        return false;
+    }
+
+    sector_t   &sector   = sectors[secnum];
+    char const *colormap = nullptr;
+
+    switch(type)
+    {
+    case COLORMAP_MID:    colormap = R_ColormapNameForNum(sector.midmap & ~COLORMAP_BOOMKIND); break;
+    case COLORMAP_TOP:    colormap = R_ColormapNameForNum(sector.topmap & ~COLORMAP_BOOMKIND); break;
+    case COLORMAP_BOTTOM: colormap = R_ColormapNameForNum(sector.bottommap & ~COLORMAP_BOOMKIND); break;
+    default:              doom_warningf("ACS_CF_GetSectorColormap: Invalid colormap type %d", type); break;
+    }
+
+    if(!colormap)
+    {
+        doom_warningf("ACS_CF_GetSectorColormap: No colormap found for sector with tag %d and type %d", tag, type);
+        thread->dataStk.push(~ACSenv.getString("")->idx);
+    }
+    else
+        thread->dataStk.push(~ACSenv.getString(colormap)->idx);
+    return false;
+}
+
+//
+// ACS_CF_IsSectorColormapBoomkind
+//
+// int IsSectorColormapBoomkind(int tag, int type);
+//
+bool ACS_CF_IsSectorColormapBoomkind(ACS_CF_ARGS)
+{
+    int const tag    = argV[0];
+    int const type   = argV[1];
+    int       secnum = P_FindSectorFromTag(tag, -1); // Get only first sector with tag
+
+    // If sector with the given tag doesn't exist, return false
+    if(secnum == -1)
+    {
+        doom_warningf("ACS_CF_IsSectorColormapBoomkind: No sector found with tag %d", tag);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    sector_t &sector   = sectors[secnum];
+    int       boomkind = -1;
+
+    switch(type)
+    {
+    case COLORMAP_MID:    boomkind = (sector.midmap & COLORMAP_BOOMKIND) != 0; break;
+    case COLORMAP_TOP:    boomkind = (sector.topmap & COLORMAP_BOOMKIND) != 0; break;
+    case COLORMAP_BOTTOM: boomkind = (sector.bottommap & COLORMAP_BOOMKIND) != 0; break;
+    default:
+        doom_warningf("ACS_CF_IsSectorColormapBoomkind: Invalid colormap type %d", type);
+        boomkind = false;
+        break;
+    }
+
+    thread->dataStk.push(boomkind);
+    return false;
+}
+
+//
+// SetSectorColormap
+//
+// bool SetSectorColormap(int tag, int type, string colormap, int isBoom);
+//
+bool ACS_CF_SetSectorColormap(ACS_CF_ARGS)
+{
+    int const   tag          = argV[0];
+    int const   type         = argV[1];
+    const char *colormapName = thread->scopeMap->getString(argV[2])->str;
+    int const   rawColormap  = R_ColormapNumForName(colormapName);
+    int const   boomBit      = argC > 3 ? (argV[3] != 0 ? COLORMAP_BOOMKIND : 0) : 0;
+    int         res          = 0;
+    int         secnum       = -1;
+
+    // If colormap name is empty, we want to use the default colormap (rawColormap of -1),
+    // so treat that as a special case
+    int const useDefault = colormapName[0] == '\0';
+
+    // If colormap type is invalid, don't do anything
+    if(type != COLORMAP_MID && type != COLORMAP_TOP && type != COLORMAP_BOTTOM)
+    {
+        doom_warningf("ACS_CF_SetSectorColormap: Invalid colormap type %d", type);
+
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    // If colormap with the given name doesn't exist, don't do anything
+    if(rawColormap == -1 && !useDefault)
+    {
+        doom_warningf("ACS_CF_SetSectorColormap: Colormap '%s' not found", colormapName);
+
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    // Get the colormap indices we need to set based on the given colormap and whether we're using the default colormap
+    // or not. If we're using the default colormap, we need to determine which default colormap to use based on whether
+    // the sector has the sky flag. Also if isboom is true, we need to use the boom colormap index instead of the
+    // regular one, so we need to take that into account as well
+    int const colormap   = (rawColormap & ~COLORMAP_BOOMKIND) | boomBit;
+    int const defaultmap = (global_cmap_index & ~COLORMAP_BOOMKIND) | boomBit;
+    int const fogmap     = (global_fog_index & ~COLORMAP_BOOMKIND) | boomBit;
+
+    // Set the colormap for all sectors with the given tag
+    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+    {
+        sector_t &sector = sectors[secnum];
+
+        // If we're using the default colormap, we need to determine which default colormap to use based on whether the
+        // sector has the sky flag. Also if isboom is true, we need to use the boom colormap index instead of the
+        // regular one, so we need to take that into account as well
+        bool      isSky         = (sector.intflags & SIF_SKY) != 0;
+        int const colormapToUse = useDefault ? (isSky ? fogmap : defaultmap) : colormap;
+
+        switch(type)
+        {
+        case COLORMAP_MID:    sector.midmap = colormapToUse; break;
+        case COLORMAP_TOP:    sector.topmap = colormapToUse; break;
+        case COLORMAP_BOTTOM: sector.bottommap = colormapToUse; break;
+        }
+
+        res = 1;
+    }
+
+    thread->dataStk.push(res);
+    return false;
 }
 
 // EOF
