@@ -969,7 +969,7 @@ bool P_ClearInventory(player_t *player)
 //
 // Uses an inventory item from the player's inventory
 //
-bool P_UseInventory(player_t *player, itemeffect_t *item)
+bool P_UseInventory(player_t *player, const itemeffect_t *item)
 {
     if(!player || !item)
         return false;
