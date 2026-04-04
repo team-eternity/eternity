@@ -320,13 +320,7 @@ itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *
 // out items that don't persist.
 void E_InventoryEndHub(const player_t *player);
 
-// Call to completely clear a player's inventory.
-enum class SetEmptyWeapon : bool
-{
-    no,
-    yes
-};
-void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon = SetEmptyWeapon::no);
+void E_ClearInventory(player_t *player);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
