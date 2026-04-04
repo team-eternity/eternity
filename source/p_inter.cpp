@@ -2061,11 +2061,17 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
     player.unmorphWeapon     = player.readyweapon;
     player.unmorphWeaponSlot = player.readyweaponslot;
 
-    E_StashOriginalMorphWeapons(player);
     P_GiveRebornInventory(player);
 
-    player.pendingweapon     = player.readyweapon;
-    player.pendingweaponslot = player.readyweaponslot;
+    player.readyweapon       = E_FindBestWeapon(player);
+    player.readyweaponslot   = E_FindFirstWeaponSlot(player, player.readyweapon);
+    if(player.readyweapon)
+    {
+        player.pendingweapon     = player.readyweapon;
+        player.pendingweaponslot = player.readyweaponslot;
+    }
+    else
+        E_DefaultToUnknownWeapon(player);
 
     player.extralight = 0;
 

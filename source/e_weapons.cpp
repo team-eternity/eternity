@@ -529,8 +529,12 @@ static weaponinfo_t *E_findBestWeapon(const player_t &player, const SelectOrderN
 
     if(node->left && (ret = E_findBestWeapon(player, node->left)))
         return ret;
-    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
+    // NOTE: only pick weapons available for the player class
+    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object) &&
+       E_FindFirstWeaponSlot(player, node->object))
+    {
         return node->object;
+    }
     if(node->next && (ret = E_findBestWeapon(player, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeapon(player, node->right)))
