@@ -348,6 +348,51 @@ int E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot)
 }
 
 //
+// Check if player has any weapons left
+//
+bool E_PlayerHasAnyWeapons(const player_t &player, WeaponFilter filter)
+{
+    for(const weaponslot_t *slot : player.pclass->weaponslots)
+    {
+        if(!slot)
+            continue;
+
+        BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
+        do
+        {
+            if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon) &&
+               (filter == WeaponFilter::any || P_WeaponHasAmmo(player, weaponslot->bdObject->weapon)))
+            {
+                return true;
+            }
+
+            weaponslot = weaponslot->bdNext;
+        }
+        while(!weaponslot->isDummy());
+    }
+
+    return false;
+}
+
+//
+// Check if player has any weapons left
+// if not and setemptyweapon is true, select the "Unknown" dummy weapon (without giving it)
+//
+void E_DefaultToUnknownWeapon(player_t &player)
+{
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player, WeaponFilter::any);
+    if(hasanyweapon)
+        return;
+
+    weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+    if(emptyWeapon != nullptr)
+    {
+        player.pendingweapon     = emptyWeapon;
+        player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
+    }
+}
+
+//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)
@@ -430,7 +475,8 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 static weaponslot_t *E_findEntryForWeaponInSlot(const weaponinfo_t *wp, const weaponslot_t *slot)
 {
-    if(slot == nullptr)
+    // BUGFIX - Prevent attempt to switch to null wp, otherwise the game will crash
+    if(slot == nullptr || wp == nullptr)
         return nullptr;
 
     auto baseslot = E_FirstInSlot(slot);
@@ -483,8 +529,12 @@ static weaponinfo_t *E_findBestWeapon(const player_t &player, const SelectOrderN
 
     if(node->left && (ret = E_findBestWeapon(player, node->left)))
         return ret;
-    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
+    // NOTE: only pick weapons available for the player class
+    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object) &&
+       E_FindFirstWeaponSlot(player, node->object))
+    {
         return node->object;
+    }
     if(node->next && (ret = E_findBestWeapon(player, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeapon(player, node->right)))
@@ -529,8 +579,10 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t &player, const ite
         return ret;
     // Player owns normal weapon always, but check if the powered one has the flag
     if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) && correctammo &&
-       P_WeaponHasAmmo(player, powerChecked))
+       P_WeaponHasAmmo(player, powerChecked) && E_FindFirstWeaponSlot(player, temp))
+    {
         return temp;
+    }
     if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))

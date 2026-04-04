@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -200,8 +200,12 @@ static int R_spanLight(const cb_plane_t &plane, float dist)
 static void R_planeLight(cb_plane_t &plane)
 {
     // This formula was taken (almost) directly from r_main.c where the zlight
-    // table is generated.
-    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
+    // table is generated. The only difference is that the extralight component 
+    // is added here, because extralight must affect planes as well as walls 
+    // and sprites, and the zlight table is only used for walls and sprites. 
+    // The formula is designed to give the same result as the zlight table, but 
+    // with the extralight component added in.
+    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f)) + 1 - (extralight * LIGHTBRIGHT);
 }
 
 //
@@ -296,9 +300,10 @@ static void R_slopeLights(const cb_plane_t &plane, int x1, int x2, double startc
 
     for(i = 0; i < len; i++)
     {
-        int index = (int)(map >> FRACBITS) + 1;
-
-        index -= (extralight * LIGHTBRIGHT);
+        // The factor of 2 was introduced here based on empirical testing — with this formula, 
+        // lighting on slopes is calculated visually correctly regardless of how much the area 
+        // with the slopes is brightened or darkened.
+        int index = (int)(map >> FRACBITS) + (1 - (extralight * LIGHTBRIGHT)) * 2;
 
         if(index < 0)
             cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap);

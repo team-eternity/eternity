@@ -24,6 +24,13 @@ Features
     power effects to the player.
     Negative value of amount will mean to give maximum.
 * Next ACS functions has been heavily improved (thanks to DRON12261):
+  - void TakeInventory(str item_name, int amount):
+    Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects from the player.
+    Also, if the function is passed a amount of item that is greater than the player actually has, the item will be
+    taken away completely (previously, it was necessary to specify a number of items equal to what was in the
+    player's inventory, which was a bug).
+    Negative value of amount will mean to take all.
   - int CheckInventory(str item_name):
     Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of
     power effects with the player.
@@ -36,6 +43,11 @@ Features
 * New thing type flag NOSEEKINVISIBLE for projectiles, which prevents the seeker from targeting players with 
   invisibility powerup active.
 * New thing type flag IGNORESEEKER for things, which prevents them from being targeted by seekers.
+* New codepointer A_LightEx added, which is an parametrized version of A_Light0/A_Light1/A_Light2. It can be used to 
+  create more complex light sequences, such as a flashlight bright lighting effect. It also can make all darker with 
+  negative brightness values.
+* Added new ACS functions: GetSectorColormap, SetSectorColormap and IsSectorColormapBoomkind. Now it's possible to 
+  change the colormap of a sector during the gameplay.
 
 Improvements
 ------------
@@ -49,15 +61,22 @@ Improvements
 * Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
   level exit score. This was needed because otherwise it would become useless on heavily scripted
   maps.
+* Updated chicken morphing rules to match Heretic 2025.
+* Updated weapon autoswitch rule to match Heretic 2025.
 
 Bug fixes
 ---------
 * Fixed failure on Windows to load file paths with unicode (non US English) characters.
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
-* Fixed bad implementation of TakeInventory.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed a freeze with an infinite loop when the player had only “Unknown” (dummy weapon) left and tried to change
+  a weapon.
+* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and
+  attempted to switch to a more suitable weapon (which did not exist).
+* Fixed a bug where a player's all weapons were taken via TakeInventory, but they still had the last weapon they
+  used in their hands (even though that weapon was no longer in the player's inventory).
 * PowerFlight, PowerAllMap, and PowerSilencer can now have limited duration and be modded in EDF using the permanent,
   additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will
   it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite
@@ -87,3 +106,4 @@ Bug fixes
 * Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
   (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.
+* Fixed ACS SetWeapon function.

@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 //
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
@@ -33,6 +33,18 @@ extern unsigned char subversion; // haleyjd
 extern const char version_date[];
 extern const char version_time[];
 extern const char version_name[];
+
+// Eternity Engine Plus versioning
+extern int eep_version_major;
+extern int eep_version_minor;
+extern int eep_version_patch;
+extern int eep_version_num;
+
+// Base Eternity Engine versioning
+extern int ee_version_major;
+extern int ee_version_minor;
+extern int ee_version_patch;
+extern int ee_version_num;
 
 #ifdef _SDL_VER
 extern const char ee_wmCaption[];

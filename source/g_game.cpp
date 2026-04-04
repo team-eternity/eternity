@@ -397,9 +397,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
         // next / prev weapon actions
         if(gameactions[ka_weaponup])
-            newweapon = P_NextWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::next, &cmd->slotIndex);
         else if(gameactions[ka_weapondown])
-            newweapon = P_PrevWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::previous, &cmd->slotIndex);
 
         if(p.readyweapon)
         {
@@ -490,9 +490,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         {
             // haleyjd 03/06/09: next/prev weapon actions
             if(gameactions[ka_weaponup])
-                newweapon = P_NextWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::next);
             else if(gameactions[ka_weapondown])
-                newweapon = P_PrevWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::previous);
 
             const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
@@ -2399,7 +2399,6 @@ void G_PlayerReborn(int player)
     skin_t        *playerskin;
     playerclass_t *playerclass;
     inventory_t    inventory;
-    inventory_t    unmorphInventory;
 
     p = &players[player];
 
@@ -2416,7 +2415,6 @@ void G_PlayerReborn(int player)
     playerskin       = p->unmorphSkin ? p->unmorphSkin : p->skin;
     playerclass      = p->unmorphClass ? p->unmorphClass : p->pclass; // haleyjd: playerclass
     inventory        = p->inventory;                                  // haleyjd: inventory
-    unmorphInventory = p->unmorphInventory;
 
     delete p->weaponctrs;
 
@@ -2436,7 +2434,6 @@ void G_PlayerReborn(int player)
     p->skin             = playerskin;
     p->pclass           = playerclass; // haleyjd: playerclass
     p->inventory        = inventory;   // haleyjd: inventory
-    p->unmorphInventory = unmorphInventory;
     p->playerstate      = PST_LIVE;
     p->health           = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
     p->quake            = 0;                        // haleyjd 01/21/07

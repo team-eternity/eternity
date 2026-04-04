@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -852,6 +852,7 @@ void D_SetGameName(const char *iwad)
 void D_InitPaths()
 {
     int i;
+    struct stat sbuf;
 
     // haleyjd 11/23/06: set game path if -game wasn't used
     if(!gamepathset)
@@ -860,17 +861,39 @@ void D_InitPaths()
     // haleyjd 11/23/06: set basedefault here, and use basegamepath.
     // get config file from same directory as executable
     // killough 10/98
+    // DRON12261: Modified to support eternity-plus.cfg with fallback to eternity.cfg
+
     if(GameModeInfo->type == Game_DOOM && use_doom_config)
     {
-        qstring tmp(userpath);
-        tmp.pathConcatenate("/doom/eternity.cfg");
-        basedefault = tmp.duplicate(PU_STATIC);
+        qstring primaryPath(userpath);
+        primaryPath.pathConcatenate("/doom/eternity-plus.cfg");
+
+        qstring fallbackPath(userpath);
+        fallbackPath.pathConcatenate("/doom/eternity.cfg");
+
+        // Try primary config first, fallback to old name
+        if(!I_stat(primaryPath.constPtr(), &sbuf))
+            basedefault = primaryPath.duplicate(PU_STATIC);
+        else if(!I_stat(fallbackPath.constPtr(), &sbuf))
+            basedefault = fallbackPath.duplicate(PU_STATIC);
+        else
+            basedefault = primaryPath.duplicate(PU_STATIC); // Use primary as default
     }
     else
     {
-        qstring tmp(usergamepath);
-        tmp.pathConcatenate("/eternity.cfg");
-        basedefault = tmp.duplicate(PU_STATIC);
+        qstring primaryPath(usergamepath);
+        primaryPath.pathConcatenate("/eternity-plus.cfg");
+
+        qstring fallbackPath(usergamepath);
+        fallbackPath.pathConcatenate("/eternity.cfg");
+
+        // Try primary config first, fallback to old name
+        if(!I_stat(primaryPath.constPtr(), &sbuf))
+            basedefault = primaryPath.duplicate(PU_STATIC);
+        else if(!I_stat(fallbackPath.constPtr(), &sbuf))
+            basedefault = fallbackPath.duplicate(PU_STATIC);
+        else
+            basedefault = primaryPath.duplicate(PU_STATIC); // Use primary as default
     }
 
     // haleyjd 11/23/06: set basesavegame here, and use usergamepath
@@ -879,8 +902,6 @@ void D_InitPaths()
 
     if((i = M_CheckParm("-save")) && i < myargc - 1) // jff 3/24/98 if -save present
     {
-        struct stat sbuf; // jff 3/24/98 used to test save path for existence
-
         if(!I_stat(myargv[i + 1], &sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
         {
             if(basesavegame)
@@ -1270,9 +1291,14 @@ extern int levelFragLimit;
 //
 static void D_StartupMessage()
 {
-    static char copyright[] = "The Eternity Engine\n"
-                              "Copyright YEAR James Haley, Stephen McGranahan, et al.\n"
-                              "http://www.doomworld.com/eternity\n"
+    static char copyright[] = "Eternity Engine Plus\n"
+                              "A fork of the Eternity Engine\n"
+                              "\n"
+                              "Copyright YEAR James Haley, Stephen McGranahan, et al. (Eternity Engine)\n"
+                              "Fork maintained by DRON12261\n"
+                              "\n"
+                              "http://doomworld.com/eternity/\n"
+                              "https://github.com/dron12261games/eternity-engine-plus\n"
                               "\n"
                               "This program is free software distributed under the terms of\n"
                               "the GNU General Public License. See the file \"COPYING\" for\n"
@@ -1280,7 +1306,7 @@ static void D_StartupMessage()
                               "without its license, source code, and copyright notices is an\n"
                               "infringement of US and international copyright laws.\n";
 
-    memcpy(copyright + 30, &__DATE__[7], 4); // Automatically update copyright year
+    memcpy(copyright + 62, &__DATE__[7], 4); // Automatically update copyright year
 
     puts(copyright);
 }
@@ -1801,10 +1827,17 @@ static void D_DoomInit()
     // haleyjd: updated for eternity
     C_Printf("\n");
     C_Separator();
-    C_Printf("\n" FC_HI "The Eternity Engine\n" FC_NORMAL "By James Haley and Stephen McGranahan\n"
+    C_Printf("\n" FC_HI "Eternity Engine Plus\n" FC_NORMAL "A fork of the Eternity Engine\n"
+             "By James Haley and Stephen McGranahan (Eternity Engine)\n"
+             "Fork maintained by DRON12261\n"
+             "\n"
              "http://doomworld.com/eternity/ \n"
-             "Version %i.%02i.%02i '%s' \n\n",
-             version / 100, version % 100, subversion, version_name);
+             "https://github.com/dron12261games/eternity-engine-plus\n"
+             "\n"
+             FC_HI "Eternity Engine Plus: v%i.%02i.%02i\n"
+             FC_HI "Based on Eternity Engine: v%i.%02i.%02i '%s'\n\n",
+             eep_version_major, eep_version_minor, eep_version_patch,
+             ee_version_major, ee_version_minor, ee_version_patch, version_name);
 
 #if defined(TOKE_MEMORIAL)
     // haleyjd 08/30/06: for v3.33.50 Phoenix: RIP Toke
