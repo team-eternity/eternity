@@ -494,7 +494,7 @@ bool P_CheckAmmo(player_t &player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(player_t &player, int compat_amt)
+void P_SubtractAmmo(const player_t &player, int compat_amt)
 {
     weaponinfo_t *weapon = player.readyweapon;
     itemeffect_t *ammo;
@@ -838,7 +838,8 @@ void A_WeaponReady(actionargs_t *actionargs)
     if(!player->pendingweapon && !E_PlayerOwnsWeapon(*player, player->readyweapon) &&
        player->readyweapon->id != UnknownWeaponInfo)
     {
-        player->pendingweapon     = E_FindBestWeapon(*player);
+        if(!(player->pendingweapon = E_FindBestWeapon(*player)))
+            player->pendingweapon = E_WeaponForID(UnknownWeaponInfo);
         player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
     }
 
