@@ -959,7 +959,7 @@ bool P_ClearInventory(player_t *player)
         P_takePower(*player, i, -1);
 
     // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
-    E_ClearInventory(player, SetEmptyWeapon::yes);
+    E_ClearInventory(player);
 
     return true;
 }
@@ -969,7 +969,7 @@ bool P_ClearInventory(player_t *player)
 //
 // Uses an inventory item from the player's inventory
 //
-bool P_UseInventory(player_t *player, itemeffect_t *item)
+bool P_UseInventory(player_t *player, const itemeffect_t *item)
 {
     if(!player || !item)
         return false;

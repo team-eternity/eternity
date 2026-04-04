@@ -2872,7 +2872,8 @@ bool ACS_CF_UseInventory(ACS_CF_ARGS)
 {
     auto                info     = &static_cast<ACSThread *>(thread)->info;
     char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+
+    const itemeffect_t *const item = E_ItemEffectForName(itemname);
 
     // If the item doesn't exist, complain
     if(!item)
