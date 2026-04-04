@@ -98,3 +98,4 @@ Bug fixes
 * Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
   (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.
+* Fixed ACS SetWeapon function.
