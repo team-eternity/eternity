@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, David Hill, et al.
 //
@@ -67,6 +67,7 @@
 #include "doomstat.h"
 #include "metaapi.h"
 #include "e_lib.h"
+#include "e_string.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -2709,6 +2710,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     const auto  info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
+    const bool  silent   = argC > 2 ? argV[2] : false; // if not silent, apply pickup effects (flash, message, sound)
 
     ScriptedItem item = getScriptedItem(itemname);
 
@@ -2724,18 +2726,54 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     if(amount == 0)
         return false;
 
+    // Apply pickup effects (flash, message, sound) if not silent.
+    auto applyPickupEffects = [&](player_t *player) {
+        if(silent || !player)
+            return;
+
+        // Resolve pickup effect in inventory layer
+        const itemeffect_t *effect = nullptr;
+        if(const auto *effPtr = std::get_if<itemeffect_t *>(&item))
+            effect = *effPtr;
+
+        const e_pickupfx_t *pickup = E_FindBestPickupFX(itemname, effect);
+
+        if(!pickup)
+            return;
+
+        const char *message = pickup->message;
+        const char *sound   = pickup->sound;
+
+        // Display pickup message
+        if(message)
+        {
+            if(message[0] == '$')
+                message = E_StringOrDehForName(message + 1);
+            player_printf(player, "%s", message);
+        }
+
+        // Play pickup sound
+        if(sound)
+            S_StartSoundName(player->mo, sound);
+
+        // Flash screen if not disabled for this pickup
+        if(!(pickup->flags & PFXF_NOSCREENFLASH))
+            player->bonuscount += 6;
+    };
+
+    // Give the item to the player(s) and apply pickup effects if not silent
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
-        if(info->mo->player)
-            P_GiveInventory(info->mo->player, item, amount);
+        if(info->mo->player && P_GiveInventory(info->mo->player, item, amount))
+            applyPickupEffects(info->mo->player);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
-            if(playeringame[pnum])
-                P_GiveInventory(&players[pnum], item, amount);
+            if(playeringame[pnum] && P_GiveInventory(&players[pnum], item, amount))
+                applyPickupEffects(&players[pnum]);
         }
     }
     return false;
