@@ -507,11 +507,14 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
     {
         if(P_shouldSwitchToNewWeapon(player, *wp))
         {
-            weaponinfo_t *sister     = wp->sisterWeapon;
-            player.pendingweapon     = wp;
-            player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-            if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-                player.pendingweapon = sister;
+            if(auto slot = E_FindFirstWeaponSlot(player, wp)) // check for class availability!
+            {
+                weaponinfo_t *sister     = wp->sisterWeapon;
+                player.pendingweapon     = wp;
+                player.pendingweaponslot = slot;
+                if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+                    player.pendingweapon = sister;
+            }
         }
         E_GiveWeapon(player, wp);
         return true;
