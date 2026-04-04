@@ -190,7 +190,6 @@ struct player_t
     // For Heretic chicken and similar
     int            morphTics;        // player is morphed if > 0
     int            headThrust;       // chicken peck countdown
-    inventory_t    unmorphInventory; // weapons are moved here when polymorphed to another creature
     weaponinfo_t  *unmorphWeapon;
     weaponslot_t  *unmorphWeaponSlot;
     playerclass_t *unmorphClass;

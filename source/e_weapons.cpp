@@ -529,8 +529,12 @@ static weaponinfo_t *E_findBestWeapon(const player_t &player, const SelectOrderN
 
     if(node->left && (ret = E_findBestWeapon(player, node->left)))
         return ret;
-    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
+    // NOTE: only pick weapons available for the player class
+    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object) &&
+       E_FindFirstWeaponSlot(player, node->object))
+    {
         return node->object;
+    }
     if(node->next && (ret = E_findBestWeapon(player, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeapon(player, node->right)))
@@ -575,8 +579,10 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t &player, const ite
         return ret;
     // Player owns normal weapon always, but check if the powered one has the flag
     if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) && correctammo &&
-       P_WeaponHasAmmo(player, powerChecked))
+       P_WeaponHasAmmo(player, powerChecked) && E_FindFirstWeaponSlot(player, temp))
+    {
         return temp;
+    }
     if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
         return ret;
     if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))

@@ -53,6 +53,8 @@ Improvements
 * Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
   level exit score. This was needed because otherwise it would become useless on heavily scripted
   maps.
+* Updated chicken morphing rules to match Heretic 2025.
+* Updated weapon autoswitch rule to match Heretic 2025.
 
 Bug fixes
 ---------
@@ -96,3 +98,4 @@ Bug fixes
 * Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
   (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.
+* Fixed ACS SetWeapon function.

@@ -2409,9 +2409,19 @@ bool ACS_CF_SetWeapon(ACS_CF_ARGS)
     player_t *player = info->mo->player;
     if(E_PlayerOwnsWeapon(*player, weapon))
     {
-        player->pendingweapon     = weapon;
-        player->pendingweaponslot = E_FindFirstWeaponSlot(*player, weapon);
-        thread->dataStk.push(1);
+        const auto slot = E_FindFirstWeaponSlot(*player, weapon);
+        if(slot)
+        {
+            if(player->readyweapon != weapon && (!player->readyweapon || !player->readyweapon->sisterWeapon ||
+                                                 player->readyweapon->sisterWeapon != weapon))
+            {
+                player->pendingweapon     = weapon;
+                player->pendingweaponslot = slot;
+            }
+            thread->dataStk.push(1);
+        }
+        else
+            thread->dataStk.push(0);
     }
     else
         thread->dataStk.push(0);
