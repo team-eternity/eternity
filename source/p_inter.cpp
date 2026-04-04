@@ -495,8 +495,11 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, ItemOrigin
     {
         player.bonuscount += BONUSADD;
         E_GiveWeapon(player, wp);
-        player.pendingweapon     = wp;
-        player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+        if(auto slot = E_FindFirstWeaponSlot(player, wp))
+        {
+            player.pendingweapon     = wp;
+            player.pendingweaponslot = slot;
+        }
         // killough 4/25/98, 12/98
         if(sound)
             S_StartSoundName(player.mo, sound);
