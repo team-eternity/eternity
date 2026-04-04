@@ -26,6 +26,8 @@
 
 #define NEED_EDF_DEFINITIONS
 
+#include <algorithm> // for std::find
+
 #include "z_zone.h"
 #include "i_system.h"
 
