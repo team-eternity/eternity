@@ -2525,8 +2525,8 @@ void E_ClearInventory(player_t *player, SetEmptyWeapon setemptyweapon)
 
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
-        itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
-        if(!(item && !(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON)))
+        const itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
+        if(!item || (item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON))
             continue;
 
         player->inventory[i].amount = 0;
