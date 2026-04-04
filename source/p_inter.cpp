@@ -939,6 +939,32 @@ int P_CheckInventory(const player_t *player, const ScriptedItem &iitem)
 }
 
 //
+// P_ClearInventory
+//
+// Take armor, backpack, all powers and clear all inventory items except undroppable ones
+//
+bool P_ClearInventory(player_t *player)
+{
+    if(!player)
+        return false;
+
+    // Take player armor
+    player->armorpoints = player->armorfactor = player->armordivisor = 0;
+
+    // Take backpack
+    E_RemoveBackpack(*player);
+
+    // Take all powers
+    for(int i = 0; i < NUMPOWERS; i++)
+        P_takePower(*player, i, -1);
+
+    // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
+    E_ClearInventory(player);
+
+    return true;
+}
+
+//
 // P_GiveBody
 //
 // Returns false if the body isn't needed at all

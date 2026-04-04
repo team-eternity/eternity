@@ -680,22 +680,24 @@ bool P_UnmorphPlayer(player_t &player, bool onexit)
                              pos.z + GameModeInfo->teleFogHeight, E_SafeThingName(GameModeInfo->teleFogType)),
                  GameModeInfo->teleSound);
 
-
-
-    if (E_PlayerOwnsWeapon(player, player.unmorphWeapon))   // it may have been removed by scripts
+    if(E_PlayerOwnsWeapon(player, player.unmorphWeapon)) // it may have been removed by scripts
     {
         player.pendingweapon = player.readyweapon = player.unmorphWeapon;
         player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
     }
     else
     {
-        weaponinfo_t *best   = E_FindBestWeapon(player);
-        if (!best)
-            best = E_WeaponForID(UnknownWeaponInfo);    // could have lost all weapons while morphed
+        weaponinfo_t *best = E_FindBestWeapon(player);
+        if(!best)
+            best = E_WeaponForID(UnknownWeaponInfo); // could have lost all weapons while morphed
         player.pendingweapon = player.readyweapon = best;
         player.pendingweaponslot = player.readyweaponslot = E_FindFirstWeaponSlot(player, best);
     }
-    pspdef_t &pspr                                    = player.psprites[ps_weapon];
+
+    player.unmorphWeapon     = nullptr;
+    player.unmorphWeaponSlot = nullptr;
+
+    pspdef_t &pspr = player.psprites[ps_weapon];
     pspr.playpos.y = pspr.renderpos.y = WEAPONBOTTOM;
     player.extralight                 = 0;
 

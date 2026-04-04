@@ -225,6 +225,7 @@ static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 static MetaKeyIndex keyArgs          (KEY_ARGS          );
+static MetaKeyIndex keyUndroppable   (KEY_UNDROPPABLE   );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -2488,6 +2489,10 @@ void E_ClearInventory(player_t *player)
 
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
+        const itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
+        if(!item || (item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON))
+            continue;
+
         player->inventory[i].amount = 0;
         player->inventory[i].item   = -1;
     }

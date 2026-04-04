@@ -2781,6 +2781,31 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 }
 
 //
+// void ClearInventory();
+//
+bool ACS_CF_ClearInventory(ACS_CF_ARGS)
+{
+    const auto info = &static_cast<ACSThread *>(thread)->info;
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            P_ClearInventory(info->mo->player);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                P_ClearInventory(&players[pnum]);
+        }
+    }
+
+    return false;
+}
+
+//
 // ACS_thingCount
 //
 static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
