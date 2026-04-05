@@ -111,3 +111,4 @@ Bug fixes
   (thanks to DRON12261).
 * Fixed wrong additive powerup time on multiplayers for players other than 1.
 * Fixed ACS SetWeapon function.
+* Fixed skies not rotating correctly past angled visual portals.
