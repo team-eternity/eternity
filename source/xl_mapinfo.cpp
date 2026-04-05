@@ -201,7 +201,7 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] = {
     "doublesky", // if enabled, has double skies
     "lightning", // if enabled, has lightning global effect
     "fadetable", // sets default global colormap
-    "cluster",   // specifies hub number (TODO)
+    "cluster",   // specifies hub number
     "warptrans", // specifies warp cheat translation number (TODO)
     "next",      // next map for normal exits
     "cdtrack",   // specifies CD track # (TODO)
@@ -280,7 +280,7 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] = {
     XLMI_BOOLEAN(XL_MAPINFO_DOUBLESKY),
     XLMI_BOOLEAN(XL_MAPINFO_LIGHTNING),
     XLMI_QSTRING(XL_MAPINFO_FADETABLE),
-    XLMI_INTEGER(XL_MAPINFO_CLUSTER),
+    XLMI_QSTRING(XL_MAPINFO_CLUSTER),
     XLMI_INTEGER(XL_MAPINFO_WARPTRANS),
     XLMI_MAPNAME(XL_MAPINFO_NEXT),
     XLMI_INTEGER(XL_MAPINFO_CDTRACK),
@@ -598,6 +598,11 @@ MetaTable *XL_MapInfoForMapNum(int episode, int map)
         mapname.Printf(9, "MAP%02d", map);
 
     return mapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname.constPtr());
+}
+
+MetaTable* XL_ClusterForName(const char* name)
+{
+    return clusterTable.getObjectKeyAndTypeEx<MetaTable>(name);
 }
 
 //

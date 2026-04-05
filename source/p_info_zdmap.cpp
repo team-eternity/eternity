@@ -44,7 +44,7 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
     //
     // Sets the normal or secret next option. Returns true if it's a finale special
     //
-    auto setNextOrFinale = [](const char *s, bool secret) -> bool {
+    auto setNextOrFinale = [xlmi](const char *s, const char *cluster, bool secret) -> bool {
         int         &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
         const char *&nextLevel  = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
 
@@ -69,7 +69,25 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
             nextLevel = s;
             getfinale = false;
         }
-        // FIXME: endpic support (figure out the syntax) and others
+        
+        if (estrnonempty(cluster))
+        {
+            MetaTable *clusterdef = XL_ClusterForName(cluster);
+            if (clusterdef)
+            {
+                const char *str;
+                str = clusterdef->getString("flat", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.backDrop = str;
+                str = clusterdef->getString("music", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.interMusic = str;
+                str = clusterdef->getString("exittext", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.interText = LevelInfo.interTextSecret = str;
+            }
+        }
+
         if(getfinale)
             P_EnsureDefaultStoryText(secret);
         return getfinale;
@@ -79,16 +97,17 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 
     const char *next       = xlmi->getString("next", nullptr);
     const char *secretnext = xlmi->getString("secretnext", nullptr);
+    const char *clustername = xlmi->getString("cluster", nullptr);
 
     if(!next && !secretnext) // no next map set
         return;
 
     bool nextfinale = false;
     if(next)
-        nextfinale = setNextOrFinale(next, false);
+        nextfinale = setNextOrFinale(next, clustername, false);
     bool secretnextfinale = false;
     if(secretnext)
-        secretnextfinale = setNextOrFinale(secretnext, true);
+        secretnextfinale = setNextOrFinale(secretnext, clustername, true);
 
     // Disable any previously set restrictions
     if(nextfinale)

@@ -86,6 +86,7 @@ enum
 
 MetaTable *XL_MapInfoForMapName(const char *name);
 MetaTable *XL_MapInfoForMapNum(int episode, int map);
+MetaTable *XL_ClusterForName(const char *name);
 void       XL_ParseMapInfo();
 
 void XL_BuildInterOldZDoomMapInfo();
