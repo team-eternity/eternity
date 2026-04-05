@@ -44,7 +44,10 @@ enum
     XL_MAPINFO_CDTRACK,
 
     // Supported ZDoom extensions
+    XL_MAPINFO_DSPARILSPECIAL,
+    XL_MAPINFO_FORCENOSKYSTRETCH,
     XL_MAPINFO_SECRETNEXT,
+    XL_MAPINFO_SPECIALACTION_KILLMONSTERS,
     XL_MAPINFO_TITLEPATCH,
     XL_MAPINFO_PAR,
     XL_MAPINFO_MUSIC,
@@ -64,9 +67,29 @@ enum
     XL_NUMMAPINFO_FIELDS
 };
 
+enum
+{
+    XL_MAPINFO_EPISODE_KEY,
+    XL_MAPINFO_EPISODE_NAME,
+
+    XL_MAPINFO_NUMEPISODE_FIELDS
+};
+
+enum
+{
+    XL_MAPINFO_CLUSTER_EXITTEXT,
+    XL_MAPINFO_CLUSTER_FLAT,
+    XL_MAPINFO_CLUSTER_MUSIC,
+
+    XL_MAPINFO_NUMCLUSTER_FIELDS
+};
+
 MetaTable *XL_MapInfoForMapName(const char *name);
 MetaTable *XL_MapInfoForMapNum(int episode, int map);
 void       XL_ParseMapInfo();
+
+void XL_BuildInterOldZDoomMapInfo();
+void XL_BuildOldZDoomMapInfoEpisodes();
 
 #endif
 

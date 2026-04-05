@@ -761,12 +761,14 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
 
     if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)
     {
+        const unsigned oldcount = pc->numrebornitems;
+
         pc->numrebornitems += numitems;
         pc->rebornitems =
             erealloc(reborninventory_t *, pc->rebornitems, pc->numrebornitems * sizeof(reborninventory_t));
 
         for(unsigned int i = 0; i < numitems; i++)
-            E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
+            E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, oldcount + i);
     }
 
     unsigned int numweaponslots;

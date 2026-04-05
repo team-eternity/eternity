@@ -30,7 +30,13 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
+#include "e_fonts.h"
 #include "e_lib.h"
+#include "mn_emenu.h"
+#include "st_stuff.h"
+#include "v_font.h"
+#include "v_patchfmt.h"
 #include "w_wad.h"
 #include "xl_animdefs.h"
 #include "xl_emapinfo.h"
@@ -458,11 +464,15 @@ static void XL_buildInterMapInfo()
 {
     // First, visit UMAPINFO
     XL_BuildInterUMapInfo();
-    // Then, override with EMAPINFO
+    // Second, try Hexen/ZDoom MAPINFO
+    XL_BuildInterOldZDoomMapInfo();
+    // Finally, override with EMAPINFO
     XL_BuildInterEMapInfo();
 
     // Episode menu from UMAPINFO
     XL_BuildUMapInfoEpisodes();
+
+    XL_BuildOldZDoomMapInfoEpisodes();
 
     // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
     // termission anyway. But maybe we should use its fields.
@@ -472,6 +482,132 @@ static void XL_buildInterMapInfo()
 //
 // External Interface
 //
+
+XLEpisodeReplacement::XLEpisodeReplacement()
+{
+    // If already overridden, do not override again.
+    if (mn_episode_override)
+    {
+        disabled = true;
+        return;
+    }
+    const menu_t *base = GameModeInfo->episodeMenu;
+    bool          finishedPrefix = false;
+
+    if(base)
+    {
+        newmenu = *base; // copy the vanilla menu properties
+        for(const menuitem_t *item = newmenu.menuitems; item->type != it_end; ++item)
+        {
+            if(item->type != it_runcmd)
+            {
+                if(!finishedPrefix)
+                {
+                    prefixItems.add(*item);
+                    if(item->type == it_gap)
+                        ++prefixGaps;
+                }
+                continue;
+            }
+            finishedPrefix = true;
+            items.add(*item);
+        }
+        newmenu.flags |= mf_bigfont;
+    }
+    else
+    {
+        // Shouldn't really go here
+        // Based on the Doom menu
+        newmenu.x     = 48;
+        newmenu.y     = 63;
+        newmenu.flags = mf_skullmenu | mf_bigfont;
+    }
+}
+
+XLEpisodeReplacement::~XLEpisodeReplacement() 
+{
+    if(disabled)
+        return;
+    // Scan for missing patches and remove them
+    // NOTE: this is a deviation from the UMAPINFO specs, by only invalidating the missing patches
+    // on an element-by-element basis, not every item.
+    for(menuitem_t &item : items)
+        if(item.patch && W_CheckNumForName(item.patch) == -1)
+            item.patch = nullptr;
+
+    // Check if the menu needs adjustment (DOOM mf_emulated menus are fine, they have fixed height)
+    if(newmenu.flags & mf_bigfont)
+    {
+        const vfont_t *gapfont   = E_FontForName(mn_fontname); // the gap uses the basic font height
+        int            rowheight = -1;                         // by default invalid
+        if(newmenu.flags & mf_emulated)
+            rowheight = EMULATED_ITEM_SIZE;
+        else
+        {
+            const vfont_t *font = E_FontForName(mn_bigfontname);
+            if(font)
+                rowheight = font->cy;
+        }
+        if(rowheight > 0 && gapfont)
+        {
+            int prefixHeight  = rowheight * ((int)prefixItems.getLength() - prefixGaps) + gapfont->cy * prefixGaps;
+            int contentHeight = rowheight * ((int)items.getLength());
+            int bottom        = newmenu.y + prefixHeight + contentHeight;
+            if(bottom > SCREENHEIGHT)
+            {
+                // Center to fit it to screen
+                newmenu.y = (SCREENHEIGHT - prefixHeight - contentHeight) / 2;
+                if(newmenu.y < 0)
+                {
+                    // Still not fitting? Remove the title
+                    newmenu.selected -= (int)prefixItems.getLength();
+                    prefixItems.makeEmpty();
+                    newmenu.y = (SCREENHEIGHT - contentHeight) / 2;
+                    if(newmenu.y < 0)
+                    {
+                        // Still not fitting? Give up, but ensure valid origin
+                        newmenu.y = 0;
+                    }
+                }
+            }
+            else if(GameModeInfo->StatusBar == &DoomStatusBar && bottom > SCREENHEIGHT - 32)
+            {
+                static int shiftedTop;
+                int        oldmenuy = newmenu.y;
+                newmenu.y           = SCREENHEIGHT - 32 - prefixHeight - contentHeight; // touch the status bar
+                if(newmenu.y < 0)
+                    newmenu.y = 0;
+                shiftedTop = 38 - (oldmenuy - newmenu.y);
+
+                // HACK: replace the drawer function to something equivalent but dynamically offset.
+                extern menu_t menu_episode, menu_episodeDoom2Stub;
+                if(GameModeInfo->episodeMenu == &menu_episode || GameModeInfo->episodeMenu == &menu_episodeDoom2Stub)
+                {
+                    newmenu.drawer = []() {
+                        V_DrawPatch(54, shiftedTop, &subscreen43,
+                                    PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
+                    };
+                }
+            }
+        }
+    }
+
+    // the stock menu didn't get changed, so don't override!
+    // Also do not perform any change if the menu is merely cleared. We never want an empty menu.
+    if(!changed || items.isEmpty())
+        return;
+
+    // Now we have the episode!
+    mn_episode_override            = estructalloc(menu_t, 1);
+    *mn_episode_override           = newmenu; // copy the properties
+    mn_episode_override->menuitems = estructalloc(menuitem_t, prefixItems.getLength() + items.getLength() + 1);
+
+    for(size_t i = 0; i < prefixItems.getLength(); ++i)
+        mn_episode_override->menuitems[i] = prefixItems[i];
+    for(size_t i = 0; i < items.getLength(); ++i)
+        mn_episode_override->menuitems[prefixItems.getLength() + i] = items[i];
+    mn_episode_override->menuitems[prefixItems.getLength() + items.getLength()].type = it_end;
+}
 
 //
 // XL_ParseHexenScripts

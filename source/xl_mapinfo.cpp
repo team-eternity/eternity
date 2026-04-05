@@ -31,7 +31,9 @@
 #include "d_gi.h"
 #include "d_main.h"
 #include "e_lib.h"
+#include "in_lude.h"
 #include "metaapi.h"
+#include "mn_emenu.h"
 #include "v_misc.h"
 #include "w_wad.h"
 #include "xl_mapinfo.h"
@@ -44,6 +46,9 @@
 
 static MetaTable defaultMap;
 static MetaTable mapInfoTable;
+static MetaTable episodeTable;
+static MetaTable clusterTable;
+static bool      clearEpisodes;
 
 //
 // XL_newMapInfo
@@ -67,6 +72,19 @@ static MetaTable *XL_newMapInfo(const qstring &map, const qstring &name)
     return ret;
 }
 
+static MetaTable *XL_newNonMapInfo(const qstring &identifier, MetaTable &globalTable)
+{
+    MetaTable *ret = globalTable.getObjectKeyAndTypeEx<MetaTable>(identifier.constPtr());
+    if(ret)
+        ret->clearTable();
+    else
+    {
+        ret = new MetaTable(identifier.constPtr());
+        globalTable.addObject(ret);
+    }
+    return ret;
+}
+
 //=============================================================================
 //
 // MAPINFO Parser
@@ -78,10 +96,15 @@ class XLMapInfoParser : public XLParser
 {
 public:
     static const char *mapKeywords[XL_NUMMAPINFO_FIELDS];
+    static const char *episodeKeywords[XL_MAPINFO_NUMEPISODE_FIELDS];
+    static const char *clusterKeywords[XL_MAPINFO_NUMCLUSTER_FIELDS];
 
     // global keywords enum
     enum
     {
+        KW_GLOBAL_CLEAREPISODES,
+        KW_GLOBAL_CLUSTERDEF,
+        KW_GLOBAL_EPISODE,
         KW_GLOBAL_MAP,
         KW_GLOBAL_CD_START,
         KW_GLOBAL_CD_END1,
@@ -95,6 +118,13 @@ public:
     };
 
 protected:
+    enum EntryType
+    {
+        cluster,
+        episode,
+        map,
+    };
+
     static const char *globalKeywords[KW_NUMGLOBAL];
 
     // State table declaration
@@ -103,22 +133,24 @@ protected:
     // parser state enumeration
     enum
     {
-        STATE_EXPECTCMD,       // expecting a global command
-        STATE_EXPECTGLOBALVAL, // expecting value for a global command
-        STATE_EXPECTMAPNAME,   // expecting map number (or name as ZDoom ext.)
-        STATE_EXPECTMAPDNAME,  // expecting map display name, for automap etc.
-        STATE_EXPECTMAPCMD,    // expecting a map command
-        STATE_EXPECTSKYNAME,   // expecting name for a sky texture
-        STATE_EXPECTSKYNUM,    // expecting number for sky delta
-        STATE_EXPECTVALUE      // expecting value
+        STATE_EXPECTCMD,        // expecting a global command
+        STATE_EXPECTNONMAPID,   // expecting an episode start map or cluster number
+        STATE_EXPECTGLOBALVAL,  // expecting value for a global command
+        STATE_EXPECTMAPNAME,    // expecting map number (or name as ZDoom ext.)
+        STATE_EXPECTMAPDNAME,   // expecting map display name, for automap etc.
+        STATE_EXPECTENTRYCMD,     // expecting a map command
+        STATE_EXPECTSKYNAME,    // expecting name for a sky texture
+        STATE_EXPECTSKYNUM,     // expecting number for sky delta
+        STATE_EXPECTVALUE       // expecting value
     };
 
     // state handlers
     bool doStateExpectCmd(XLTokenizer &);
+    bool doStateExpectNonMapIdentifier(XLTokenizer &);
     bool doStateExpectGlobalVal(XLTokenizer &);
     bool doStateExpectMapName(XLTokenizer &);
     bool doStateExpectMapDName(XLTokenizer &);
-    bool doStateExpectMapCmd(XLTokenizer &);
+    bool doStateExpectEntryCmd(XLTokenizer &);
     bool doStateExpectSkyName(XLTokenizer &);
     bool doStateExpectSkyNum(XLTokenizer &);
     bool doStateExpectValue(XLTokenizer &);
@@ -131,18 +163,27 @@ protected:
     xlmikeyword_t *kwd;
     bool           classicHexenMode; // use ZDoom's method of determining how to compute some fields
 
+    EntryType currentType;
+
     virtual bool doToken(XLTokenizer &token) override;
     virtual void startLump() override;
+    virtual void initTokenizer(XLTokenizer& tokenizer) override
+    {
+        tokenizer.setTokenFlags(XLTokenizer::TF_SLASHCOMMENTS);
+    }
 
 public:
     XLMapInfoParser()
         : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL), curInfo(nullptr), mapName(),
-          kwd(nullptr), classicHexenMode()
+          kwd(nullptr), classicHexenMode(), currentType(EntryType::map)
     {}
 };
 
 // Keywords allowed in the global parsing context
 const char *XLMapInfoParser::globalKeywords[KW_NUMGLOBAL] = {
+    "clearepisodes",         // clear previous episode definitions
+    "clusterdef",            // cluster (episode or hub)
+    "episode",               // episode number (TODO)
     "map",                   // starts a map definition
     "cd_start_track",        // specifies startup CD track (TODO)
     "cd_end1_track",         // specifies END1 track for Hexen (TODO)
@@ -155,16 +196,19 @@ const char *XLMapInfoParser::globalKeywords[KW_NUMGLOBAL] = {
 
 // Keywords allowed in a map context
 const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] = {
-    "sky1",                     // first sky texture
-    "sky2",                     // second sky texture
-    "doublesky",                // if enabled, has double skies
-    "lightning",                // if enabled, has lightning global effect
-    "fadetable",                // sets default global colormap
-    "cluster",                  // specifies hub number (TODO)
-    "warptrans",                // specifies warp cheat translation number (TODO)
-    "next",                     // next map for normal exits
-    "cdtrack",                  // specifies CD track # (TODO)
-    "secretnext",               // next map for secret exits
+    "sky1",      // first sky texture
+    "sky2",      // second sky texture
+    "doublesky", // if enabled, has double skies
+    "lightning", // if enabled, has lightning global effect
+    "fadetable", // sets default global colormap
+    "cluster",   // specifies hub number (TODO)
+    "warptrans", // specifies warp cheat translation number (TODO)
+    "next",      // next map for normal exits
+    "cdtrack",   // specifies CD track # (TODO)
+    "dsparilspecial",
+    "forcenoskystretch", // sky not meant to stretch or fill in, so tile instead (TODO)
+    "secretnext",        // next map for secret exits
+    "specialaction_killmonsters",
     "titlepatch",               // patch to use for name in intermission
     "par",                      // par time in seconds
     "music",                    // name of music lump
@@ -181,6 +225,13 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] = {
     "specialaction_exitlevel",  // exit
     "nosoundclipping"           // no sound clipping (TODO)
 };
+
+const char *XLMapInfoParser::episodeKeywords[XL_MAPINFO_NUMEPISODE_FIELDS] = {
+    "key",  // hotkey to open the episode
+    "name", // episode name on the menu
+};
+
+const char *XLMapInfoParser::clusterKeywords[XL_MAPINFO_NUMCLUSTER_FIELDS] = { "exittext", "flat", "music" };
 
 // holds data about how to parse and store a map keyword's data
 struct xlmikeyword_t
@@ -233,7 +284,10 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] = {
     XLMI_INTEGER(XL_MAPINFO_WARPTRANS),
     XLMI_MAPNAME(XL_MAPINFO_NEXT),
     XLMI_INTEGER(XL_MAPINFO_CDTRACK),
+    XLMI_BOOLEAN(XL_MAPINFO_DSPARILSPECIAL),
+    XLMI_BOOLEAN(XL_MAPINFO_FORCENOSKYSTRETCH),
     XLMI_MAPNAME(XL_MAPINFO_SECRETNEXT),
+    XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_KILLMONSTERS),
     XLMI_QSTRING(XL_MAPINFO_TITLEPATCH),
     XLMI_INTEGER(XL_MAPINFO_PAR),
     XLMI_QSTRING(XL_MAPINFO_MUSIC),
@@ -249,6 +303,18 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] = {
     XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_LOWERFLOOR),
     XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_EXITLEVEL),
     XLMI_BOOLEAN(XL_MAPINFO_NOSOUNDCLIPPING),
+};
+
+#define XLEI_QSTRING(n) { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::episodeKeywords[n], nullptr }
+
+static xlmikeyword_t episodeKeywordParseTable[XL_MAPINFO_NUMEPISODE_FIELDS] = { XLEI_QSTRING(XL_MAPINFO_EPISODE_KEY),
+                                                                                XLEI_QSTRING(XL_MAPINFO_EPISODE_NAME) };
+
+#define XLCI_QSTRING(n) { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::clusterKeywords[n], nullptr }
+
+static xlmikeyword_t clusterKeywordParseTable[XL_MAPINFO_NUMCLUSTER_FIELDS] = {
+    XLCI_QSTRING(XL_MAPINFO_CLUSTER_EXITTEXT), XLCI_QSTRING(XL_MAPINFO_CLUSTER_FLAT),
+    XLCI_QSTRING(XL_MAPINFO_CLUSTER_MUSIC)
 };
 
 //
@@ -290,13 +356,28 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
 
     switch(kwNum)
     {
+    case KW_GLOBAL_CLEAREPISODES: // clear episode menu
+        episodeTable.clearTable();
+        clearEpisodes = true;
+        state         = STATE_EXPECTCMD;    // clear if it fell back here from an entry-cmd
+        break;
+    case KW_GLOBAL_CLUSTERDEF:
+        state       = STATE_EXPECTNONMAPID;
+        currentType = EntryType::cluster;
+        break;
+    case KW_GLOBAL_EPISODE:
+        state       = STATE_EXPECTNONMAPID;
+        currentType = EntryType::episode;
+        break;
     case KW_GLOBAL_MAP:
-        state = STATE_EXPECTMAPNAME; // map name or number should be next.
+        state       = STATE_EXPECTMAPNAME; // map name or number should be next.
+        currentType = EntryType::map;
         break;
     case KW_GLOBAL_DEFAULTMAP:
         defaultMap.clearTable(); // must clear previous defaultmap data
-        curInfo = &defaultMap;
-        state   = STATE_EXPECTMAPCMD;
+        curInfo     = &defaultMap;
+        currentType = EntryType::map;
+        state       = STATE_EXPECTENTRYCMD;
         break;
     default:
         globalKW = kwNum;
@@ -304,6 +385,13 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
         break;
     }
 
+    return true;
+}
+
+bool XLMapInfoParser::doStateExpectNonMapIdentifier(XLTokenizer &token)
+{
+    curInfo = XL_newNonMapInfo(token.getToken(), currentType == EntryType::cluster ? clusterTable : episodeTable);
+    state   = STATE_EXPECTENTRYCMD;
     return true;
 }
 
@@ -354,24 +442,48 @@ bool XLMapInfoParser::doStateExpectMapDName(XLTokenizer &token)
     // Copy now whatever we have in defaultmap
     curInfo->copyTableFrom(&defaultMap);
 
-    state = STATE_EXPECTMAPCMD;
+    state = STATE_EXPECTENTRYCMD;
     return true;
 }
 
 // Expecting a map-level command
-bool XLMapInfoParser::doStateExpectMapCmd(XLTokenizer &token)
+bool XLMapInfoParser::doStateExpectEntryCmd(XLTokenizer &token)
 {
     auto &tokenVal = token.getToken();
-    int   mapKwd   = E_StrToNumLinear(mapKeywords, XL_NUMMAPINFO_FIELDS, tokenVal.constPtr());
 
-    if(mapKwd == XL_NUMMAPINFO_FIELDS) // unknown keyword, error
+    const char *const *fields;
+    int                numfields;
+    xlmikeyword_t     *keywordParseTable;
+    switch(currentType)
+    {
+    case EntryType::cluster:
+        fields            = clusterKeywords;
+        numfields         = XL_MAPINFO_NUMCLUSTER_FIELDS;
+        keywordParseTable = clusterKeywordParseTable;
+        break;
+    case EntryType::episode:
+        fields            = episodeKeywords;
+        numfields         = XL_MAPINFO_NUMEPISODE_FIELDS;
+        keywordParseTable = episodeKeywordParseTable;
+        break;
+    case EntryType::map:
+        fields            = mapKeywords;
+        numfields         = XL_NUMMAPINFO_FIELDS;
+        keywordParseTable = mapKeywordParseTable;
+        break;
+    default: return false;
+    }
+
+    int mapKwd = E_StrToNumLinear(fields, numfields, tokenVal.constPtr());
+
+    if(mapKwd == numfields) // unknown keyword, error
     {
         // see if it is a new global keyword
         return doStateExpectCmd(token);
     }
 
     // get the parsing information for this map keyword
-    kwd = &mapKeywordParseTable[mapKwd];
+    kwd = &keywordParseTable[mapKwd];
 
     switch(kwd->kwtype)
     {
@@ -380,7 +492,7 @@ bool XLMapInfoParser::doStateExpectMapCmd(XLTokenizer &token)
         break;
     case KW_TYPE_FLAG: // flags have no value; presence means set it now
         curInfo->setInt(kwd->key, 1);
-        state = STATE_EXPECTMAPCMD;
+        state = STATE_EXPECTENTRYCMD;
         break;
     case KW_TYPE_VALUE: // next token should be value
         state = STATE_EXPECTVALUE;
@@ -405,13 +517,13 @@ bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
     double val    = token.getToken().toDouble(&endptr);
 
     if(*endptr) // not a number, it's optional, so try something else
-        return doStateExpectMapCmd(token);
+        return doStateExpectEntryCmd(token);
 
     // Must apply GZDoom's scale if so far the format is modern
     if(!classicHexenMode)
         val *= 256;
     curInfo->setDouble(kwd->intkey, val);
-    state = STATE_EXPECTMAPCMD; // go back to scanning for a map command
+    state = STATE_EXPECTENTRYCMD; // go back to scanning for a map command
     return true;
 }
 
@@ -436,20 +548,22 @@ bool XLMapInfoParser::doStateExpectValue(XLTokenizer &token)
     }
     break;
     }
-    state = STATE_EXPECTMAPCMD; // go back to scanning for map commands
+    // go back to scanning for map or episode commands
+    state = STATE_EXPECTENTRYCMD;
     return true;
 }
 
 // State Table
 bool (XLMapInfoParser::*XLMapInfoParser::States[])(XLTokenizer &) = {
-    &XLMapInfoParser::doStateExpectCmd,       //
-    &XLMapInfoParser::doStateExpectGlobalVal, //
-    &XLMapInfoParser::doStateExpectMapName,   //
-    &XLMapInfoParser::doStateExpectMapDName,  //
-    &XLMapInfoParser::doStateExpectMapCmd,    //
-    &XLMapInfoParser::doStateExpectSkyName,   //
-    &XLMapInfoParser::doStateExpectSkyNum,    //
-    &XLMapInfoParser::doStateExpectValue      //
+    &XLMapInfoParser::doStateExpectCmd,              //
+    &XLMapInfoParser::doStateExpectNonMapIdentifier, //
+    &XLMapInfoParser::doStateExpectGlobalVal,        //
+    &XLMapInfoParser::doStateExpectMapName,          //
+    &XLMapInfoParser::doStateExpectMapDName,         //
+    &XLMapInfoParser::doStateExpectEntryCmd,           //
+    &XLMapInfoParser::doStateExpectSkyName,          //
+    &XLMapInfoParser::doStateExpectSkyNum,           //
+    &XLMapInfoParser::doStateExpectValue             //
 };
 
 //=============================================================================
@@ -496,6 +610,55 @@ void XL_ParseMapInfo()
     XLMapInfoParser parser;
 
     parser.parseAll(wGlobalDir);
+}
+
+void XL_BuildInterOldZDoomMapInfo()
+{
+    MetaTable *level = nullptr;
+    while((level = mapInfoTable.getNextTypeEx(level)))
+    {
+        intermapinfo_t &info = IN_GetMapInfo(level->getKey());
+        const char     *str;
+        str = level->getString("name", "");
+        if(estrnonempty(str))
+            info.levelname = str;
+    }
+}
+
+void XL_BuildOldZDoomMapInfoEpisodes()
+{
+    XLEpisodeReplacement replacement;
+    if(replacement.isDisabled())
+        return;
+    if(clearEpisodes)
+        replacement.clear();
+    struct episodeinfo_t
+    {
+        const char *name;
+        const char *startMap;
+        // NOTE: key currently unused
+    };
+    MetaTable *eptable = nullptr;
+    PODCollection<episodeinfo_t> epinfos;   // REVERSE LIST
+    while((eptable = episodeTable.getNextTypeEx(eptable)))
+    {
+        episodeinfo_t epinfo = {};
+        epinfo.name          = eptable->getString("name", nullptr);
+        epinfo.startMap      = eptable->getKey();
+        epinfos.add(epinfo);
+    }
+    for (int i = (int)epinfos.getLength() - 1; i >= 0; --i)
+    {
+        const episodeinfo_t &epinfo = epinfos[i];
+        qstring              ccmd("mn_start_mapname ");
+        ccmd += epinfo.startMap;
+
+        menuitem_t newitem = {};
+        newitem.type       = it_runcmd;
+        newitem.description = epinfo.name;
+        newitem.data        = ccmd.duplicate(PU_STATIC);
+        replacement.add(newitem);
+    }
 }
 
 //=============================================================================

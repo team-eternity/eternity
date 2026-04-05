@@ -736,6 +736,9 @@ struct visplane_t
     int bflags;
     // Opacity of the overlay (255 - opaque, 0 - translucent)
     byte opacity;
+
+    // angle may be rotated by portals: for skies.
+    angle_t viewangle;
 };
 
 struct planehash_t
