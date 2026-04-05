@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, David Hill, et al.
 //
@@ -2766,6 +2766,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
         const char *message = pickup->message;
         const char *sound   = pickup->sound;
 
+        // Display pickup message
         if(message)
         {
             if(message[0] == '$')
@@ -2773,11 +2774,13 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
             player_printf(player, "%s", message);
         }
 
+        // Play pickup sound
         if(sound)
             S_StartSoundName(player->mo, sound);
 
+        // Flash screen if not disabled for this pickup
         if(!(pickup->flags & PFXF_NOSCREENFLASH))
-            player->bonuscount += 6; // BONUSADD
+            player->bonuscount += 6;
     };
 
     // Give the item to the player(s) and apply pickup effects if not silent

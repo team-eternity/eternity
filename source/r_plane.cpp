@@ -683,6 +683,8 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext
     check->viewsin = sinf(cb_viewpoint.angle + check->angle);
     check->viewcos = cosf(cb_viewpoint.angle + check->angle);
 
+    check->viewangle = viewpoint.angle;
+
     // SoM: set up slope type stuff
     if((check->pslope = slope))
     {
@@ -754,6 +756,8 @@ visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t
     new_pl->pslope = pl->pslope;
     memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
     new_pl->fullcolormap = pl->fullcolormap;
+
+    new_pl->viewangle = pl->viewangle;
 
     visplane_t *retpl = new_pl;
     retpl->minx       = start;
@@ -844,13 +848,13 @@ inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, visplane_t *pl)
 {
     cb_column_t column{};
 
     R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
-    angle_t an = viewangle;
+    angle_t an = pl->viewangle;
 
     // render two layers
 
@@ -922,7 +926,7 @@ static const int MultiplyDeBruijnBitPosition2[32] = {
 //
 // Drawing sky as a background texture instead of a visplane.
 //
-static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
+static void R_drawSky(ZoneHeap &heap, const visplane_t *pl, const skyflat_t *skyflat)
 {
     int                 texture;
     int                 offset = 0;
@@ -934,7 +938,7 @@ static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, c
     // arbitrary multiple skies per level without having
     // to use info lumps.
 
-    angle_t an = viewangle;
+    angle_t an = pl->viewangle;
 
     cb_column_t column{};
     bool        tilevert = false;
@@ -1045,8 +1049,7 @@ static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, c
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spanstart, const angle_t viewangle,
-                          visplane_t *pl)
+static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spanstart, visplane_t *pl)
 {
     if(!(pl->minx <= pl->maxx))
         return;
@@ -1055,14 +1058,14 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
     if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
     {
         // NOTE: MBF sky transfers change pl->picnum so it won't go here if set to transfer.
-        do_draw_newsky(context, heap, viewangle, pl);
+        do_draw_newsky(context, heap, pl);
         return;
     }
 
     skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
 
     if(skyflat || pl->picnum & PL_SKYFLAT) // sky flat
-        R_drawSky(heap, viewangle, pl, skyflat);
+        R_drawSky(heap, pl, skyflat);
     else // regular flat
     {
         const texture_t *tex;
@@ -1222,7 +1225,7 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
 // function is also now used to render portal overlays.
 //
 void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash, int *const spanstart,
-                  const angle_t viewangle, planehash_t *table)
+                  planehash_t *table)
 {
     visplane_t *pl;
     int         i;
@@ -1233,7 +1236,7 @@ void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash,
     for(i = 0; i < table->chaincount; ++i)
     {
         for(pl = table->chains[i]; pl; pl = pl->next)
-            do_draw_plane(context, heap, spanstart, viewangle, pl);
+            do_draw_plane(context, heap, spanstart, pl);
     }
 }
 
