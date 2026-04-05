@@ -1483,7 +1483,7 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
     {
         if (!strcmp(info->getString("ignore", "0"), "1"))
         {
-            C_Printf("Found ignored [level info], will try MAPINFO first...\n");
+            C_Printf("Found ignored [level info]; if no EMAPINFO, will try MAPINFO if available...\n");
             levelHeaderInfoHasIgnore = true;
             levelHeaderInfo          = info;
         }
