@@ -199,15 +199,16 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
 // P_applyHexenMapInfo
 //
 // haleyjd 01/26/14: Applies data from Hexen MAPINFO
+// printz: returns true if an entry exists
 //
-void P_ApplyHexenMapInfo()
+bool P_ApplyHexenMapInfo()
 {
     MetaTable  *xlmi = nullptr;
     const char *s    = nullptr;
     int         i;
 
     if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
-        return;
+        return false;
 
     // Mark if classic demos to avoid changing certain playsim settings
     bool classicDemo = demo_version <= 203;
@@ -283,6 +284,7 @@ void P_ApplyHexenMapInfo()
     qstring secretnext;
     qstring titlepatch;
     */
+    return true;
 }
 
 // EOF

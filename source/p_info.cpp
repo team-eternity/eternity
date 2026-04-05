@@ -1477,16 +1477,31 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
     }
 
     // additively process any SMMU header information for compatibility
+    bool levelHeaderInfoHasIgnore = false;
+    MetaTable *levelHeaderInfo = nullptr;
     if((info = XL_ParseLevelInfo(dir, lumpnum)))
     {
-        P_ProcessEMapInfo(info);
-        foundEEMapInfo = true;
+        if (!strcmp(info->getString("ignore", "0"), "1"))
+        {
+            C_Printf("Found ignored [level info], will try MAPINFO first...\n");
+            levelHeaderInfoHasIgnore = true;
+            levelHeaderInfo          = info;
+        }
+        else
+        {
+            P_ProcessEMapInfo(info);
+            foundEEMapInfo = true;
+        }
     }
 
     // haleyjd 01/26/14: if no EE map information was specified for this map,
     // defer to any defined Hexen MAPINFO data now.
-    if(!foundEEMapInfo)
-        P_ApplyHexenMapInfo();
+    if(!foundEEMapInfo && !P_ApplyHexenMapInfo() && levelHeaderInfo && levelHeaderInfoHasIgnore)
+    {
+        C_Printf("Found no MAPINFO, using ignored [level info].\n");
+        P_ProcessEMapInfo(levelHeaderInfo);
+        foundEEMapInfo = true;
+    }
 
     P_truncateLevelInfoNames();
 
