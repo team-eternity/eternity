@@ -458,7 +458,9 @@ static void XL_buildInterMapInfo()
 {
     // First, visit UMAPINFO
     XL_BuildInterUMapInfo();
-    // Then, override with EMAPINFO
+    // Second, try Hexen/ZDoom MAPINFO
+    XL_BuildInterOldZDoomMapInfo();
+    // Finally, override with EMAPINFO
     XL_BuildInterEMapInfo();
 
     // Episode menu from UMAPINFO

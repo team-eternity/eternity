@@ -31,6 +31,7 @@
 #include "d_gi.h"
 #include "d_main.h"
 #include "e_lib.h"
+#include "in_lude.h"
 #include "metaapi.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -608,6 +609,20 @@ void XL_ParseMapInfo()
     XLMapInfoParser parser;
 
     parser.parseAll(wGlobalDir);
+}
+
+void XL_BuildInterOldZDoomMapInfo()
+{
+    MetaTable *level = nullptr;
+    while ((level = mapInfoTable.getNextTypeEx(level)))
+    {
+        intermapinfo_t &info = IN_GetMapInfo(level->getKey());
+        const char     *str;
+        str = level->getString("name", "");
+        if(estrnonempty(str))
+            info.levelname = str;
+
+    }
 }
 
 //=============================================================================

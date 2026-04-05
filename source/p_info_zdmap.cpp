@@ -214,6 +214,7 @@ bool P_ApplyHexenMapInfo()
     bool classicDemo = demo_version <= 203;
 
     LevelInfo.levelName = xlmi->getString("name", "");
+    LevelInfo.interLevelName = LevelInfo.levelName;
 
     // sky textures
     if((s = xlmi->getString("sky1", nullptr)))
