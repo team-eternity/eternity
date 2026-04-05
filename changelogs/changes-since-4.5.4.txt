@@ -68,6 +68,7 @@ Improvements
 * Updated chicken morphing rules to match Heretic 2025.
 * Updated weapon autoswitch rule to match Heretic 2025.
 * Increased MAPINFO support so the Heretic episode "Curse of D'Sparil" from /idgames loads.
+* Switches with bad secondary textures now just don't animate, but don't display the checkerboard.
 
 Bug fixes
 ---------

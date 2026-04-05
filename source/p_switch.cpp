@@ -157,7 +157,10 @@ void P_InitSwitchList(void)
             if(!SwapShort(alphSwitchList[i].episode))
                 break;
             switchlist[index++] = R_FindWall(alphSwitchList[i].name1);
-            switchlist[index++] = R_FindWall(alphSwitchList[i].name2);
+            switchlist[index]   = R_FindWall(alphSwitchList[i].name2);
+            if(switchlist[index] == texturecount - 1 && switchlist[index - 1] != texturecount - 1)
+                switchlist[index] = switchlist[index - 1]; // sloppy design compatibility with other ports
+            ++index;
             switchsounds.add(qstring()); // empty means default
             offswitchsounds.add(qstring());
         }
