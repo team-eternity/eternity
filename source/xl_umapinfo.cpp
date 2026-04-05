@@ -560,46 +560,10 @@ void XL_BuildInterUMapInfo()
 //
 void XL_BuildUMapInfoEpisodes()
 {
-    // The EDF episode menu has priority
-    if(mn_episode_override)
+    XLEpisodeReplacement replacement;
+    if(replacement.isDisabled())
         return;
-
-    PODCollection<menuitem_t> prefixItems; // the visual items before the actual items, if any
-    PODCollection<menuitem_t> items;
-    int                       prefixGaps = 0; // number of prefix lines with blanks
-
-    const menu_t *base           = GameModeInfo->episodeMenu;
-    menu_t        newmenu        = {};
-    bool          finishedPrefix = false;
-    if(base)
-    {
-        newmenu = *base; // copy the vanilla menu properties
-        for(const menuitem_t *item = newmenu.menuitems; item->type != it_end; ++item)
-        {
-            if(item->type != it_runcmd)
-            {
-                if(!finishedPrefix)
-                {
-                    prefixItems.add(*item);
-                    if(item->type == it_gap)
-                        ++prefixGaps;
-                }
-                continue;
-            }
-            finishedPrefix = true;
-            items.add(*item);
-        }
-        newmenu.flags |= mf_bigfont;
-    }
-    else
-    {
-        // Shouldn't really go here
-        // Based on the Doom menu
-        newmenu.x     = 48;
-        newmenu.y     = 63;
-        newmenu.flags = mf_skullmenu | mf_bigfont;
-    }
-
+    
     struct episodeinfo_t
     {
         const char *patch;
@@ -608,8 +572,6 @@ void XL_BuildUMapInfoEpisodes()
     };
 
     PODCollection<episodeinfo_t> epinfos; // REVERSE LIST
-
-    bool changed = false;
 
     for(const char *levelname : orderedLevels)
     {
@@ -620,8 +582,7 @@ void XL_BuildUMapInfoEpisodes()
         int mint = level->getInt("episode", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(mint == XL_UMAPINFO_SPECVAL_CLEAR)
         {
-            items.makeEmpty(); // empty out the episode list
-            changed = true;
+            replacement.clear();
         }
 
         // Now get the episode list.
@@ -656,97 +617,14 @@ void XL_BuildUMapInfoEpisodes()
             newitem.description = epinfo.name;
             newitem.data        = ccmd.duplicate(PU_STATIC);
             newitem.patch       = epinfo.patch;
-            items.add(newitem);
-            changed = true;
+            replacement.add(newitem);
         }
     }
     // Now we have the items
     // Cut them off to 8 (UMAPINFO limit)
-    if(items.getLength() > 8)
-    {
-        items.resize(8);
-        changed = true;
-    }
+    replacement.cap(8);
 
-    // Scan for missing patches and remove them
-    // NOTE: this is a deviation from the UMAPINFO specs, by only invalidating the missing patches
-    // on an element-by-element basis, not every item.
-    for(menuitem_t &item : items)
-        if(item.patch && W_CheckNumForName(item.patch) == -1)
-            item.patch = nullptr;
-
-    // Check if the menu needs adjustment (DOOM mf_emulated menus are fine, they have fixed height)
-    if(newmenu.flags & mf_bigfont)
-    {
-        const vfont_t *gapfont   = E_FontForName(mn_fontname); // the gap uses the basic font height
-        int            rowheight = -1;                         // by default invalid
-        if(newmenu.flags & mf_emulated)
-            rowheight = EMULATED_ITEM_SIZE;
-        else
-        {
-            const vfont_t *font = E_FontForName(mn_bigfontname);
-            if(font)
-                rowheight = font->cy;
-        }
-        if(rowheight > 0 && gapfont)
-        {
-            int prefixHeight  = rowheight * ((int)prefixItems.getLength() - prefixGaps) + gapfont->cy * prefixGaps;
-            int contentHeight = rowheight * ((int)items.getLength());
-            int bottom        = newmenu.y + prefixHeight + contentHeight;
-            if(bottom > SCREENHEIGHT)
-            {
-                // Center to fit it to screen
-                newmenu.y = (SCREENHEIGHT - prefixHeight - contentHeight) / 2;
-                if(newmenu.y < 0)
-                {
-                    // Still not fitting? Remove the title
-                    newmenu.selected -= (int)prefixItems.getLength();
-                    prefixItems.makeEmpty();
-                    newmenu.y = (SCREENHEIGHT - contentHeight) / 2;
-                    if(newmenu.y < 0)
-                    {
-                        // Still not fitting? Give up, but ensure valid origin
-                        newmenu.y = 0;
-                    }
-                }
-            }
-            else if(GameModeInfo->StatusBar == &DoomStatusBar && bottom > SCREENHEIGHT - 32)
-            {
-                static int shiftedTop;
-                int        oldmenuy = newmenu.y;
-                newmenu.y           = SCREENHEIGHT - 32 - prefixHeight - contentHeight; // touch the status bar
-                if(newmenu.y < 0)
-                    newmenu.y = 0;
-                shiftedTop = 38 - (oldmenuy - newmenu.y);
-
-                // HACK: replace the drawer function to something equivalent but dynamically offset.
-                extern menu_t menu_episode, menu_episodeDoom2Stub;
-                if(GameModeInfo->episodeMenu == &menu_episode || GameModeInfo->episodeMenu == &menu_episodeDoom2Stub)
-                {
-                    newmenu.drawer = []() {
-                        V_DrawPatch(54, shiftedTop, &subscreen43,
-                                    PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
-                    };
-                }
-            }
-        }
-    }
-
-    // the stock menu didn't get changed, so don't override!
-    // Also do not perform any change if the menu is merely cleared. We never want an empty menu.
-    if(!changed || items.isEmpty())
-        return;
-
-    // Now we have the episode!
-    mn_episode_override            = estructalloc(menu_t, 1);
-    *mn_episode_override           = newmenu; // copy the properties
-    mn_episode_override->menuitems = estructalloc(menuitem_t, prefixItems.getLength() + items.getLength() + 1);
-
-    for(size_t i = 0; i < prefixItems.getLength(); ++i)
-        mn_episode_override->menuitems[i] = prefixItems[i];
-    for(size_t i = 0; i < items.getLength(); ++i)
-        mn_episode_override->menuitems[prefixItems.getLength() + i] = items[i];
-    mn_episode_override->menuitems[prefixItems.getLength() + items.getLength()].type = it_end;
+    // Destructor will finish setting it up (or not if nothing changed)
 }
 
 // EOF

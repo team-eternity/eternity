@@ -89,6 +89,7 @@ MetaTable *XL_MapInfoForMapNum(int episode, int map);
 void       XL_ParseMapInfo();
 
 void XL_BuildInterOldZDoomMapInfo();
+void XL_BuildOldZDoomMapInfoEpisodes();
 
 #endif
 

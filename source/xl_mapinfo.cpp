@@ -33,6 +33,7 @@
 #include "e_lib.h"
 #include "in_lude.h"
 #include "metaapi.h"
+#include "mn_emenu.h"
 #include "v_misc.h"
 #include "w_wad.h"
 #include "xl_mapinfo.h"
@@ -47,6 +48,7 @@ static MetaTable defaultMap;
 static MetaTable mapInfoTable;
 static MetaTable episodeTable;
 static MetaTable clusterTable;
+static bool      clearEpisodes;
 
 //
 // XL_newMapInfo
@@ -160,7 +162,6 @@ protected:
     qstring        mapName;
     xlmikeyword_t *kwd;
     bool           classicHexenMode; // use ZDoom's method of determining how to compute some fields
-    bool           clearEpisodes;
 
     EntryType currentType;
 
@@ -174,7 +175,7 @@ protected:
 public:
     XLMapInfoParser()
         : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL), curInfo(nullptr), mapName(),
-          kwd(nullptr), classicHexenMode(), clearEpisodes(false), currentType(EntryType::map)
+          kwd(nullptr), classicHexenMode(), currentType(EntryType::map)
     {}
 };
 
@@ -614,14 +615,49 @@ void XL_ParseMapInfo()
 void XL_BuildInterOldZDoomMapInfo()
 {
     MetaTable *level = nullptr;
-    while ((level = mapInfoTable.getNextTypeEx(level)))
+    while((level = mapInfoTable.getNextTypeEx(level)))
     {
         intermapinfo_t &info = IN_GetMapInfo(level->getKey());
         const char     *str;
         str = level->getString("name", "");
         if(estrnonempty(str))
             info.levelname = str;
+    }
+}
 
+void XL_BuildOldZDoomMapInfoEpisodes()
+{
+    XLEpisodeReplacement replacement;
+    if(replacement.isDisabled())
+        return;
+    if(clearEpisodes)
+        replacement.clear();
+    struct episodeinfo_t
+    {
+        const char *name;
+        const char *startMap;
+        // NOTE: key currently unused
+    };
+    MetaTable *eptable = nullptr;
+    PODCollection<episodeinfo_t> epinfos;   // REVERSE LIST
+    while((eptable = episodeTable.getNextTypeEx(eptable)))
+    {
+        episodeinfo_t epinfo = {};
+        epinfo.name          = eptable->getString("name", nullptr);
+        epinfo.startMap      = eptable->getKey();
+        epinfos.add(epinfo);
+    }
+    for (int i = (int)epinfos.getLength() - 1; i >= 0; --i)
+    {
+        const episodeinfo_t &epinfo = epinfos[i];
+        qstring              ccmd("mn_start_mapname ");
+        ccmd += epinfo.startMap;
+
+        menuitem_t newitem = {};
+        newitem.type       = it_runcmd;
+        newitem.description = epinfo.name;
+        newitem.data        = ccmd.duplicate(PU_STATIC);
+        replacement.add(newitem);
     }
 }
 
