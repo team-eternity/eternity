@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_things.h"
 #include "ev_specials.h"
@@ -110,6 +111,8 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 //
 static void P_addMapInfoBossAction(const mobjtype_t type, const char *name, int args0, int args1)
 {
+    if(estrempty(name))
+        return;
     auto action                 = estructalloctag(levelaction_t, 1, PU_LEVEL);
     action->flags               = levelaction_t::BOSS_ONLY;
     action->mobjtype            = type;
@@ -146,29 +149,51 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
     };
 
     // Conditions: which monsters to die
-    // NOTE: currently Heretic monsters aren't implemented. We only focus on supporting cross-port
-    // maps which get this treatment, and those usually aim Boom. The cross-port Heretic megawads are
-    // all vanilla.
-    static const bossspecialbinding_t bossspecialbindings[] = {
+    static const bossspecialbinding_t bossspecialbindings_doom[] = {
         { "baronspecial",            BSPEC_E1M8,              MF2_E1M8BOSS                },
         { "cyberdemonspecial",       BSPEC_E2M8 | BSPEC_E4M6, MF2_E2M8BOSS | MF2_E4M6BOSS },
         { "spidermastermindspecial", BSPEC_E3M8 | BSPEC_E4M8, MF2_E3M8BOSS | MF2_E4M8BOSS },
     };
 
+    // Add maulotaur when encountered in mods
+    static const bossspecialbinding_t bossspecialbindings_heretic[] = {
+        { "dsparilspecial", BSPEC_E3M8, MF2_E3M8BOSS },
+    };
+
+    const bossspecialbinding_t *bossspecialbindings =
+        GameModeInfo->type == Game_DOOM ? bossspecialbindings_doom : bossspecialbindings_heretic;
+    const size_t bossspecialbindings_size =
+        GameModeInfo->type == Game_DOOM ? earrlen(bossspecialbindings_doom) : earrlen(bossspecialbindings_heretic);
+
     // Actions: what to do
-    static const specialactionbinding_t specialactionbindings[] = {
+    static const specialactionbinding_t specialactionbindings_doom[] = {
         { "specialaction_lowerfloor", BSPEC_E1M8 | BSPEC_E4M8, "Floor_LowerToLowest", { 666, 8, 0, 0, 0 }  },
         { "specialaction_exitlevel",  BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal",         { 0, 0, 0, 0, 0 }    },
         { "specialaction_opendoor",   BSPEC_E4M6,              "Door_Open",           { 666, 64, 0, 0, 0 } },
     };
 
-    for(const bossspecialbinding_t &monsterBinding : bossspecialbindings)
+    // FIXME: killmonsters doesn't have an action special. Add it if any existing mods depend on it
+    static const specialactionbinding_t specialactionbindings_heretic[] = {
+        { "specialaction_lowerfloor",
+         BSPEC_E1M8 | BSPEC_E2M8 | BSPEC_E3M8 | BSPEC_E4M8 | BSPEC_E5M8,
+         "Floor_LowerToLowest",                                                                { 666, 8, 0, 0, 0 } },
+        { "specialaction_killmonsters", BSPEC_E2M8 | BSPEC_E3M8 | BSPEC_E4M8 | BSPEC_E5M8, "", {}                  }
+    };
+    const specialactionbinding_t *specialactionbindings =
+        GameModeInfo->type == Game_DOOM ? specialactionbindings_doom : specialactionbindings_heretic;
+    const size_t specialactionbindings_size =
+        GameModeInfo->type == Game_DOOM ? earrlen(specialactionbindings_doom) : earrlen(specialactionbindings_heretic);
+
+    for(size_t i = 0; i < bossspecialbindings_size; ++i)
     {
+        const bossspecialbinding_t &monsterBinding = bossspecialbindings[i];
         if(!hasflag(monsterBinding.name))
             continue;
 
-        for(const specialactionbinding_t &actionBinding : specialactionbindings)
+        for(size_t j = 0; j < specialactionbindings_size; ++j)
         {
+            const specialactionbinding_t &actionBinding = specialactionbindings[j];
+        
             if(!hasflag(actionBinding.name))
                 continue;
 
@@ -280,10 +305,6 @@ bool P_ApplyHexenMapInfo()
 
     /*
     Stuff with "Unfinished Business":
-    qstring name;
-    qstring next;
-    qstring secretnext;
-    qstring titlepatch;
     */
     return true;
 }
