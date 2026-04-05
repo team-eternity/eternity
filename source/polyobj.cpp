@@ -1246,10 +1246,10 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
     dest.x = x;
     dest.y = y;
 
-    // calculate distance from centerPt to destination
+    // calculate distance from spawnSpot to destination
     // ioanch 20151218: use 32-bit coordinates
-    dist.x = po->centerPt.x - dest.x;
-    dist.y = po->centerPt.y - dest.y;
+    dist.x = po->spawnSpot.x - dest.x;
+    dist.y = po->spawnSpot.y - dest.y;
 
     // update linedef bounding boxes
     for(i = 0; i < po->numLines; ++i)
