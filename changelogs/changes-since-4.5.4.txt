@@ -115,3 +115,4 @@ Bug fixes
 * Fixed ACS SetWeapon function.
 * Fixed skies not rotating correctly past angled visual portals.
 * Fixed crash when using playerdelta with added rebornitem entries (without clearrebornitems).
+* Fixed bad polyobject coordinate control in ACS GetPolyobjX, GetPolyobjY and SetPolyobjXY.
