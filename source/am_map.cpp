@@ -1765,23 +1765,24 @@ static void AM_drawMline(mline_t *ml, int color)
 //
 static void AM_drawGrid(int color)
 {
-    fixed_t x, y;
-    fixed_t start, end;
+    constexpr int block    = MAPBLOCKUNITS << FRACBITS;
+    double        cx       = m_x + m_w / 2;
+    double        cy       = m_y + m_h / 2;
+    double        radius   = hypot(m_w, m_h);
+
+    // Vertical lines
+    fixed_t start = M_DoubleToFixed(m_x - radius) - block;
+    if((start - bmaporgx) % block)
+        start -= ((start - bmaporgx) % block);
+    fixed_t end = M_DoubleToFixed(m_x + radius) + block;
+
     mline_t ml;
-
-    // Figure out start of vertical gridlines
-    start = M_DoubleToFixed(m_x);
-    if((start - bmaporgx) % (MAPBLOCKUNITS << FRACBITS))
-        start -= ((start - bmaporgx) % (MAPBLOCKUNITS << FRACBITS));
-    end = M_DoubleToFixed(m_x + m_w);
-
-    // draw vertical gridlines
-    ml.a.y = m_y;
-    ml.b.y = m_y + m_h;
-    for(x = start; x < end; x += (MAPBLOCKUNITS << FRACBITS))
+    for(fixed_t x = start; x < end; x += block)
     {
         ml.a.x = M_FixedToDouble(x);
+        ml.a.y = cy - radius;
         ml.b.x = M_FixedToDouble(x);
+        ml.b.y = cy + radius;
 
         if(rotatemode)
         {
@@ -1792,18 +1793,17 @@ static void AM_drawGrid(int color)
         AM_drawMline(&ml, color);
     }
 
-    // Figure out start of horizontal gridlines
-    start = M_DoubleToFixed(m_y);
-    if((start - bmaporgy) % (MAPBLOCKUNITS << FRACBITS))
-        start -= ((start - bmaporgy) % (MAPBLOCKUNITS << FRACBITS));
-    end = M_DoubleToFixed(m_y + m_h);
+    // Horizontal lines
+    start = M_DoubleToFixed(m_y - radius) - block;
+    if((start - bmaporgy) % block)
+        start -= ((start - bmaporgy) % block);
+    end = M_DoubleToFixed(m_y + radius) + block;
 
-    // draw horizontal gridlines
-    ml.a.x = m_x;
-    ml.b.x = m_x + m_w;
-    for(y = start; y < end; y += (MAPBLOCKUNITS << FRACBITS))
+    for(fixed_t y = start; y < end; y += block)
     {
+        ml.a.x = cx - radius;
         ml.a.y = M_FixedToDouble(y);
+        ml.b.x = cx + radius;
         ml.b.y = M_FixedToDouble(y);
 
         if(rotatemode)
@@ -2014,6 +2014,12 @@ static void AM_drawWalls()
             l.a.y += M_FixedToDouble(link->y);
             l.b.x += M_FixedToDouble(link->x);
             l.b.y += M_FixedToDouble(link->y);
+
+            if(rotatemode)
+            {
+                AM_rotatePoint(&l.a);
+                AM_rotatePoint(&l.b);
+            }
 
             // if line has been seen or IDDT has been used
             if(ddt_cheating || (line->flags & ML_MAPPED))
@@ -2581,7 +2587,7 @@ static void AM_drawMarks()
                 my    += M_FixedToDouble(link->y);
             }
 
-            if (rotatemode)
+            if(rotatemode)
             {
                 AM_rotatePoint(&mx, &my);
             }
