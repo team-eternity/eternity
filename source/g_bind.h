@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -125,6 +125,7 @@ enum keyaction_e
     ka_map_toggle,
     ka_map_gobig,
     ka_map_follow,
+    ka_map_rotate,
     ka_map_mark,
     ka_map_clear,
     ka_map_grid,

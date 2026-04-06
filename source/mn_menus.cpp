@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Simon Howard et al.
 //
@@ -3371,6 +3371,7 @@ static menuitem_t mn_automapkeys_items[] = {
     { it_binding, "Zoom out",      "map_zoomout" },
     { it_binding, "Show full map", "map_gobig"   },
     { it_binding, "Follow mode",   "map_follow"  },
+    { it_binding, "Rotate mode",   "map_rotate"  },
     { it_binding, "Mark spot",     "map_mark"    },
     { it_binding, "Clear spots",   "map_clear"   },
     { it_binding, "Show grid",     "map_grid"    },

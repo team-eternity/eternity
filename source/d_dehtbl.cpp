@@ -291,6 +291,8 @@ static const char *s_HUSTR_PLRBROWN     = HUSTR_PLRBROWN;
 static const char *s_HUSTR_PLRRED       = HUSTR_PLRRED;
 static const char *s_AMSTR_FOLLOWON     = AMSTR_FOLLOWON;
 static const char *s_AMSTR_FOLLOWOFF    = AMSTR_FOLLOWOFF;
+static const char *s_AMSTR_ROTATEON     = AMSTR_ROTATEON;
+static const char *s_AMSTR_ROTATEOFF    = AMSTR_ROTATEOFF;
 static const char *s_AMSTR_GRIDON       = AMSTR_GRIDON;
 static const char *s_AMSTR_GRIDOFF      = AMSTR_GRIDOFF;
 static const char *s_AMSTR_MARKEDSPOT   = AMSTR_MARKEDSPOT;
@@ -777,6 +779,8 @@ dehstr_t deh_strlookup[] = {
     // player chat keys removed
     { &s_AMSTR_FOLLOWON,           "AMSTR_FOLLOWON"           },
     { &s_AMSTR_FOLLOWOFF,          "AMSTR_FOLLOWOFF"          },
+    { &s_AMSTR_ROTATEON,           "AMSTR_ROTATEON"           },
+    { &s_AMSTR_ROTATEOFF,          "AMSTR_ROTATEOFF"          },
     { &s_AMSTR_GRIDON,             "AMSTR_GRIDON"             },
     { &s_AMSTR_GRIDOFF,            "AMSTR_GRIDOFF"            },
     { &s_AMSTR_MARKEDSPOT,         "AMSTR_MARKEDSPOT"         },
