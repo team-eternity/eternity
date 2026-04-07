@@ -71,6 +71,8 @@ Improvements
 * Switches with bad secondary textures now just don't animate, but don't display the checkerboard.
 * Prevent BSP-caused texture misalignment, in the same way as other Boom-compatible source ports.
 * Updated to UMAPINFO requirement that nextsecret should fallback to next.
+* Fixed so UMAPINFO episode ending debriefing background, when set as patch (not as flat as usual),
+  renders properly.
 
 Bug fixes
 ---------

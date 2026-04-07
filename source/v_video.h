@@ -189,8 +189,13 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height, i
                          byte *cmap);
 
 // haleyjd 05/18/09: Fullscreen background drawing helpers
+enum DrawPatchSettings
+{
+    keepOffsets,
+    clearOffsets,
+};
 void V_DrawBlockFS(VBuffer *buffer, const byte *src);
-void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
+void V_DrawPatchFS(VBuffer *buffer, patch_t *patch, DrawPatchSettings settings = DrawPatchSettings::keepOffsets);
 void V_DrawFSBackground(VBuffer *dest, int lumpnum);
 
 // V_FindBestColor (haleyjd)
