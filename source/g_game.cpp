@@ -120,8 +120,8 @@ player_t        players[MAXPLAYERS];
 int             consoleplayer; // player taking events and displaying
 int             displayplayer; // view being displayed
 int             gametic;
-int             levelstarttic;                       // gametic at level start
-int             basetic;                             // killough 9/29/98: for demo sync
+int             levelstarttic;                          // gametic at level start
+int             basetic;                                // killough 9/29/98: for demo sync
 int             totalmonsters, totalitems, totalsecret; // for intermission
 int             totalKilledMonsters;
 bool            democontinue;
@@ -1780,6 +1780,8 @@ static void G_setupMapInfoWMInfo(levelkind_t kind)
     wminfo.li_lastlevelpic = LevelInfo.levelPic;
     wminfo.li_nextlevelpic = next.levelpic;
 
+    wminfo.li_lastlevelcreator = LevelInfo.creator;
+
     const intermapinfo_t &last = IN_GetMapInfo(gamemapname);
 
     // NOTE: just for exit-pic, do NOT use LevelInfo.interPic! We need to tell if
@@ -2412,9 +2414,9 @@ void G_PlayerReborn(int player)
     playercolour = p->colormap;
     totalfrags   = p->totalfrags;
     // Restore class now
-    playerskin       = p->unmorphSkin ? p->unmorphSkin : p->skin;
-    playerclass      = p->unmorphClass ? p->unmorphClass : p->pclass; // haleyjd: playerclass
-    inventory        = p->inventory;                                  // haleyjd: inventory
+    playerskin  = p->unmorphSkin ? p->unmorphSkin : p->skin;
+    playerclass = p->unmorphClass ? p->unmorphClass : p->pclass; // haleyjd: playerclass
+    inventory   = p->inventory;                                  // haleyjd: inventory
 
     delete p->weaponctrs;
 
@@ -2425,18 +2427,18 @@ void G_PlayerReborn(int player)
 
     p->weaponctrs = new WeaponCounterTree();
 
-    p->killcount        = killcount;
-    p->itemcount        = itemcount;
-    p->secretcount      = secretcount;
-    p->cheats           = cheats;
-    p->colormap         = playercolour;
-    p->totalfrags       = totalfrags;
-    p->skin             = playerskin;
-    p->pclass           = playerclass; // haleyjd: playerclass
-    p->inventory        = inventory;   // haleyjd: inventory
-    p->playerstate      = PST_LIVE;
-    p->health           = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
-    p->quake            = 0;                        // haleyjd 01/21/07
+    p->killcount   = killcount;
+    p->itemcount   = itemcount;
+    p->secretcount = secretcount;
+    p->cheats      = cheats;
+    p->colormap    = playercolour;
+    p->totalfrags  = totalfrags;
+    p->skin        = playerskin;
+    p->pclass      = playerclass; // haleyjd: playerclass
+    p->inventory   = inventory;   // haleyjd: inventory
+    p->playerstate = PST_LIVE;
+    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
+    p->quake       = 0;                        // haleyjd 01/21/07
 
     p->usedown = true; // don't do anything immediately
 

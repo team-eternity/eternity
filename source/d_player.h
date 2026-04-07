@@ -188,8 +188,8 @@ struct player_t
     int refire; // Refired shots are less accurate.
 
     // For Heretic chicken and similar
-    int            morphTics;        // player is morphed if > 0
-    int            headThrust;       // chicken peck countdown
+    int            morphTics;  // player is morphed if > 0
+    int            headThrust; // chicken peck countdown
     weaponinfo_t  *unmorphWeapon;
     weaponslot_t  *unmorphWeaponSlot;
     playerclass_t *unmorphClass;
@@ -268,6 +268,8 @@ struct wbstartstruct_t
     const char *li_nextlevelpic;
     const char *li_lastexitpic;
     const char *li_nextenterpic;
+    const char *li_lastlevelcreator;
+    const char *li_nextlevelcreator;
 
     int maxkills;
     int maxitems;
