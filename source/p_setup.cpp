@@ -382,6 +382,25 @@ static void P_CalcSegLength(seg_t *lseg)
 }
 
 //
+// R_DynaSegOffset
+//
+// Computes the offset value of the seg relative to its parent linedef.
+// Not terribly fast.
+// Derived from BSP 5.2 SplitDist routine.
+//
+// haleyjd 06/14/10: made global for map loading in p_setup.c and added
+//                   side parameter.
+// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
+//
+static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
+{
+    float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
+    float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
+
+    lseg->offset = sqrtf(dx * dx + dy * dy);
+}
+
+//
 // P_LoadSegs
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -420,6 +439,8 @@ static void P_LoadSegs(int lump)
             level_error = "Seg line side number out of range";
             return;
         }
+
+        R_calcSegOffset(li, ldef, side);
 
         li->frontside   = side == 0;
         li->sidedef     = &sides[ldef->sidenum[side]];
@@ -493,6 +514,8 @@ static void P_LoadSegs_V4(int lump)
             Z_Free(data);
             return;
         }
+
+        R_calcSegOffset(li, ldef, side);
 
         li->frontside   = side == 0;
         li->sidedef     = &sides[ldef->sidenum[side]];
@@ -1184,25 +1207,6 @@ struct mapnode_znod_t
     // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
     int32_t children[2];
 };
-
-//
-// R_DynaSegOffset
-//
-// Computes the offset value of the seg relative to its parent linedef.
-// Not terribly fast.
-// Derived from BSP 5.2 SplitDist routine.
-//
-// haleyjd 06/14/10: made global for map loading in p_setup.c and added
-//                   side parameter.
-// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
-//
-static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
-{
-    float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
-    float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
-
-    lseg->offset = sqrtf(dx * dx + dy * dy);
-}
 
 //
 // P_LoadZSegs
@@ -4019,17 +4023,17 @@ void P_LoadOlo(void)
 {
    int lumpnum;
    char *lump;
-   
+
    if((lumpnum = W_CheckNumForName("OLO")) == -1)
       return;
-   
+
    lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   
+
    if(strncmp(lump, "OLO", 3))
       return;
-   
+
    memcpy(&olo, lump, sizeof(olo_t));
-   
+
    olo_loaded = true;
 }
 #endif
