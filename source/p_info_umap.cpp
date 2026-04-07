@@ -272,9 +272,12 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
         strval = info->getString("next", nullptr);
         if(strval)
             LevelInfo.nextLevel = strval;
-        strval = info->getString("nextsecret", nullptr);
+        const char *const next = strval;
+        strval                 = info->getString("nextsecret", nullptr);
         if(strval)
             LevelInfo.nextSecret = strval;
+        else if(next)
+            LevelInfo.nextSecret = next;
     }
     strval = info->getString("skytexture", nullptr);
     if(strval)
