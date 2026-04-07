@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -164,6 +164,7 @@ keyaction_t keyactions[NUMKEYACTIONS] = {
     { "map_clear",         kac_map,     at_variable },
     { "map_grid",          kac_map,     at_variable },
     { "map_overlay",       kac_map,     at_variable },
+    { "map_tagfinder",     kac_map,     at_variable },
 
     // Console Actions
 

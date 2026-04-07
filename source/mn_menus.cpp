@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Simon Howard et al.
 //
@@ -3360,22 +3360,23 @@ CONSOLE_COMMAND(mn_menukeys, 0)
 //
 
 static menuitem_t mn_automapkeys_items[] = {
-    { it_title,   "Automap",       nullptr       },
-    { it_gap,     nullptr,         nullptr       },
-    { it_binding, "Toggle map",    "map_toggle"  },
-    { it_binding, "Move up",       "map_up"      },
-    { it_binding, "Move down",     "map_down"    },
-    { it_binding, "Move left",     "map_left"    },
-    { it_binding, "Move right",    "map_right"   },
-    { it_binding, "Zoom in",       "map_zoomin"  },
-    { it_binding, "Zoom out",      "map_zoomout" },
-    { it_binding, "Show full map", "map_gobig"   },
-    { it_binding, "Follow mode",   "map_follow"  },
-    { it_binding, "Mark spot",     "map_mark"    },
-    { it_binding, "Clear spots",   "map_clear"   },
-    { it_binding, "Show grid",     "map_grid"    },
-    { it_binding, "Overlay mode",  "map_overlay" },
-    { it_end,     nullptr,         nullptr       }
+    { it_title,   "Automap",       nullptr         },
+    { it_gap,     nullptr,         nullptr         },
+    { it_binding, "Toggle map",    "map_toggle"    },
+    { it_binding, "Move up",       "map_up"        },
+    { it_binding, "Move down",     "map_down"      },
+    { it_binding, "Move left",     "map_left"      },
+    { it_binding, "Move right",    "map_right"     },
+    { it_binding, "Zoom in",       "map_zoomin"    },
+    { it_binding, "Zoom out",      "map_zoomout"   },
+    { it_binding, "Show full map", "map_gobig"     },
+    { it_binding, "Follow mode",   "map_follow"    },
+    { it_binding, "Mark spot",     "map_mark"      },
+    { it_binding, "Clear spots",   "map_clear"     },
+    { it_binding, "Show grid",     "map_grid"      },
+    { it_binding, "Overlay mode",  "map_overlay"   },
+    { it_binding, "Tag Finder",    "map_tagfinder" },
+    { it_end,     nullptr,         nullptr         }
 };
 
 menu_t menu_automapkeys = {

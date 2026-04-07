@@ -1,4 +1,4 @@
-Changes since v4.05.04
+﻿Changes since v4.05.04
 ======================
 
 Features
@@ -52,6 +52,7 @@ Features
   the contribution!
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* New Tag Finder feature for automap. Now works only on non-UDMF maps. Originally from prBoomX.
 
 Improvements
 ------------

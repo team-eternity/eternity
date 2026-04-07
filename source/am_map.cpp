@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2026 James Haley et al.
 //
@@ -290,6 +290,20 @@ markpoint_t *markpoints       = nullptr; // where the points are
 int          markpointnum     = 0;       // next point to be assigned (also number of points now)
 int          markpointnum_max = 0;       // killough 2/22/98
 int          followplayer     = 1;       // specifies whether to follow the player around
+int          tagfindermode    = 0;       // tag finder mode
+
+// tag finder mode found sector and tag
+static sector_t *finder_sector;
+static int       finder_tag = 0;
+
+// constants for tag finder mode
+const int FINDER_SECTOR_COLOR_TAGGED_MIN   = 168;
+const int FINDER_SECTOR_COLOR_TAGGED_MAX   = 180;
+const int FINDER_SECTOR_COLOR_UNTAGGED_MIN = 80;
+const int FINDER_SECTOR_COLOR_UNTAGGED_MAX = 98;
+const int FINDER_LINE_COLOR_MIN            = 112;
+const int FINDER_LINE_COLOR_MAX            = 191;
+const int FINDER_REFRESH_MAX               = 2;
 
 static bool stopped = true;
 static bool am_needbackscreen; // haleyjd 05/03/13
@@ -748,6 +762,11 @@ void AM_Stop()
     ST_AutomapEvent(AM_MSGEXITED);
     stopped       = true;
     setsizeneeded = true; // haleyjd
+
+    // Clear tag finder mode variables
+    tagfindermode = 0;
+    finder_sector = nullptr;
+    finder_tag    = 0;
 }
 
 //
@@ -997,6 +1016,10 @@ bool AM_Responder(const event_t *ev)
             doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON" : "AMSTR_FOLLOWOFF"));
             return true;
 
+        case ka_map_tagfinder: // activate tag finder
+            tagfindermode = true;
+            return true;
+
         case ka_map_grid:                 // toggle grid
             automap_grid = !automap_grid; // killough 2/28/98
             // Ty 03/27/98 - *not* externalized
@@ -1202,6 +1225,79 @@ void SecretSectorLookupCheat::showNext()
 }
 
 //
+// AM_tagFinderHandler()
+//
+// Handles the tag finder mode, which looks for the closest line with a tag
+// to the center of the map and returns its tag number
+//
+static void AM_tagFinderHandler()
+{
+    if(tagfindermode)
+    {
+        // Get the coordinates of the center of the map
+        fixed_t tmapx = (m_x + m_w / 2);
+        fixed_t tmapy = (m_y + m_h / 2);
+
+        // Find the closest sector to the center of the map
+        subsector_t *subsec = R_PointInSubsector(tmapx << FRACBITS, tmapy << FRACBITS);
+
+        // If there is a sector there, find the closest line with a tag
+        if(subsec && subsec->sector)
+        {
+            // Set the finder variables to the sector and 0,
+            // in case there are no tagged lines
+            finder_sector = subsec->sector;
+            finder_tag    = 0;
+
+            // Minimal distance for a line to be considered "close"
+            // to the center of the map, in map units
+            double min_distance = 32 * scale_ftom;
+
+            // The tag of the closest line
+            int min_tag = 0;
+
+            // Loop through the lines of the sector and find the closest one with a tag
+            for(int i = 0; i < subsec->sector->linecount; i++)
+            {
+                line_t *line = subsec->sector->lines[i];
+
+                // If the line has a tag, check its distance to the center of the map
+                if(line && (line->tag > 0))
+                {
+                    double x1 = line->v1->x >> FRACBITS;
+                    double x2 = line->v2->x >> FRACBITS;
+                    double y1 = line->v1->y >> FRACBITS;
+                    double y2 = line->v2->y >> FRACBITS;
+
+                    double dist = abs((y2 - y1) * tmapx - (x2 - x1) * tmapy + x2 * y1 - y2 * x1) /
+                                  sqrt(pow(y2 - y1, 2) + pow(x2 - x1, 2));
+
+                    // If the distance is less than the minimum distance,
+                    // take this line as the closest one
+                    if(dist < min_distance)
+                    {
+                        min_distance = dist;
+                        min_tag      = line->tag;
+                    }
+                }
+            }
+
+            // If a line with a tag was found, set the finder variables to it
+            // Line has priority over sector, so set the sector to null
+            if(min_tag > 0)
+            {
+                finder_tag    = min_tag;
+                finder_sector = nullptr;
+            }
+        }
+
+        // Prevent searching for a line again until player presses the
+        // tag finder key again
+        tagfindermode = false;
+    }
+}
+
+//
 // AM_Ticker()
 //
 // Updates on gametic - enter follow mode, zoom, or change map location
@@ -1231,6 +1327,9 @@ void AM_Ticker()
 
     backdrop_fx += MTOF(m_x + m_w / 2 - oldmx);
     backdrop_fy += MTOF(m_y + m_h / 2 - oldmy);
+
+    // Handle tag finder mode
+    AM_tagFinderHandler();
 }
 
 //
@@ -1877,6 +1976,84 @@ inline static bool AM_dontDraw(const line_t &line)
 }
 
 //
+// AM_rotate()
+//
+// Rotation in 2D.
+// Used to rotate player arrow line character.
+//
+// Passed the coordinates of a point, and an angle
+// Returns the coordinates rotated by the angle
+//
+// haleyjd 01/24/03: made static
+//
+static void AM_rotate(double &x, double &y, angle_t a)
+{
+    double tmpx;
+
+    // a little magic: a * (PI / ANG180) converts angle_t to radians
+    double angle = (double)a * 1.4629180792671596811e-9;
+
+    tmpx = x * cos(angle) - y * sin(angle);
+    y    = x * sin(angle) + y * cos(angle);
+    x    = tmpx;
+}
+
+//
+// AM_drawLineCharacter()
+//
+// Draws a vector graphic according to numerous parameters
+//
+// Passed the structure defining the vector graphic shape, the number
+// of vectors in it, the scale to draw it at, the angle to draw it at,
+// the color to draw it with, and the map coordinates to draw it at.
+// Returns nothing
+//
+static void AM_drawLineCharacter(const mline_t *lineguy, int lineguylines, double scale, angle_t angle, int color,
+                                 fixed_t x, fixed_t y)
+{
+    mline_t l;
+    double  fx, fy;
+
+    fx = M_FixedToDouble(x);
+    fy = M_FixedToDouble(y);
+
+    for(int i = 0; i < lineguylines; i++)
+    {
+        l.a.x = lineguy[i].a.x;
+        l.a.y = lineguy[i].a.y;
+
+        if(scale != 0.0)
+        {
+            l.a.x = scale * l.a.x;
+            l.a.y = scale * l.a.y;
+        }
+
+        if(angle)
+            AM_rotate(l.a.x, l.a.y, angle);
+
+        l.a.x += fx;
+        l.a.y += fy;
+
+        l.b.x = lineguy[i].b.x;
+        l.b.y = lineguy[i].b.y;
+
+        if(scale)
+        {
+            l.b.x = scale * l.b.x;
+            l.b.y = scale * l.b.y;
+        }
+
+        if(angle)
+            AM_rotate(l.b.x, l.b.y, angle);
+
+        l.b.x += fx;
+        l.b.y += fy;
+
+        AM_drawMline(&l, color);
+    }
+}
+
+//
 // Determines visible lines, draws them.
 // This is LineDef based, not LineSeg based.
 //
@@ -1898,6 +2075,63 @@ static void AM_drawWalls()
     static mline_t l;
 
     int plrgroup = plr->mo->groupid;
+
+    // Finder variables for color cycling
+    static int finder_sector_color_pos = FINDER_SECTOR_COLOR_TAGGED_MIN;
+    static int finder_line_color_pos   = FINDER_LINE_COLOR_MIN;
+    static int finder_refresh          = FINDER_REFRESH_MAX - 1;
+
+    if(finder_sector || finder_tag)
+    {
+        // Increment the refresh counter, which determines when to update the finder colors
+        finder_refresh++;
+
+        // If the finder is active (either a tagged line or sector),
+        // cycle the finder sector color within the tagged range
+        if(finder_tag || (finder_sector && finder_sector->tag))
+        {
+            finder_sector_color_pos = std::max(FINDER_SECTOR_COLOR_TAGGED_MIN, finder_sector_color_pos);
+            finder_sector_color_pos = std::min(FINDER_SECTOR_COLOR_TAGGED_MAX, finder_sector_color_pos);
+        }
+        else
+        {
+            finder_sector_color_pos = std::max(FINDER_SECTOR_COLOR_UNTAGGED_MIN, finder_sector_color_pos);
+            finder_sector_color_pos = std::min(FINDER_SECTOR_COLOR_UNTAGGED_MAX, finder_sector_color_pos);
+        }
+
+        // If the refresh counter exceeds the maximum,
+        // reset it and update the finder colors
+        if(finder_refresh > FINDER_REFRESH_MAX)
+        {
+            finder_refresh = 0;
+            finder_line_color_pos++;
+            finder_sector_color_pos++;
+        }
+
+        // If line found, but not sector, use line color range
+        if((finder_tag || (finder_sector && finder_sector->tag)) &&
+           finder_sector_color_pos >= FINDER_SECTOR_COLOR_TAGGED_MAX)
+        {
+            finder_sector_color_pos = FINDER_SECTOR_COLOR_TAGGED_MIN;
+        }
+        else if(!(finder_tag || (finder_sector && finder_sector->tag)) &&
+                finder_sector_color_pos >= FINDER_SECTOR_COLOR_UNTAGGED_MAX)
+        {
+            finder_sector_color_pos = FINDER_SECTOR_COLOR_UNTAGGED_MIN;
+        }
+
+        // If the line color position exceeds the maximum,
+        // reset it to the minimum
+        if(finder_line_color_pos > FINDER_LINE_COLOR_MAX)
+        {
+            finder_line_color_pos = FINDER_LINE_COLOR_MIN;
+        }
+    }
+    else
+    {
+        // If no finder is active, reset the refresh counter
+        finder_refresh = FINDER_REFRESH_MAX - 1;
+    }
 
     // Draw overlay lines first so they will not obscure the (more important)
     // normal map lines
@@ -1948,6 +2182,37 @@ static void AM_drawWalls()
                     }
                 }
             } // end else if
+
+            // Finder highlights - only apply if a finder sector or tag is active if(finder_sector || finder_tag)
+            {
+                // If sector has tag matching finder tag, or is the finder sector, draw it with the finder color
+                if((lines[i].frontsector && ((finder_sector && lines[i].frontsector == finder_sector) ||
+                                             ((finder_tag > 0) && lines[i].frontsector->tag == finder_tag))) ||
+                   (lines[i].backsector && ((finder_sector && lines[i].backsector == finder_sector) ||
+                                            ((finder_tag > 0) && lines[i].backsector->tag == finder_tag))))
+                {
+                    AM_drawMline(&l, finder_sector_color_pos);
+
+                    if(finder_sector_color_pos == FINDER_SECTOR_COLOR_TAGGED_MIN)
+                    {
+                        AM_drawLineCharacter(cross_mark, earrlen(cross_mark), 16 * scale_ftom, 0, 229,
+                                             M_DoubleToFixed(l.a.x), M_DoubleToFixed(l.a.y));
+                    }
+                }
+
+                // If line has tag matching finder tag, or is in the finder sector, draw it with the finder color
+                if(lines[i].tag > 0 &&
+                   (lines[i].tag == finder_tag || (finder_sector && (lines[i].tag == finder_sector->tag))))
+                {
+                    AM_drawMline(&l, finder_line_color_pos);
+
+                    if(finder_line_color_pos == FINDER_LINE_COLOR_MIN)
+                    {
+                        AM_drawLineCharacter(cross_mark, earrlen(cross_mark), 16 * scale_ftom, 0, 251,
+                                             M_DoubleToFixed(l.a.x), M_DoubleToFixed(l.a.y));
+                    }
+                }
+            }
         }
     }
 
@@ -2072,6 +2337,38 @@ static void AM_drawWalls()
                 }
             }
         } // end else if
+
+        // Finder highlights - only apply if a finder sector or tag is active
+        if(finder_sector || finder_tag)
+        {
+            // If sector has tag matching finder tag, or is the finder sector, draw it with the finder color
+            if((lines[i].frontsector && ((finder_sector && lines[i].frontsector == finder_sector) ||
+                                         ((finder_tag > 0) && lines[i].frontsector->tag == finder_tag))) ||
+               (lines[i].backsector && ((finder_sector && lines[i].backsector == finder_sector) ||
+                                        ((finder_tag > 0) && lines[i].backsector->tag == finder_tag))))
+            {
+                AM_drawMline(&l, finder_sector_color_pos);
+
+                if(finder_sector_color_pos == FINDER_SECTOR_COLOR_TAGGED_MIN)
+                {
+                    AM_drawLineCharacter(cross_mark, earrlen(cross_mark), 16 * scale_ftom, 0, 229,
+                                         M_DoubleToFixed(l.a.x), M_DoubleToFixed(l.a.y));
+                }
+            }
+
+            // If line has tag matching finder tag, or is in the finder sector, draw it with the finder color
+            if(lines[i].tag > 0 &&
+               (lines[i].tag == finder_tag || (finder_sector && (lines[i].tag == finder_sector->tag))))
+            {
+                AM_drawMline(&l, finder_line_color_pos);
+
+                if(finder_line_color_pos == FINDER_LINE_COLOR_MIN)
+                {
+                    AM_drawLineCharacter(cross_mark, earrlen(cross_mark), 16 * scale_ftom, 0, 251,
+                                         M_DoubleToFixed(l.a.x), M_DoubleToFixed(l.a.y));
+                }
+            }
+        }
     } // end for
 }
 
@@ -2174,84 +2471,6 @@ static void AM_drawDynaSegs()
             if(color > 216)
                 color = 24;
         }
-    }
-}
-
-//
-// AM_rotate()
-//
-// Rotation in 2D.
-// Used to rotate player arrow line character.
-//
-// Passed the coordinates of a point, and an angle
-// Returns the coordinates rotated by the angle
-//
-// haleyjd 01/24/03: made static
-//
-static void AM_rotate(double &x, double &y, angle_t a)
-{
-    double tmpx;
-
-    // a little magic: a * (PI / ANG180) converts angle_t to radians
-    double angle = (double)a * 1.4629180792671596811e-9;
-
-    tmpx = x * cos(angle) - y * sin(angle);
-    y    = x * sin(angle) + y * cos(angle);
-    x    = tmpx;
-}
-
-//
-// AM_drawLineCharacter()
-//
-// Draws a vector graphic according to numerous parameters
-//
-// Passed the structure defining the vector graphic shape, the number
-// of vectors in it, the scale to draw it at, the angle to draw it at,
-// the color to draw it with, and the map coordinates to draw it at.
-// Returns nothing
-//
-static void AM_drawLineCharacter(const mline_t *lineguy, int lineguylines, double scale, angle_t angle, int color,
-                                 fixed_t x, fixed_t y)
-{
-    mline_t l;
-    double  fx, fy;
-
-    fx = M_FixedToDouble(x);
-    fy = M_FixedToDouble(y);
-
-    for(int i = 0; i < lineguylines; i++)
-    {
-        l.a.x = lineguy[i].a.x;
-        l.a.y = lineguy[i].a.y;
-
-        if(scale != 0.0)
-        {
-            l.a.x = scale * l.a.x;
-            l.a.y = scale * l.a.y;
-        }
-
-        if(angle)
-            AM_rotate(l.a.x, l.a.y, angle);
-
-        l.a.x += fx;
-        l.a.y += fy;
-
-        l.b.x = lineguy[i].b.x;
-        l.b.y = lineguy[i].b.y;
-
-        if(scale)
-        {
-            l.b.x = scale * l.b.x;
-            l.b.y = scale * l.b.y;
-        }
-
-        if(angle)
-            AM_rotate(l.b.x, l.b.y, angle);
-
-        l.b.x += fx;
-        l.b.y += fy;
-
-        AM_drawMline(&l, color);
     }
 }
 
