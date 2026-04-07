@@ -1,11 +1,11 @@
-set(resource_dirs
+﻿set(resource_dirs
     ${CMAKE_SOURCE_DIR}/docs
     ${CMAKE_SOURCE_DIR}/user    # base/ is no longer static, it's loaded with the binaries
 )
 set(resource_files
     ${CMAKE_SOURCE_DIR}/AUTHORS
     ${CMAKE_SOURCE_DIR}/COPYING
-    Eternity.icns
+    EternityPlus.icns
     DumpConsole.xib
     English.lproj/About.xib
     English.lproj/Launcher.xib
@@ -38,14 +38,14 @@ add_executable(
 add_custom_command(
     TARGET EternityLauncher PRE_BUILD
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/prepare_game_binaries.sh
-    $<TARGET_FILE_DIR:eternity>
+    $<TARGET_FILE_DIR:eternity-plus>
     ${CMAKE_CURRENT_BINARY_DIR}
     VERBATIM
 )
 
 set(binary_resources
     ${CMAKE_CURRENT_BINARY_DIR}/base
-    ${CMAKE_CURRENT_BINARY_DIR}/eternity
+    ${CMAKE_CURRENT_BINARY_DIR}/eternity-plus
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2.framework
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.framework
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.framework
@@ -62,7 +62,7 @@ set_source_files_properties(
     GENERATED TRUE
 )
 
-set(app_display_name "Eternity Engine")
+set(app_display_name "Eternity Engine Plus")
 set_target_properties(
     EternityLauncher PROPERTIES
 
@@ -73,7 +73,7 @@ set_target_properties(
     MACOSX_BUNDLE_EXECUTABLE_NAME ${app_display_name}
     MACOSX_BUNDLE_GUI_IDENTIFIER "$(PRODUCT_BUNDLE_IDENTIFIER)"
     MACOSX_BUNDLE_LONG_VERSION_STRING ${PROJECT_VERSION}
-    MACOSX_BUNDLE_ICON_FILE "Eternity"
+    MACOSX_BUNDLE_ICON_FILE "EternityPlus"
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
 
     OUTPUT_NAME ${app_display_name}
@@ -81,7 +81,7 @@ set_target_properties(
     XCODE_ATTRIBUTE_GCC_PREFIX_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/EternityLaunch_Prefix.pch
     XCODE_ATTRIBUTE_GCC_PRECOMPILE_PREFIX_HEADER YES
 
-    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "net.mancubus.Eternity-Engine"
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "net.mancubus.Eternity-Engine-Plus"
 
     XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
     XCODE_ATTRIBUTE_SKIP_INSTALL "No"

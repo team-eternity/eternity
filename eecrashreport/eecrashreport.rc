@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+﻿//Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
 
@@ -80,7 +80,7 @@ BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,20
     LTEXT           "Eternity Crash Reporter v1.0",IDC_STATIC,40,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright � 2009 James Haley\nEmail: haleyjd@hotmail.com",
+    LTEXT           "Copyright © 2009 James Haley\nEmail: haleyjd@hotmail.com",
                     IDC_STATIC,40,23,119,23
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
     LTEXT           "This program is Free Software available under the terms of the GNU General Public License. See the COPYING file for more information. This program is covered by no warranties.",
@@ -90,14 +90,14 @@ END
 IDD_EECRASHREPORT_DIALOG DIALOGEX 0, 0, 292, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Eternity Engine Fatal Error"
+CAPTION "Eternity Engine Plus Fatal Error"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "Report",IDOK,91,199,50,14
     PUSHBUTTON      "Close",IDCANCEL,150,199,50,14
     EDITTEXT        IDC_EDIT1,7,54,278,137,ES_MULTILINE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
-    LTEXT           "You can help us solve this problem by submitting the information below to the Doomworld Forums. Click ""Report"" to launch your default web browser, and then upload CRASHLOG.txt and eternity.dmp in a zip.",
+    LTEXT           "You can help us solve this problem by submitting the information below to the GitHub repository. Click ""Report"" to launch your default web browser, and then upload CRASHLOG.txt and eternity.dmp in a zip.",
                     IDC_STATIC,36,20,249,26
     ICON            "",IDC_STATIC_ICON,7,15,20,20
     LTEXT           "Eternity has experienced a problem and needs to shut down.",

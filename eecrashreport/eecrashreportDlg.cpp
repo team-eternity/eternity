@@ -1,4 +1,4 @@
-// eecrashreportDlg.cpp : implementation file
+﻿// eecrashreportDlg.cpp : implementation file
 //
 
 #include "stdafx.h"
@@ -276,5 +276,5 @@ void CEECrashReportDlg::LoadErrorFile()
 //
 void CEECrashReportDlg::LaunchBrowser()
 {
-    ShellExecute(NULL, "open", "https://www.doomworld.com/forum/25-eternity/?do=add", NULL, NULL, SW_SHOWNORMAL);
+    ShellExecute(NULL, "open", "https://github.com/dron12261games/eternity-engine-plus/issues/new", NULL, NULL, SW_SHOWNORMAL);
 }

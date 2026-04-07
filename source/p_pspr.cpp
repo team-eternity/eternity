@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -1236,6 +1236,38 @@ void A_Light2(actionargs_t *actionargs)
 
     if(LevelInfo.useFullBright) // haleyjd
         mo->player->extralight = 2;
+}
+
+void A_LightEx(actionargs_t *actionargs)
+{
+    if(!LevelInfo.useFullBright)
+        return;
+
+    Mobj     *mo         = actionargs->actor;
+    int const lightdelta = E_ArgAsInt(actionargs->args, 0, 0);
+
+    // lighter than the current extralight? if so, apply it. otherwise, leave it alone.
+    // lighter has higher priority, than darker, so that multiple lightdelta changes can
+    // be applied in the same tic without worrying about order of execution and screen
+    // flickering.
+    auto applyLight = [lightdelta](player_t &player) {
+        if(!player.extralight || player.extralight <= lightdelta)
+            player.extralight = lightdelta;
+    };
+
+    // if caller was a player, apply the lightdelta to that player only
+    if(mo->player)
+    {
+        applyLight(*mo->player);
+        return;
+    }
+
+    // otherwise, apply the lightdelta to all players in the game
+    for(int pnum = 0; pnum < MAXPLAYERS; ++pnum)
+    {
+        if(playeringame[pnum])
+            applyLight(players[pnum]);
+    }
 }
 
 //

@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>Eternity Engine</string>
+	<string>Eternity Engine Plus</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -26,7 +26,7 @@
 				<string>zip</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
-			<string>Eternity.icns</string>
+			<string>EternityPlus.icns</string>
 			<key>CFBundleTypeName</key>
 			<string>Doom Data File</string>
 			<key>CFBundleTypeRole</key>

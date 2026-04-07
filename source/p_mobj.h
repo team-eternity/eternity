@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -776,13 +776,15 @@ enum mobjflags4_e : unsigned int
 
 enum mobjflags5_e : unsigned int
 {
-    MF5_NOTAUTOAIMED  = 0x00000001, // can't be autoaimed (for real)
-    MF5_FULLVOLSOUNDS = 0x00000002, // full-volume see/death sounds
-    MF5_ACTLIKEBRIDGE = 0x00000004, // unmoved by sector actions, and pickups can sit atop
+    MF5_NOTAUTOAIMED    = 0x00000001, // can't be autoaimed (for real)
+    MF5_FULLVOLSOUNDS   = 0x00000002, // full-volume see/death sounds
+    MF5_ACTLIKEBRIDGE   = 0x00000004, // unmoved by sector actions, and pickups can sit atop
+    MF5_NOSEEKINVISIBLE = 0x00000008, // seeker missiles ignore invisible targets
+    MF5_IGNORESEEKER    = 0x00000010, // thing is ignored by seeker missiles
 };
 
-// killough 9/15/98: Same, but internal flags, not intended for .deh
-// (some degree of opaqueness is good, to avoid compatibility woes)
+// Returns true if the given seeker missile can track the given target.
+bool P_SeekerCanTrack(const Mobj *actor, const Mobj *target);
 
 //
 // IMPORTANT: if you want to reuse any of the UNUSED bits, remember to increment WRITE_SAVE_VERSION

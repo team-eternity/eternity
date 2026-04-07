@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -62,6 +62,26 @@ CONSOLE_CONST(ver_time, vertime_hack);
 // version name
 CONST_STRING(vername_hack);
 CONSOLE_CONST(ver_name, vername_hack);
+
+// Eternity Engine Plus version
+CONST_INT(eep_version_num);
+CONSOLE_CONST(eep_version, eep_version_num);
+CONST_INT(eep_version_major);
+CONSOLE_CONST(eep_version_major, eep_version_major);
+CONST_INT(eep_version_minor);
+CONSOLE_CONST(eep_version_minor, eep_version_minor);
+CONST_INT(eep_version_patch);
+CONSOLE_CONST(eep_version_patch, eep_version_patch);
+
+// Base Eternity Engine version
+CONST_INT(ee_version_num);
+CONSOLE_CONST(ee_version, ee_version_num);
+CONST_INT(ee_version_major);
+CONSOLE_CONST(ee_version_major, ee_version_major);
+CONST_INT(ee_version_minor);
+CONSOLE_CONST(ee_version_minor, ee_version_minor);
+CONST_INT(ee_version_patch);
+CONSOLE_CONST(ee_version_patch, ee_version_patch);
 
 /************* aliases ***************/
 CONSOLE_COMMAND(alias, 0)

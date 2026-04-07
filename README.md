@@ -1,5 +1,66 @@
-The Eternity Engine
-===================
+﻿![img](./Eepicon.png)
+
+The Eternity Engine Plus
+========================
+
+Eternity Engine Plus - is my ([DRON12261](https://github.com/dron12261games)) fork of [Eternity Engine](https://github.com/team-eternity/eternity) by Team Eternity, designed to expand its capabilities, particularly in terms of modding and mapping. I'm developing it based on my own programming skills and the needs of my [ETERNUM](https://github.com/dron12261games/RES-Eternum-Resource-Pack) project (a large resource pack for mappers).
+
+I do not intend for this port to be entirely independent. I plan to submit all my improvements and changes as PRs to the main Eternity Engine repository. However, since development in the Eternity Engine is quite slow and it sometimes takes a long time for PRs to be accepted (or even rejected), I think it would be a good idea to have a separate fork that provides early access to my innovations without having to wait for them to appear in the main branch. I also want to keep this fork up to date with the latest developments in Eternity Engine itself, at least until it causes major issues or until I decide to abandon this project altogether.
+
+**Eternity Engine Plus current version:** `0.1.0` (WIP)
+
+**Base Eternity Engine version:** `4.06.00` (WIP)
+
+### Project wiki with all info about new features:
+`placeholder (WIP)`
+
+## New features
+New ACS functions:
+* void Give Inventory(str item_name, int amount, bool silent) - Can be used to give all types of items, as well as health, armor, weapons, backpacks, and all types of power effects to the player. Negative value of amount will mean to give maximum.
+* void ClearInventory() - Takes all armor, backpack, weapons and ammunition, keys, all powers and all items except those marked with the UNDROPPABLE flag.
+* int UseInventory(str item_name) - Uses and consume the item if the player has it in their inventory. Returns true if the use is successful, otherwise false.
+* int GetMaxInventory(int tid, str item_name) - Returns the current maximum number of items a player can carry. If a health/armor item is passed, returns the maximum amount of health/armor that this type of item can heal/repair. If PowerArtifact is passed, it returns the duration of this artifact (if it is infinite, it returns -1). If type of PowerEffect is passed directly, it returns -1 if effect is infinite by default, otherwise 1.
+* int GetArmorInfo(int infotype) - Allows to directly get information about the current state of the player's armor. If infotype = 0, the current amount of armor will be returned; if 1, savefactor will be returned; if 2, savedivisor will be returned. Otherwise, 0.
+* str GetSectorColormap(int tag, int type) - Returns the name of the colormap of the first sector with the specified tag.
+* int SetSectorColormap(int tag, int type, str colormap, bool isBoom) - Changes the colormap in the specified sector.
+* int IsSectorColormapBoomkind(int tag, int type) - Returns 1 if the colormap in the sector uses the old Boom logic. Returns 0 if it uses the new Eternity (or SMMU) logic. Returns -1 on error (for example, if the sector cannot be found, or an invalid type is specified).
+
+Rewritten/improved old ACS functions:
+* void TakeInventory (str item_name, int amount) - Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of power effects from the player. Also, if the function is passed a amount of item that is greater than the player actually has, the item will be taken away completely (previously, it was necessary to specify a number of items equal to what was in the player's inventory, which was a bug). Negative value of amount will mean to take all.
+* int CheckInventory (str item_name) - Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of power effects with the player.
+
+New Dehacked/EDF codepointers:
+* A_LightEx(int lightDelta) - Parameterized version of A_Light0, A_Light1, and A_Light2. lightDelta - a number indicating how much the render brightness around the player should change. Positive values will make everything brighter, while negative values will make everything darker.
+
+New thing type flags:
+* NOSEEKINVISIBLE - prevents the seeker from targeting players with invisibility powerup active
+* IGNORESEEKER - prevents them from being targeted by seekers
+
+New QoL features:
+* New cheat codes for automap: IDDKT/RAVKMAP, IDDIT/RAVIMAP, IDDST/RAVSMAP.
+* PowerFlight, PowerAllMap, and PowerSilencer can now have limited duration and be modded in EDF using the permanent, additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite regardless of duration settings.
+
+## Bug fixes:
+* Fixed a freeze with an infinite loop when the player had only "Unknown" (dummy weapon) left and tried to change a weapon.
+* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and attempted to switch to a more suitable weapon (which did not exist).
+* Fixed a bug where a player's all weapons were taken via TakeInventory, but they still had the last weapon they used in their hands (even though that weapon was no longer in the player's inventory).
+* Fixed a bug with the "alwayspickup" flag for Health Effect and ArmorEffect. Previously, if a player picked up a
+health/armor item with this flag, whose maxamount/maxsaveamount was less than the player's current amount,
+the player's health/armor would be reset to the maxamount/maxsaveamount of the picked up item. Now, in such
+a situation, the player's current health/armor will not be reset and will remain unchanged.
+* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health.
+
+## How to get started with mapping/modding:
+`placeholder (WIP)`
+
+
+
+
+
+
+
+The Eternity Engine (original README.md)
+========================================
 
 Eternity is an advanced [DOOM](http://doomwiki.org/wiki/Doom) source
 port maintained by James "Quasar" Haley, descended from Simon
