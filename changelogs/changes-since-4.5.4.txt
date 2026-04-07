@@ -73,6 +73,8 @@ Improvements
 * Updated to UMAPINFO requirement that nextsecret should fallback to next.
 * Fixed so UMAPINFO episode ending debriefing background, when set as patch (not as flat as usual),
   renders properly.
+* UMAPINFO "author" and EMAPINFO "creator" now show on the intermission below the level name, if
+  specified.
 
 Bug fixes
 ---------
