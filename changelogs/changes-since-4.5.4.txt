@@ -69,6 +69,8 @@ Improvements
 * Updated weapon autoswitch rule to match Heretic 2025.
 * Increased MAPINFO support so the Heretic episode "Curse of D'Sparil" from /idgames loads.
 * Switches with bad secondary textures now just don't animate, but don't display the checkerboard.
+* Prevent BSP-caused texture misalignment, in the same way as other Boom-compatible source ports.
+* Updated to UMAPINFO requirement that nextsecret should fallback to next.
 
 Bug fixes
 ---------
