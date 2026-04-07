@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -129,6 +129,7 @@ enum keyaction_e
     ka_map_clear,
     ka_map_grid,
     ka_map_overlay,
+    ka_map_tagfinder,
     ka_console_pageup,
     ka_console_pagedown,
     ka_console_toggle,
