@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2026 James Haley et al.
 //
@@ -290,6 +290,10 @@ markpoint_t *markpoints       = nullptr; // where the points are
 int          markpointnum     = 0;       // next point to be assigned (also number of points now)
 int          markpointnum_max = 0;       // killough 2/22/98
 int          followplayer     = 1;       // specifies whether to follow the player around
+int          rotatemode       = 0;       // specifies whether to rotate the map with the player
+
+static mpoint_t m_center;
+static angle_t  m_angle;
 
 static bool stopped = true;
 static bool am_needbackscreen; // haleyjd 05/03/13
@@ -361,6 +365,61 @@ inline static double HORZ_PAN_SCALE(const double x)
 inline static double VERT_PAN_SCALE(const double y)
 {
     return y * f_h / SCREENHEIGHT;
+}
+
+//
+// AM_rotate()
+//
+// Rotation in 2D.
+// Used to rotate player arrow line character.
+//
+// Passed the coordinates of a point, and an angle
+// Returns the coordinates rotated by the angle
+//
+// haleyjd 01/24/03: made static
+//
+static void AM_rotate(double &x, double &y, angle_t a)
+{
+    double tmpx;
+
+    // a little magic: a * (PI / ANG180) converts angle_t to radians
+    double angle = (double)a * 1.4629180792671596811e-9;
+
+    tmpx = x * cos(angle) - y * sin(angle);
+    y    = x * sin(angle) + y * cos(angle);
+    x    = tmpx;
+}
+
+//
+// AM_rotatePoint()
+//
+// Rotation in 2D for a point.
+// Used to rotate point structures
+//
+// Passed the point to rotate, rotates it by the player's angle around the
+// center of the map
+//
+
+static void AM_rotatePoint(double *px, double *py)
+{
+    if(rotatemode)
+    {
+        fixed_t pivotx = m_x + m_w / 2;
+        fixed_t pivoty = m_y + m_h / 2;
+
+        *px -= pivotx;
+        *py -= pivoty;
+
+        AM_rotate(*px, *py, ANG90 - plr->mo->angle);
+
+        *px += pivotx;
+        *py += pivoty;
+    }
+}
+
+static void AM_rotatePoint(mpoint_t *point)
+{
+    AM_rotatePoint(&point->x, &point->y);
 }
 
 //
@@ -535,24 +594,37 @@ static void AM_findMinMaxBoundaries()
 //
 static void AM_changeWindowLoc()
 {
+    double incx, incy;
+
     if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
     {
         followplayer = 0;
         f_oldloc.x   = D_MAXINT;
     }
 
-    m_x += m_paninc.x;
-    m_y += m_paninc.y;
+    incx = m_paninc.x;
+    incy = m_paninc.y;
 
-    if(m_x + m_w / 2 > max_x)
-        m_x = max_x - m_w / 2;
-    else if(m_x + m_w / 2 < min_x)
-        m_x = min_x - m_w / 2;
+    if(rotatemode)
+    {
+        AM_rotate(incx, incy, ANG270 + plr->mo->angle);
+    }
 
-    if(m_y + m_h / 2 > max_y)
-        m_y = max_y - m_h / 2;
-    else if(m_y + m_h / 2 < min_y)
-        m_y = min_y - m_h / 2;
+    m_x += incx;
+    m_y += incy;
+
+    if(!(rotatemode))
+    {
+        if(m_x + m_w / 2 > max_x)
+            m_x = max_x - m_w / 2;
+        else if(m_x + m_w / 2 < min_x)
+            m_x = min_x - m_w / 2;
+
+        if(m_y + m_h / 2 > max_y)
+            m_y = max_y - m_h / 2;
+        else if(m_y + m_h / 2 < min_y)
+            m_y = min_y - m_h / 2;
+    }
 
     m_x2 = m_x + m_w;
     m_y2 = m_y + m_h;
@@ -995,6 +1067,11 @@ bool AM_Responder(const event_t *ev)
             f_oldloc.x   = D_MAXINT;
             // Ty 03/27/98 - externalized
             doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON" : "AMSTR_FOLLOWOFF"));
+            return true;
+
+        case ka_map_rotate: // toggle rotate mode
+            rotatemode = !rotatemode;
+            doom_printf("%s", DEH_String(rotatemode ? "AMSTR_ROTATEON" : "AMSTR_ROTATEOFF"));
             return true;
 
         case ka_map_grid:                 // toggle grid
@@ -1688,39 +1765,53 @@ static void AM_drawMline(mline_t *ml, int color)
 //
 static void AM_drawGrid(int color)
 {
-    fixed_t x, y;
-    fixed_t start, end;
+    constexpr int block    = MAPBLOCKUNITS << FRACBITS;
+    double        cx       = m_x + m_w / 2;
+    double        cy       = m_y + m_h / 2;
+    double        radius   = hypot(m_w, m_h);
+
+    // Vertical lines
+    fixed_t start = M_DoubleToFixed(m_x - radius) - block;
+    if((start - bmaporgx) % block)
+        start -= ((start - bmaporgx) % block);
+    fixed_t end = M_DoubleToFixed(m_x + radius) + block;
+
     mline_t ml;
-
-    // Figure out start of vertical gridlines
-    start = M_DoubleToFixed(m_x);
-    if((start - bmaporgx) % (MAPBLOCKUNITS << FRACBITS))
-        start -= ((start - bmaporgx) % (MAPBLOCKUNITS << FRACBITS));
-    end = M_DoubleToFixed(m_x + m_w);
-
-    // draw vertical gridlines
-    ml.a.y = m_y;
-    ml.b.y = m_y + m_h;
-    for(x = start; x < end; x += (MAPBLOCKUNITS << FRACBITS))
+    for(fixed_t x = start; x < end; x += block)
     {
         ml.a.x = M_FixedToDouble(x);
+        ml.a.y = cy - radius;
         ml.b.x = M_FixedToDouble(x);
+        ml.b.y = cy + radius;
+
+        if(rotatemode)
+        {
+            AM_rotatePoint(&ml.a);
+            AM_rotatePoint(&ml.b);
+        }
+
         AM_drawMline(&ml, color);
     }
 
-    // Figure out start of horizontal gridlines
-    start = M_DoubleToFixed(m_y);
-    if((start - bmaporgy) % (MAPBLOCKUNITS << FRACBITS))
-        start -= ((start - bmaporgy) % (MAPBLOCKUNITS << FRACBITS));
-    end = M_DoubleToFixed(m_y + m_h);
+    // Horizontal lines
+    start = M_DoubleToFixed(m_y - radius) - block;
+    if((start - bmaporgy) % block)
+        start -= ((start - bmaporgy) % block);
+    end = M_DoubleToFixed(m_y + radius) + block;
 
-    // draw horizontal gridlines
-    ml.a.x = m_x;
-    ml.b.x = m_x + m_w;
-    for(y = start; y < end; y += (MAPBLOCKUNITS << FRACBITS))
+    for(fixed_t y = start; y < end; y += block)
     {
+        ml.a.x = cx - radius;
         ml.a.y = M_FixedToDouble(y);
+        ml.b.x = cx + radius;
         ml.b.y = M_FixedToDouble(y);
+
+        if(rotatemode)
+        {
+            AM_rotatePoint(&ml.a);
+            AM_rotatePoint(&ml.b);
+        }
+
         AM_drawMline(&ml, color);
     }
 }
@@ -1924,6 +2015,12 @@ static void AM_drawWalls()
             l.b.x += M_FixedToDouble(link->x);
             l.b.y += M_FixedToDouble(link->y);
 
+            if(rotatemode)
+            {
+                AM_rotatePoint(&l.a);
+                AM_rotatePoint(&l.b);
+            }
+
             // if line has been seen or IDDT has been used
             if(ddt_cheating || (line->flags & ML_MAPPED))
             {
@@ -1978,6 +2075,12 @@ static void AM_drawWalls()
                 l.b.x += M_FixedToDouble(link->x);
                 l.b.y += M_FixedToDouble(link->y);
             }
+        }
+
+        if(rotatemode)
+        {
+            AM_rotatePoint(&l.a);
+            AM_rotatePoint(&l.b);
         }
 
         // if line has been seen or IDDT has been used
@@ -2178,29 +2281,6 @@ static void AM_drawDynaSegs()
 }
 
 //
-// AM_rotate()
-//
-// Rotation in 2D.
-// Used to rotate player arrow line character.
-//
-// Passed the coordinates of a point, and an angle
-// Returns the coordinates rotated by the angle
-//
-// haleyjd 01/24/03: made static
-//
-static void AM_rotate(double &x, double &y, angle_t a)
-{
-    double tmpx;
-
-    // a little magic: a * (PI / ANG180) converts angle_t to radians
-    double angle = (double)a * 1.4629180792671596811e-9;
-
-    tmpx = x * cos(angle) - y * sin(angle);
-    y    = x * sin(angle) + y * cos(angle);
-    x    = tmpx;
-}
-
-//
 // AM_drawLineCharacter()
 //
 // Draws a vector graphic according to numerous parameters
@@ -2218,6 +2298,11 @@ static void AM_drawLineCharacter(const mline_t *lineguy, int lineguylines, doubl
 
     fx = M_FixedToDouble(x);
     fy = M_FixedToDouble(y);
+
+    if(rotatemode)
+    {
+        angle -= plr->mo->angle - ANG90;
+    }
 
     for(int i = 0; i < lineguylines; i++)
     {
@@ -2291,6 +2376,17 @@ static void AM_drawPlayers()
         px = plr->mo->x;
         py = plr->mo->y;
 
+        if(rotatemode)
+        {
+            double fx = M_FixedToDouble(px);
+            double fy = M_FixedToDouble(py);
+
+            AM_rotatePoint(&fx, &fy);
+
+            px = M_DoubleToFixed(fx);
+            py = M_DoubleToFixed(fy);
+        }
+
         if(ddt_cheating && !drawSword) // Raven games have no cheat arrow
         {
             AM_drawLineCharacter(cheat_player_arrow, earrlen(cheat_player_arrow), 0.0, plr->mo->angle,
@@ -2320,6 +2416,17 @@ static void AM_drawPlayers()
 
         px = p->mo->x;
         py = p->mo->y;
+
+        if(rotatemode)
+        {
+            double fx = M_FixedToDouble(px);
+            double fy = M_FixedToDouble(py);
+
+            AM_rotatePoint(&fx, &fy);
+
+            px = M_DoubleToFixed(fx);
+            py = M_DoubleToFixed(fy);
+        }
 
         // haleyjd: add total invisibility
 
@@ -2364,7 +2471,7 @@ static void AM_drawThings(int colors, int colorrange)
         while(t) // for all things in that sector
         {
             // SoM: Moved thing coords to variables for linked portals
-            const v2fixed_t tpoint = AM_getMapCoords(*t);
+            v2fixed_t tpoint = AM_getMapCoords(*t);
 
             // jff 1/5/98 case over doomednum of thing being drawn
             const mline_t *keyglyph  = nullptr; // shut up compiler
@@ -2406,10 +2513,32 @@ static void AM_drawThings(int colors, int colorrange)
                     break;
                 }
 
+                if(rotatemode)
+                {
+                    double fx = M_FixedToDouble(tpoint.x);
+                    double fy = M_FixedToDouble(tpoint.y);
+
+                    AM_rotatePoint(&fx, &fy);
+
+                    tpoint.x = M_DoubleToFixed(fx);
+                    tpoint.y = M_DoubleToFixed(fy);
+                }
+
                 AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
                                      keycolour != -1 ? keycolour : mapcolor_sprt, tpoint.x, tpoint.y);
                 t = t->snext;
                 continue;
+            }
+
+            if(rotatemode)
+            {
+                double fx = M_FixedToDouble(tpoint.x);
+                double fy = M_FixedToDouble(tpoint.y);
+
+                AM_rotatePoint(&fx, &fy);
+
+                tpoint.x = M_DoubleToFixed(fx);
+                tpoint.y = M_DoubleToFixed(fy);
             }
 
             // jff 1/5/98 end added code for keys
@@ -2448,6 +2577,7 @@ static void AM_drawMarks()
             double mx    = markpoints[i].x;
             double my    = markpoints[i].y;
             bool   trans = false;
+
             if(markpoints[i].groupid != plr->mo->groupid)
             {
                 const linkoffset_t *link = P_GetLinkOffset(markpoints[i].groupid, plr->mo->groupid);
@@ -2456,6 +2586,12 @@ static void AM_drawMarks()
                 mx    += M_FixedToDouble(link->x);
                 my    += M_FixedToDouble(link->y);
             }
+
+            if(rotatemode)
+            {
+                AM_rotatePoint(&mx, &my);
+            }
+
             int fx = CXMTOF(mx);
             int fy = CYMTOF(my);
             int j  = i;
@@ -2519,6 +2655,17 @@ void AM_Drawer()
 
     if(automap_grid)                // killough 2/28/98: change var name
         AM_drawGrid(mapcolor_grid); // jff 1/7/98 grid default color
+
+    if(rotatemode)
+    {
+        m_center.x = m_x + m_w / 2;
+        m_center.y = m_y + m_h / 2;
+
+        if(rotatemode && followplayer)
+        {
+            m_angle = ANG90 - plr->mo->angle;
+        }
+    }
 
     AM_drawWalls();
 

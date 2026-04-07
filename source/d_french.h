@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -240,6 +240,9 @@ constexpr const char HUSTR_KEYRED    = 'r';
 
 constexpr const char AMSTR_FOLLOWON[]  = "MODE POURSUITE ON";
 constexpr const char AMSTR_FOLLOWOFF[] = "MODE POURSUITE OFF";
+
+constexpr const char AMSTR_ROTATEON[]  = "MODE ROTATION ON";
+constexpr const char AMSTR_ROTATEOFF[] = "MODE ROTATION OFF";
 
 constexpr const char AMSTR_GRIDON[]  = "GRILLE ON";
 constexpr const char AMSTR_GRIDOFF[] = "GRILLE OFF";

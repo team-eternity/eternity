@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -106,6 +106,7 @@ struct markpoint_t
 extern markpoint_t *markpoints;
 extern int          markpointnum, markpointnum_max;
 extern int          followplayer;
+extern int          rotatemode;
 extern int          automap_grid;
 
 // end changes -- killough 2/22/98
