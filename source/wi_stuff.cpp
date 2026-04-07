@@ -378,6 +378,7 @@ static const char *mapName;
 static const char *nextMapName;
 
 static const char *wi_creator;
+static const char *wi_nextCreator;
 
 // globals
 
@@ -526,10 +527,19 @@ static void WI_drawEL()
         {
             V_FontWriteText(in_bigfont, nextMapName, (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName)) / 2, y,
                             &subscreen43);
+            if(wi_nextCreator)
+                y += (5 * V_FontStringHeight(in_bigfont, nextMapName)) / 4;
         }
         else
         {
             V_DrawPatch((SCREENWIDTH - patch->width) / 2, y, &subscreen43, patch);
+            if(wi_nextCreator)
+                y += (5 * patch->height) / 4;
+        }
+        if(wi_nextCreator)
+        {
+            V_FontWriteText(in_font, wi_nextCreator, (SCREENWIDTH - V_FontStringWidth(in_font, wi_nextCreator)) / 2, y,
+                            &subscreen43);
         }
     }
 
@@ -2130,9 +2140,10 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
     }
 
     // haleyjd 03/27/05: EDF-defined intermission map names
-    mapName     = nullptr;
-    nextMapName = nullptr;
-    wi_creator  = nullptr;
+    mapName        = nullptr;
+    nextMapName    = nullptr;
+    wi_creator     = nullptr;
+    wi_nextCreator = nullptr;
 
     // NOTE: in UMAPINFO, level-pic has priority
     if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) && wbs->li_lastlevelname && *wbs->li_lastlevelname)
@@ -2145,6 +2156,8 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
     }
     if(estrnonempty(wbs->li_lastlevelcreator))
         wi_creator = wbs->li_lastlevelcreator;
+    if(estrnonempty(wbs->li_nextlevelcreator))
+        wi_nextCreator = wbs->li_nextlevelcreator;
 
     if(LevelInfo.useEDFInterName || inmanageddir)
     {

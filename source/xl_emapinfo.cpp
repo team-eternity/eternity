@@ -440,6 +440,10 @@ void XL_BuildInterEMapInfo()
         str = level->getString("interpic", "");
         if(*str)
             info.exitpic = str;
+
+        str = level->getString("creator", "");
+        if(*str)
+            info.creator = str;
     }
 }
 

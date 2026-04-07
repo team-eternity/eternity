@@ -1781,6 +1781,7 @@ static void G_setupMapInfoWMInfo(levelkind_t kind)
     wminfo.li_nextlevelpic = next.levelpic;
 
     wminfo.li_lastlevelcreator = LevelInfo.creator;
+    wminfo.li_nextlevelcreator = next.creator;
 
     const intermapinfo_t &last = IN_GetMapInfo(gamemapname);
 

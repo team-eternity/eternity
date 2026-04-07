@@ -552,6 +552,10 @@ void XL_BuildInterUMapInfo()
         str = level->getString("exitpic", nullptr);
         if(str)
             info.exitpic = str;
+
+        str = level->getString("author", nullptr);
+        if(str)
+            info.creator = str;
     }
 }
 
@@ -563,7 +567,7 @@ void XL_BuildUMapInfoEpisodes()
     XLEpisodeReplacement replacement;
     if(replacement.isDisabled())
         return;
-    
+
     struct episodeinfo_t
     {
         const char *patch;

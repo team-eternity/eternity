@@ -71,6 +71,7 @@ struct intermapinfo_t
     const char *levelpic;  // the level pic in the intermission
     const char *enterpic;  // intermission background picture for entrance
     const char *exitpic;   // intermission exit picture
+    const char *creator;
 };
 
 intermapinfo_t &IN_GetMapInfo(const char *lumpname);
