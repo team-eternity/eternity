@@ -143,6 +143,8 @@ static int hi_dead_faces[4];
 // 03/27/05: EDF strings for intermission level names
 static const char *mapName;
 static const char *nextMapName;
+static const char *hi_creator;
+static const char *hi_nextCreator;
 
 // 04/25/09: deathmatch data
 static fixed_t dSlideX[MAXPLAYERS];
@@ -228,8 +230,10 @@ static void HI_loadData(void)
     }
 
     // haleyjd 03/27/05: EDF-defined intermission map names
-    mapName     = nullptr;
-    nextMapName = nullptr;
+    mapName        = nullptr;
+    nextMapName    = nullptr;
+    hi_creator     = nullptr;
+    hi_nextCreator = nullptr;
 
     {
         char          nameBuffer[24];
@@ -245,12 +249,16 @@ static void HI_loadData(void)
             if((str = E_StringForName(nameBuffer)))
                 mapName = str->string;
         }
+        if(estrnonempty(hi_wbs.li_lastlevelcreator))
+            hi_creator = hi_wbs.li_lastlevelcreator;
 
         if(hi_wbs.li_nextlevelname && *hi_wbs.li_nextlevelname)
         {
             nextMapName = hi_wbs.li_nextlevelname;
             return;
         }
+        if(estrnonempty(hi_wbs.li_nextlevelcreator))
+            hi_nextCreator = hi_wbs.li_nextlevelcreator;
 
         // are we going to a secret level?
         basename = hi_wbs.gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
@@ -388,6 +396,12 @@ static void HI_drawNewLevelName(int y)
 
     x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, thisLevelName)) >> 1;
     V_FontWriteTextShadowed(in_bigfont, thisLevelName, x, y + 10, &subscreen43);
+
+    if(estrnonempty(hi_nextCreator))
+    {
+        x = (SCREENWIDTH - V_FontStringWidth(in_font, hi_nextCreator)) >> 1;
+        V_FontWriteText(in_font, hi_nextCreator, x, y + 30, &subscreen43);
+    }
 }
 
 //
@@ -408,6 +422,13 @@ static void HI_drawOldLevelName(int y)
 
     x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, oldLevelName)) / 2;
     V_FontWriteTextShadowed(in_bigfont, oldLevelName, x, y, &subscreen43);
+
+    if(estrnonempty(hi_creator))
+    {
+        x = (SCREENWIDTH - V_FontStringWidth(in_font, hi_creator)) / 2;
+        V_FontWriteText(in_font, hi_creator, x, y + 20, &subscreen43);
+        y += 12;
+    }
 
     x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_FINISHED)) / 2;
     V_FontWriteText(in_font, HIS_FINISHED, x, y + 22, &subscreen43);
