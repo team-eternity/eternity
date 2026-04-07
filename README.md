@@ -42,6 +42,7 @@ New QoL features:
 * New Rotate Mode for automap. Default key binding: R. Toggles between normal and rotated map orientation.
 * New Tag Finder mode for automap. Default key binding: N. When you select a sector with a tag, it displays the linedef with the action that affects that sector. Similarly, when you select a linedef with an action, it displays all the sectors that it affects.
 * Portal overlay mode now can be toggled with a key bind (default: P).
+* Now automap state will update even when automap is open.
 
 ## Bug fixes:
 * Fixed a freeze with an infinite loop when the player had only "Unknown" (dummy weapon) left and tried to change a weapon.
