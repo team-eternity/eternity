@@ -25,6 +25,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "doomstat.h"
 #include "d_gi.h"
@@ -963,6 +964,33 @@ static void R_appendAlphaMask(texture_t *tex)
     tex->flags |= TF_MASKED; // Finally used here!
 }
 
+static double R_calcVerticalTilingVariance(const texture_t &texture)
+{
+    AutoPalette palette(wGlobalDir);
+    double      perPixelError = 0;
+    if(texture.height <= 1)
+        return 0;
+    double topIntensityAverage = 0, bottomIntensityAverage = 0;
+    for(int16_t x = 0; x < texture.width; ++x)
+    {
+        const int    topIndex    = (int)texture.bufferdata[x * texture.height] * 3;
+        const int    bottomIndex = (int)texture.bufferdata[x * texture.height + texture.height - 1] * 3;
+        const byte   topRed      = palette[topIndex];
+        const byte   topGreen    = palette[topIndex + 1];
+        const byte   topBlue     = palette[topIndex + 2];
+        const byte   bottomRed   = palette[bottomIndex];
+        const byte   bottomGreen = palette[bottomIndex + 1];
+        const byte   bottomBlue  = palette[bottomIndex + 2];
+        const double squareDist =
+            pow(topRed - bottomRed, 2.0) + pow(topGreen - bottomGreen, 2.0) + pow(topBlue - bottomBlue, 2.0);
+        perPixelError          += squareDist / texture.width;
+        topIntensityAverage    += (topRed / 4.0 + topGreen / 2.0 + topBlue / 4.0) / texture.width;
+        bottomIntensityAverage += (bottomRed / 4.0 + bottomGreen / 2.0 + bottomBlue / 4.0) / texture.width;
+    }
+    const double rowError = pow(topIntensityAverage - bottomIntensityAverage, 2.0);
+    return (perPixelError + rowError) / 2.0;
+}
+
 //
 // FinishTexture
 //
@@ -1126,6 +1154,14 @@ void R_CacheTexture(int num)
 
     // Finish texture
     FinishTexture(tex);
+
+    // Tiling sky texture detection heuristics: just compare the top and bottom row for seams
+    // The threshold is the middle line between classic TNT.WAD SKY2 (noisy galaxy sky) and DOOM.WAD SKY3 (obvious
+    // mountains which happen to have a very low variance).
+    const double variance = R_calcVerticalTilingVariance(*tex);
+    if(variance <= (537.345 + 3233.29) / 2)
+        tex->flags |= TF_TILESKY;
+
     Z_ChangeTag(tex->bufferalloc, PU_CACHE);
 
     return;
