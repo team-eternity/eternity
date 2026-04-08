@@ -1,4 +1,4 @@
-## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+﻿## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
 ##
 ## This software is free software; you can redistribute it and/or
@@ -22,11 +22,11 @@ set(CMAKE_MFC_FLAG 2)
 set(CMAKE_INSTALL_MFC_LIBRARIES 1)
 include(InstallRequiredSystemLibraries)
 set(CPACK_GENERATOR "DEB;RPM;STGZ;ZIP")
-set(CPACK_PACKAGE_VENDOR "Team Eternity")
+set(CPACK_PACKAGE_VENDOR "Team Eternity & DRON12261")
 set(CPACK_PACKAGE_CONTACT "Team Eternity <haleyjd(at)hotmail.com>")
-set(CPACK_PACKAGE_NAME "Eternity Engine")
+set(CPACK_PACKAGE_NAME "Eternity Engine Plus")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine is Team Eternity's flagship product.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine Plus is Team Eternity's flagship product. The Eternity Engine Plus is an enhanced version of the original Eternity Engine, featuring additional content and improvements.")
 set(CPACK_DEBIAN_PACKAGE_SECTION "games")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.11.0), libgcc1 (>= 1:4.4.3), libsdl2-2.0-0 (>=2.0.7), libsdl2-mixer-2.0-0 (>=2.0.2), libsdl2-net-2.0-0 (>=2.0.1), bash")
 set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "freedoom, game-data-packager")
@@ -47,7 +47,7 @@ if(WIN32)
                 set(BUILD_ARCH "windows-$ENV{PROCESSOR_ARCHITECTURE}")
         endif($ENV{PROCESSOR_ARCHITECTURE} STREQUAL AMD64)
 endif(WIN32)
-set(CPACK_PACKAGE_FILE_NAME "eternity-engine-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}_${BUILD_ARCH}")
+set(CPACK_PACKAGE_FILE_NAME "eternity-engine-plus-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}_${BUILD_ARCH}")
 set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_FILE_NAME}")
 set(CPACK_RPM_PACKAGE_NAME "${CPACK_PACKAGE_FILE_NAME}")
 

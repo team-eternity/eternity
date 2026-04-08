@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 David Hill, James Haley, et al.
 //
@@ -440,6 +440,9 @@ bool ACS_CF_Timer(ACS_CF_ARGS);
 bool ACS_CF_UniqueTID(ACS_CF_ARGS);
 bool ACS_CF_PolyWait(ACS_CF_ARGS);
 bool ACS_CF_TagWait(ACS_CF_ARGS);
+bool ACS_CF_GetSectorColormap(ACS_CF_ARGS);
+bool ACS_CF_SetSectorColormap(ACS_CF_ARGS);
+bool ACS_CF_IsSectorColormapBoomkind(ACS_CF_ARGS);
 
 // extern vars.
 
