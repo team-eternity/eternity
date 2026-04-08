@@ -356,6 +356,8 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             reuseSecretStoryForMainExit();
             P_EnsureDefaultStoryText(false);
         }
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+            C_Printf(FC_ERROR "Invalid 'endbunny = false' in UMAPINFO.\n");
         val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {
@@ -364,6 +366,8 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             reuseSecretStoryForMainExit();
             P_EnsureDefaultStoryText(false);
         }
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+            C_Printf(FC_ERROR "Invalid 'endcast = false' in UMAPINFO.\n");
 
         // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
         val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);

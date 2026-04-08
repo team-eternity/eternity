@@ -505,8 +505,8 @@ static void XL_initRules()
     addRule("partime", PropertyType::setInteger);
     addRule("endgame", PropertyType::setBoolean);
     addRule("endpic", PropertyType::setString);
-    addRule("endbunny", PropertyType::setTrue);
-    addRule("endcast", PropertyType::setTrue);
+    addRule("endbunny", PropertyType::setBoolean);
+    addRule("endcast", PropertyType::setBoolean);
     addRule("nointermission", PropertyType::setBoolean);
     addRule("intertext", PropertyType::setMultiStringOrClear);
     addRule("intertextsecret", PropertyType::setMultiStringOrClear);

@@ -75,6 +75,8 @@ Improvements
   renders properly.
 * UMAPINFO "author" and EMAPINFO "creator" now show on the intermission below the level name, if
   specified.
+* Relax UMAPINFO to tolerate "endbunny = false" and "endcast = false". Needed because of released WADs,
+  and other popular source ports implementing the specification poorly.
 
 Bug fixes
 ---------
