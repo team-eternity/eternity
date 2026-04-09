@@ -174,7 +174,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
         column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height ?
                             segclip.frontsec->srf.floor.height :
                             segclip.backsec->srf.floor.height;
-        column.texmid = column.texmid + textures[texnum]->heightfrac - viewpos.z;
+        column.texmid = column.texmid - viewpos.z;
+        column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
+        column.texmid += textures[texnum]->heightfrac;
     }
     else
     {
@@ -182,6 +184,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
                             segclip.frontsec->srf.ceiling.height :
                             segclip.backsec->srf.ceiling.height;
         column.texmid = column.texmid - viewpos.z;
+        column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
     }
 
     column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y;
@@ -193,8 +196,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
         column.colormap = ds->fixedcolormap;
 
     // SoM: performance tuning (tm Lee Killough 1998)
-    scale     = dist * view.yfoc;
-    scalestep = diststep * view.yfoc;
+    scale     = dist * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
+    scalestep = diststep * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
     texmidf   = M_FixedToFloat(column.texmid);
 
     // draw the columns
@@ -388,19 +391,22 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
         {
             basescale = 1.0f / (segclip.dist * view.yfoc);
 
-            column.step = M_FloatToFixed(basescale); // SCALE_TODO: Y scale-factor here
+            // column.step is no longer set here as it needs to be set per-texture due to scaling.
             column.x    = i;
 
-            texx = segclip.len * basescale + segclip.toffset_base_x; // SCALE_TODO: X scale-factor here
+            texx = segclip.len * basescale; // segclip.toffset_base_x added elsewhere due to needing to ignore scaling.
 
             if(ds_p->maskedtexturecol)
-                ds_p->maskedtexturecol[i] = texx + segclip.toffset_mid_x;
+                ds_p->maskedtexturecol[i] = texx * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
 
             if(ds_p->maskedtextureskew)
             {
                 if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
+                {
                     ds_p->maskedtextureskew[i] =
-                        segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+                        segclip.skew_mid_step * (segclip.len * basescale) * segclip.tscale_mid_y +
+                        segclip.skew_mid_baseoffset;
+                }
                 else
                     ds_p->maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
             }
@@ -422,9 +428,14 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                                 column.texmid = segclip.toptexmid;
-                                column.source = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
+                                column.source = R_GetRawColumn(
+                                    heap, segclip.toptex,
+                                    int(texx * segclip.tscale_top_x + segclip.toffset_base_x + segclip.toffset_top_x));
                                 column.texheight = segclip.toptexh;
+                                column.step      = M_FloatToFixed(basescale * segclip.tscale_top_y);
+
                                 colfunc(column);
+
                                 ceilingclip[i] = (float)(column.y2 + 1);
                             }
                             else
@@ -442,10 +453,14 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                                 column.texmid = segclip.bottomtexmid;
-                                column.source =
-                                    R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
+                                column.source    = R_GetRawColumn(heap, segclip.bottomtex,
+                                                                  int(texx * segclip.tscale_bottom_x +
+                                                                   segclip.toffset_base_x + segclip.toffset_bottom_x));
                                 column.texheight = segclip.bottomtexh;
+                                column.step      = M_FloatToFixed(basescale * segclip.tscale_bottom_y);
+
                                 colfunc(column);
+
                                 floorclip[i] = (float)(column.y1 - 1);
                             }
                             else
@@ -473,11 +488,15 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                     column.texmid   = segclip.midtexmid;
                     if(segclip.skew_mid_step && (segclip.side->middleSkewType() == SKEW_FRONT_FLOOR ||
                                                  segclip.side->middleSkewType() == SKEW_FRONT_CEILING))
-                        column.texmid += M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) +
+                        column.texmid +=
+                            M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) * segclip.tscale_mid_y +
                                                         segclip.skew_mid_baseoffset);
 
-                    column.source    = R_GetRawColumn(heap, segclip.midtex, int(texx + segclip.toffset_mid_x));
+                    column.source = R_GetRawColumn(
+                        heap, segclip.midtex,
+                        int(texx * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x));
                     column.texheight = segclip.midtexh;
+                    column.step      = M_FloatToFixed(basescale * segclip.tscale_mid_y);
 
                     colfunc(column);
 
@@ -512,11 +531,15 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                         column.texmid   = segclip.toptexmid;
 
                         if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_NONE)
-                            column.texmid += M_FloatToFixed(segclip.skew_top_step * (segclip.len * basescale) +
+                            column.texmid += M_FloatToFixed(segclip.skew_top_step * (segclip.len * basescale) *
+                                                                segclip.tscale_top_y +
                                                             segclip.skew_top_baseoffset);
 
-                        column.source    = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
+                        column.source = R_GetRawColumn(
+                            heap, segclip.toptex,
+                            int(texx * segclip.tscale_top_x + segclip.toffset_base_x + segclip.toffset_top_x));
                         column.texheight = segclip.toptexh;
+                        column.step      = M_FloatToFixed(basescale * segclip.tscale_top_y);
 
                         colfunc(column);
 
@@ -555,11 +578,17 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                         column.texmid   = segclip.bottomtexmid;
 
                         if(segclip.skew_bottom_step && segclip.side->bottomSkewType() != SKEW_NONE)
-                            column.texmid += M_FloatToFixed(segclip.skew_bottom_step * (segclip.len * basescale) +
+                        {
+                            column.texmid += M_FloatToFixed(segclip.skew_bottom_step * (segclip.len * basescale) *
+                                                                segclip.tscale_bottom_y +
                                                             segclip.skew_bottom_baseoffset);
+                        }
 
-                        column.source = R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
+                        column.source = R_GetRawColumn(
+                            heap, segclip.bottomtex,
+                            int(texx * segclip.tscale_bottom_x + segclip.toffset_base_x + segclip.toffset_bottom_x));
                         column.texheight = segclip.bottomtexh;
+                        column.step      = M_FloatToFixed(basescale * segclip.tscale_bottom_y);
 
                         colfunc(column);
 
@@ -777,7 +806,10 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
         if(maskedtextureskew)
         {
             if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
-                maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+            {
+                maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) * segclip.tscale_mid_y +
+                                       segclip.skew_mid_baseoffset;
+            }
             else
                 maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
         }

@@ -447,6 +447,13 @@ struct side_t
     fixed_t offset_mid_x;    // x offset for midtexture only
     fixed_t offset_mid_y;    // y offset for midtexture only
 
+    fixed_t scale_top_x;    // x scale for toptexture only
+    fixed_t scale_top_y;    // y scale for toptexture only
+    fixed_t scale_bottom_x; // x scale for bottomtexture only
+    fixed_t scale_bottom_y; // y scale for bottomtexture only
+    fixed_t scale_mid_x;    // x scale for midtexture only
+    fixed_t scale_mid_y;    // y scale for midtexture only
+
     int16_t light_base;   // light offset for sidedef (or overall if flag is set)
     int16_t light_top;    // light offset for top texture (or overall if flag is set)
     int16_t light_mid;    // light offset for mid texture (or overall if flag is set)

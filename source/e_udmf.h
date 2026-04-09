@@ -292,6 +292,8 @@ private:
         fixed_t offsetx, offsety;
         fixed_t offsetx_top, offsety_top, offsetx_mid, offsety_mid, offsetx_bottom, offsety_bottom;
 
+        fixed_t scalex_top, scaley_top, scalex_mid, scaley_mid, scalex_bottom, scaley_bottom;
+
         qstring texturetop;
         qstring texturebottom;
         qstring texturemiddle;
@@ -309,7 +311,8 @@ private:
 
         USidedef()
             : offsetx(0), offsety(0), offsetx_top(0), offsety_top(0), offsetx_mid(0), offsety_mid(0), offsetx_bottom(0),
-              offsety_bottom(0), sector(0), sset(false), errorline(0)
+              offsety_bottom(0), scalex_top(FRACUNIT), scaley_top(FRACUNIT), scalex_mid(FRACUNIT), scaley_mid(FRACUNIT),
+              scalex_bottom(FRACUNIT), scaley_bottom(FRACUNIT), sector(0), sset(false), errorline(0)
         {}
     };
 

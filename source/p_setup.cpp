@@ -2217,6 +2217,13 @@ static void P_LoadSideDefs2(int lumpnum)
         sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
         sd->offset_base_y = GetBinaryWord(data) << FRACBITS;
 
+        sd->scale_top_x    = FRACUNIT;
+        sd->scale_top_y    = FRACUNIT;
+        sd->scale_bottom_x = FRACUNIT;
+        sd->scale_bottom_y = FRACUNIT;
+        sd->scale_mid_x    = FRACUNIT;
+        sd->scale_mid_y    = FRACUNIT;
+
         // haleyjd 05/26/10: read texture names into buffers
         GetBinaryString(data, toptexture, 8);
         GetBinaryString(data, bottomtexture, 8);

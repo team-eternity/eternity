@@ -383,6 +383,10 @@ Fixed very large maps having potential collision issues.
 Fixed blocklist start being ignored when building portal map.
 Adopted blockmap overflow P_PathTraverse fix from PR+.
 
+--------------------------------------------------------------------------------
+2026/04/09
+Added wall texture scaling.
+
 ================================================================================
 EOF
 ================================================================================

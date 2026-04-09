@@ -213,6 +213,10 @@ struct cb_seg_t
     float toffset_mid_x, toffset_mid_y;
     float toffset_bottom_x, toffset_bottom_y;
 
+    float tscale_top_x, tscale_top_y;
+    float tscale_mid_x, tscale_mid_y;
+    float tscale_bottom_x, tscale_bottom_y;
+
     float dist, dist2, diststep;
     float len, len2, lenstep;
 
