@@ -349,6 +349,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
                 ld->extflags |= EX_ML_ZONEBOUNDARY;
             if(uld.clipmidtex)
                 ld->extflags |= EX_ML_CLIPMIDTEX;
+            if(uld.wrapmidtex)
+                ld->extflags |= EX_ML_WRAPMIDTEX;
             if(uld.midtex3dimpassible)
                 ld->extflags |= EX_ML_3DMTPASSPROJ;
             if(uld.lowerportal)
@@ -743,6 +745,7 @@ void UDMFParser::readLinedefToken(ULinedef *linedef, const keytoken_t *kt) const
         READ_BOOL(linedef,   blockeverything);
         READ_BOOL(linedef,   zoneboundary);
         READ_BOOL(linedef,   clipmidtex);
+        READ_BOOL(linedef,   wrapmidtex);
         READ_BOOL(linedef,   lowerportal);
         READ_BOOL(linedef,   upperportal);
 

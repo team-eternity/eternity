@@ -776,10 +776,11 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
     const byte *const localstart = tex->bufferdata + tcol->ptroff;
     const byte *const last       = localstart + tcol->len;
 
-    const fixed_t     srcfrac  = column.texmid + int((column.y1 - view.ycenter + 1) * column.step);
-    const int         count    = column.y2 - column.y1 + 1;
-    const fixed_t     lastfrac = srcfrac + column.step * count;
-    const byte *const lastdraw = localstart + (lastfrac >> FRACBITS);
+    const fixed_t     srcfrac    = column.texmid + int((column.y1 - view.ycenter + 1) * column.step);
+    const int         count      = column.y2 - column.y1 + 1;
+    const fixed_t     lastfrac   = srcfrac + column.step * count;
+    const byte *const lastdraw   = localstart + (lastfrac >> FRACBITS);
+    const int         origheight = column.texheight;
 
     if(lastdraw == last && last < texend && last > tex->bufferdata && column.y2)
     {
@@ -792,7 +793,7 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
 
         column.y1        = orig;
         column.source    = localstart;
-        column.texheight = 0;
+        column.texheight = origheight;
 
         column.y2 -= 1;
     }
@@ -808,7 +809,7 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
 
         column.y2        = orig;
         column.source    = localstart;
-        column.texheight = 0;
+        column.texheight = origheight;
 
         column.y1 += 1;
     }
@@ -851,29 +852,28 @@ inline static void R_drawNewMaskedColumnSingleThread(
 #endif
 
 //
-// R_DrawNewMaskedColumn
+// The heart of R_DrawNewMaskedColumn, split out as wrapped columns iterate over this function multiple times.
 //
-void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *const tex, const texcol_t *tcol, const float *const mfloorclip,
-                           const float *const mceilingclip, const float skew)
+static void R_drawSingleMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                     const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                     const texcol_t *tcol, const float *const mfloorclip,
+                                     const float *const mceilingclip, const float skew, const float offset)
 {
-    float         y1, y2;
-    const fixed_t basetexturemid = column.texmid;
 
-    column.texheight = 0; // killough 11/98
+    const fixed_t basetexturemid = column.texmid;
 
     while(tcol)
     {
         // calculate unclipped screen coordinates for post
-        y1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew));
-        y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
+        const float y1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew)) - offset;
+        const float y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
 
         column.y1 = (int)((y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1));
         column.y2 = (int)((y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2));
 
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-        // ioanch 20250719: prevent columns just above screen (but still not supposed to be seen) from trying to render.
-        // This might fix occasional crashes.
+        // ioanch 20250719: prevent columns just above screen (but still not supposed to be seen) from trying to
+        // render. This might fix occasional crashes.
         if(column.y1 <= column.y2 && (column.y2 != 0 || y2 >= 0) && column.y2 < viewwindow.height)
         {
             column.source = tex->bufferdata + tcol->ptroff;
@@ -886,6 +886,41 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, cons
     }
 
     column.texmid = basetexturemid;
+}
+
+//
+// Draws a wrapped masked column, iterating as many times as is necessary.
+//
+void R_DrawNewWrappedMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                  const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                  const texcol_t *const tcol, const float *const mfloorclip,
+                                  const float *const mceilingclip, const float skew)
+{
+    const float scaledtexheight = maskedcolumn.scale * column.texheight;
+
+    // Start off from one below the modulo to ensure a top draw isn't missed.
+    const float basey1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew));
+    float       texy1  = fmodf(basey1, scaledtexheight) - scaledtexheight;
+
+    while(texy1 <= mfloorclip[column.x])
+    {
+        R_drawSingleMaskedColumn(colfunc, column, maskedcolumn, tex, tcol, mfloorclip, mceilingclip, skew,
+                                 basey1 - texy1);
+
+        texy1 += scaledtexheight;
+    }
+}
+
+//
+// R_DrawNewMaskedColumn
+//
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *const tex, const texcol_t *const tcol, const float *const mfloorclip,
+                           const float *const mceilingclip, const float skew)
+{
+    column.texheight = 0; // killough 11/98
+
+    R_drawSingleMaskedColumn(colfunc, column, maskedcolumn, tex, tcol, mfloorclip, mceilingclip, skew, 0.0f);
 }
 
 //

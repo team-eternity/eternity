@@ -53,6 +53,7 @@ Features
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
 * Added support for wall texture scaling, which includes top, middle, and bottom X and Y scaling.
+* Added support for wrapping 2-sided middle textures.
 
 Improvements
 ------------

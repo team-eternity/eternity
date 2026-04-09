@@ -1394,7 +1394,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
     // ioanch 20160130: be sure to check for portal line too!
     mark        = (seg.frontsec->lightlevel != seg.backsec->lightlevel || seg.line->linedef->portal ||
             seg.frontsec->midmap != seg.backsec->midmap ||
-            (seg.line->sidedef->midtexture && (seg.line->linedef->extflags & EX_ML_CLIPMIDTEX)));
+            (seg.line->sidedef->midtexture && (seg.line->linedef->extflags & (EX_ML_CLIPMIDTEX | EX_ML_WRAPMIDTEX))));
     marktheight = seg.frontsec->heightsec != seg.backsec->heightsec;
 
     t  = (int)seg.top;
@@ -1734,7 +1734,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
     // ioanch 20160130: be sure to check for portal line too!
     mark        = (seg.frontsec->lightlevel != seg.backsec->lightlevel || seg.line->linedef->portal ||
             seg.frontsec->midmap != seg.backsec->midmap ||
-            (seg.line->sidedef->midtexture && (seg.line->linedef->extflags & EX_ML_CLIPMIDTEX)));
+            (seg.line->sidedef->midtexture && (seg.line->linedef->extflags & (EX_ML_CLIPMIDTEX | EX_ML_WRAPMIDTEX))));
     marktheight = seg.frontsec->heightsec != seg.backsec->heightsec;
 
     frontc = seg.frontsec->srf.ceiling.height;

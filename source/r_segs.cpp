@@ -200,6 +200,11 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     scalestep = diststep * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
     texmidf   = M_FixedToFloat(column.texmid);
 
+    column.texheight = textures[segclip.line->sidedef->midtexture]->height;
+
+    auto drawNewColumnFunc =
+        (segclip.line->linedef->extflags & EX_ML_WRAPMIDTEX) ? R_DrawNewWrappedMaskedColumn : R_DrawNewMaskedColumn;
+
     // draw the columns
     for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
     {
@@ -229,8 +234,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
 
             // draw the texture
             col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-            R_DrawNewMaskedColumn(colfunc, column, maskedcolumn, textures[texnum], col, ds->sprbottomclip,
-                                  ds->sprtopclip, ds->maskedtextureskew[column.x]);
+            drawNewColumnFunc(colfunc, column, maskedcolumn, textures[texnum], col, ds->sprbottomclip, ds->sprtopclip,
+                              ds->maskedtextureskew[column.x]);
 
             maskedtexturecol[column.x] = FLT_MAX;
         }

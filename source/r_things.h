@@ -88,8 +88,12 @@ struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
+void R_DrawNewWrappedMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                  const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                  const texcol_t *const tcolumn, const float *const mfloorclip,
+                                  const float *const mceilingclip, const float skew);
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *tex, const texcol_t *tcolumn, const float *const mfloorclip,
+                           const texture_t *tex, const texcol_t *const tcolumn, const float *const mfloorclip,
                            const float *const mceilingclip, const float skew);
 void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,

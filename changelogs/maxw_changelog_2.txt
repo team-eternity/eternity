@@ -386,6 +386,7 @@ Adopted blockmap overflow P_PathTraverse fix from PR+.
 --------------------------------------------------------------------------------
 2026/04/09
 Added wall texture scaling.
+Added wrapping middle textures.
 
 ================================================================================
 EOF

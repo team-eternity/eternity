@@ -271,6 +271,7 @@ private:
         bool    blockeverything;    // zdoomish blocks-everything
         bool    zoneboundary;       // zdoomish audio reverb boundary
         bool    clipmidtex;         // zdoomish cut rendering of middle texture
+        bool    wrapmidtex;         // zdoomish wrapping of 2s midtex up/down
         bool    midtex3dimpassible; // zdoomish trick to make projectiles pass
         bool    lowerportal;        // lower part acts as a portal extension
         bool    upperportal;        // upper part acts as a portal extension
