@@ -1567,13 +1567,18 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
         seg.toptex  = texturetranslation[side->toptexture];
         seg.toptexh = textures[side->toptexture]->height;
 
+        float ftoptexmid;
         if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = M_FloatToFixed(textop * seg.tscale_top_y + seg.toffset_base_y + seg.toffset_top_y);
+            ftoptexmid = textop * seg.tscale_top_y;
         else
-        {
-            seg.toptexmid =
-                M_FloatToFixed(texhigh * seg.tscale_top_y + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y);
-        }
+            ftoptexmid = texhigh * seg.tscale_top_y + seg.toptexh;
+
+        if(seg.tscale_top_y > 0)
+            ftoptexmid += seg.toffset_base_y + seg.toffset_top_y;
+        else
+            ftoptexmid -= seg.toffset_base_y + seg.toffset_top_y;
+
+        seg.toptexmid = M_FloatToFixed(ftoptexmid);
     }
     else
         seg.toptex = 0;
@@ -1669,10 +1674,18 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
         seg.bottomtex  = texturetranslation[side->bottomtexture];
         seg.bottomtexh = textures[side->bottomtexture]->height;
 
+        float fbottomtexmid;
         if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = M_FloatToFixed(textop * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
+            fbottomtexmid = textop * seg.tscale_bottom_y;
         else
-            seg.bottomtexmid = M_FloatToFixed(texlow * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
+            fbottomtexmid = texlow * seg.tscale_bottom_y;
+
+        if(seg.tscale_bottom_y > 0)
+            fbottomtexmid += seg.toffset_base_y + seg.toffset_bottom_y;
+        else
+            fbottomtexmid -= seg.toffset_base_y + seg.toffset_bottom_y;
+
+        seg.bottomtexmid = M_FloatToFixed(fbottomtexmid);
     }
     else
         seg.bottomtex = 0;
@@ -1853,13 +1866,18 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
         seg.toptex  = texturetranslation[side->toptexture];
         seg.toptexh = textures[side->toptexture]->height;
 
+        float ftoptexmid;
         if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = M_FloatToFixed(textop * seg.tscale_top_y + seg.toffset_base_y + seg.toffset_top_y);
+            ftoptexmid = textop * seg.tscale_top_y;
         else
-        {
-            seg.toptexmid =
-                M_FloatToFixed(texhigh * seg.tscale_top_y + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y);
-        }
+            ftoptexmid = texhigh * seg.tscale_top_y + seg.toptexh;
+
+        if(seg.tscale_top_y > 0)
+            ftoptexmid += seg.toffset_base_y + seg.toffset_top_y;
+        else
+            ftoptexmid -= seg.toffset_base_y + seg.toffset_top_y;
+
+        seg.toptexmid = M_FloatToFixed(ftoptexmid);
     }
     else
         seg.toptex = 0;
@@ -1957,10 +1975,18 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
         seg.bottomtex  = texturetranslation[side->bottomtexture];
         seg.bottomtexh = textures[side->bottomtexture]->height;
 
+        float fbottomtexmid;
         if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = M_FloatToFixed(textop * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
+            fbottomtexmid = textop * seg.tscale_bottom_y;
         else
-            seg.bottomtexmid = M_FloatToFixed(texlow * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
+            fbottomtexmid = texlow * seg.tscale_bottom_y;
+
+        if(seg.tscale_bottom_y > 0)
+            fbottomtexmid += seg.toffset_base_y + seg.toffset_bottom_y;
+        else
+            fbottomtexmid -= seg.toffset_base_y + seg.toffset_bottom_y;
+
+        seg.bottomtexmid = M_FloatToFixed(fbottomtexmid);
     }
     else
         seg.bottomtex = 0;
@@ -2036,11 +2062,18 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
 
             float texhigh = beyondHeightFloat.ceiling - cb_viewpoint.z;
 
+            float ftoptexmid;
             if(seg.line->linedef->flags & ML_DONTPEGTOP)
-                seg.toptexmid = M_FloatToFixed(textop * seg.tscale_top_y + seg.toffset_base_y + seg.toffset_top_y);
+                ftoptexmid = textop * seg.tscale_top_y;
             else
-                seg.toptexmid =
-                    M_FloatToFixed(texhigh * seg.tscale_top_y + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y);
+                ftoptexmid = texhigh * seg.tscale_top_y + seg.toptexh;
+
+            if(seg.tscale_top_y > 0)
+                ftoptexmid += seg.toffset_base_y + seg.toffset_top_y;
+            else
+                ftoptexmid -= seg.toffset_base_y + seg.toffset_top_y;
+
+            seg.toptexmid = M_FloatToFixed(ftoptexmid);
 
             seg.high     = view.ycenter - ((beyondHeightFloat.ceiling - cb_viewpoint.z) * i1) - 1.0f;
             seg.high2    = view.ycenter - ((beyondHeightFloat.ceiling - cb_viewpoint.z) * i2) - 1.0f;
@@ -2056,16 +2089,18 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
 
             float texlow = beyondHeightFloat.floor - cb_viewpoint.z;
 
+            float fbottomtexmid;
             if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            {
-                seg.bottomtexmid =
-                    M_FloatToFixed(textop * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
-            }
+                fbottomtexmid = textop * seg.tscale_bottom_y;
             else
-            {
-                seg.bottomtexmid =
-                    M_FloatToFixed(texlow * seg.tscale_bottom_y + seg.toffset_base_y + seg.toffset_bottom_y);
-            }
+                fbottomtexmid = texlow * seg.tscale_bottom_y;
+
+            if(seg.tscale_bottom_y > 0)
+                fbottomtexmid += seg.toffset_base_y + seg.toffset_bottom_y;
+            else
+                fbottomtexmid -= seg.toffset_base_y + seg.toffset_bottom_y;
+
+            seg.bottomtexmid = M_FloatToFixed(fbottomtexmid);
 
             seg.low     = view.ycenter - ((beyondHeightFloat.floor - cb_viewpoint.z) * i1);
             seg.low2    = view.ycenter - ((beyondHeightFloat.floor - cb_viewpoint.z) * i2);
@@ -2081,13 +2116,19 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
         seg.midtex  = texturetranslation[side->midtexture];
         seg.midtexh = textures[side->midtexture]->height;
 
+        float fmidtexmid;
         if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-        {
-            seg.midtexmid =
-                M_FloatToFixed(texbottom * seg.tscale_mid_y + seg.midtexh + seg.toffset_base_y + seg.toffset_mid_y);
-        }
+            fmidtexmid = texbottom * seg.tscale_mid_y + seg.midtexh;
         else
-            seg.midtexmid = M_FloatToFixed(textop * seg.tscale_mid_y + seg.toffset_base_y + seg.toffset_mid_y);
+            fmidtexmid = textop * seg.tscale_mid_y;
+
+        if(seg.toffset_mid_y > 0)
+            fmidtexmid += seg.toffset_base_y + seg.toffset_mid_y;
+        else
+            fmidtexmid -= seg.toffset_base_y + seg.toffset_mid_y;
+
+        seg.midtexmid = M_FloatToFixed(fmidtexmid);
+
         seg.skyflat = 0;
     }
     else

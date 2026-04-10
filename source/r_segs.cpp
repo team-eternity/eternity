@@ -176,7 +176,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
                             segclip.backsec->srf.floor.height;
         column.texmid = column.texmid - viewpos.z;
         column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
-        column.texmid += textures[texnum]->heightfrac;
+
+        if(segclip.line->sidedef->scale_mid_y > 0)
+            column.texmid += textures[texnum]->heightfrac;
     }
     else
     {
@@ -185,6 +187,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
                             segclip.backsec->srf.ceiling.height;
         column.texmid = column.texmid - viewpos.z;
         column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
+
+        if(segclip.line->sidedef->scale_mid_y < 0)
+            column.texmid += textures[texnum]->heightfrac;
     }
 
     column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y;
@@ -200,7 +205,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     scalestep = diststep * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
     texmidf   = M_FixedToFloat(column.texmid);
 
-    column.texheight = textures[segclip.line->sidedef->midtexture]->height;
+    column.texheight = textures[texnum]->height;
 
     auto drawNewColumnFunc =
         (segclip.line->linedef->extflags & EX_ML_WRAPMIDTEX) ? R_DrawNewWrappedMaskedColumn : R_DrawNewMaskedColumn;
