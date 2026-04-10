@@ -804,7 +804,7 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
     for(i = segclip.x1; i <= segclip.x2; i++)
     {
         basescale = 1.0f / (segclip.dist * view.yfoc);
-        texx      = segclip.len * basescale + segclip.toffset_base_x + segclip.toffset_mid_x;
+        texx      = segclip.len * basescale * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
 
         if(maskedtexturecol)
             maskedtexturecol[i] = texx;
