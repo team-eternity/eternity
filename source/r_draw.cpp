@@ -151,8 +151,13 @@ void CB_DrawColumn_8(cb_column_t &column)
             {
                 *dest  = colormap[source[frac >> FRACBITS]];
                 dest  += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac  += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
+
             }
             while(--count);
         }
@@ -254,8 +259,12 @@ void CB_DrawSkyColumn_8(cb_column_t &column)
             {
                 *dest  = colormap[source[frac >> FRACBITS]];
                 dest  += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac  += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -345,8 +354,12 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
                 if(source[frac >> FRACBITS])
                     *dest = colormap[source[frac >> FRACBITS]];
                 dest += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -425,9 +438,13 @@ void CB_DrawTLColumn_8(cb_column_t &column)
             do
             {
                 *dest  = column.tranmap[(*dest << 8) + colormap[source[frac >> FRACBITS]]]; // phares
-                dest  += 1;                                                                 // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                dest  += 1; // killough 11/98
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac  += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -500,8 +517,12 @@ void CB_DrawTLTRColumn_8(cb_column_t &column)
             {
                 *dest  = SRCPIXEL; // phares
                 dest  += 1;        // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac  += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -675,8 +696,12 @@ void CB_DrawTRColumn_8(cb_column_t &column)
             {
                 *dest  = colormap[column.translation[source[frac >> FRACBITS]]]; // phares
                 dest  += 1;                                                      // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac  += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -763,8 +788,12 @@ void CB_DrawFlexColumn_8(cb_column_t &column)
                 *dest = RGB32k[0][0][fg & (fg >> 15)];
 
                 dest += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -874,8 +903,12 @@ void CB_DrawFlexTRColumn_8(cb_column_t &column)
                 *dest = RGB32k[0][0][fg & (fg >> 15)];
 
                 dest += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -990,8 +1023,12 @@ void CB_DrawAddColumn_8(cb_column_t &column)
                 *dest = RGB32k[0][0][a & (a >> 15)];
 
                 dest += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
@@ -1119,8 +1156,12 @@ void CB_DrawAddTRColumn_8(cb_column_t &column)
                 *dest = RGB32k[0][0][a & (a >> 15)];
 
                 dest += 1; // killough 11/98
-                if((frac += fracstep) >= heightmask)
+                // RENDERER_TODO: We know before call if fracstep is +/-. We can reduce branching w/ templates.
+                frac += fracstep;
+                if(frac >= heightmask)
                     frac -= heightmask;
+                else if(frac < 0)
+                    frac += heightmask;
             }
             while(--count);
         }
