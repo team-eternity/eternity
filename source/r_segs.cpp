@@ -292,7 +292,6 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
     int   t, b, line;
     int   cliptop, clipbot;
-    int   i;
     float texx;
     float basescale;
 
@@ -313,7 +312,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
     if(cmapcontext.fixedcolormap)
         column.colormap = cmapcontext.fixedcolormap;
 
-    for(i = segclip.x1; i <= segclip.x2; i++)
+    for(int i = segclip.x1; i <= segclip.x2; i++)
     {
         cliptop = (int)ceilingclip[i];
         clipbot = (int)floorclip[i];
@@ -807,14 +806,14 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext, planecontext_t &plan
 
 static void R_storeTextureColumns(float *const maskedtexturecol, float *const maskedtextureskew, cb_seg_t &segclip)
 {
-    int   i;
     float texx;
     float basescale;
 
-    for(i = segclip.x1; i <= segclip.x2; i++)
+    for(int i = segclip.x1; i <= segclip.x2; i++)
     {
         basescale = 1.0f / (segclip.dist * view.yfoc);
-        texx      = (segclip.len * basescale + segclip.toffset_seg_x) * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
+        texx      = (segclip.len * basescale + segclip.toffset_seg_x) * segclip.tscale_mid_x + segclip.toffset_base_x +
+               segclip.toffset_mid_x;
 
         if(maskedtexturecol)
             maskedtexturecol[i] = texx;
@@ -1112,7 +1111,6 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
         if(segclip.maskedtex)
         {
-            int    i;
             float *mtc;
             float *mts;
             int    xlen;
@@ -1129,7 +1127,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
             mtc = lastopening;
             mts = lastskew;
 
-            for(i = 0; i < xlen; i++)
+            for(int i = 0; i < xlen; i++)
             {
                 mtc[i] = FLT_MAX;
                 mts[i] = 0.0f;
