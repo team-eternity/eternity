@@ -2646,7 +2646,10 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
     side = line->sidedef;
 
-    seg.toffset_base_x = M_FixedToFloat(side->offset_base_x) + line->offset;
+    seg.toffset_seg_x = line->offset;
+
+    seg.toffset_base_x = M_FixedToFloat(side->offset_base_x); // line->offset stored to seg.toffset_seg_x
+                                                              // and factored in elsewhere due to scaling.
     seg.toffset_base_y = M_FixedToFloat(side->offset_base_y);
 
     seg.toffset_top_x    = M_FixedToFloat(side->offset_top_x);
@@ -2663,9 +2666,10 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     seg.tscale_bottom_x = M_FixedToFloat(side->scale_bottom_x);
     seg.tscale_bottom_y = M_FixedToFloat(side->scale_bottom_y);
 
-    seg.toffset_top_x    = R_getAdjustedXOffset(seg.toffset_top_x, seg.toffset_base_x, side->toptexture);
-    seg.toffset_mid_x    = R_getAdjustedXOffset(seg.toffset_mid_x, seg.toffset_base_x, side->midtexture);
-    seg.toffset_bottom_x = R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x, side->bottomtexture);
+    seg.toffset_top_x = R_getAdjustedXOffset(seg.toffset_top_x, seg.toffset_base_x + line->offset, side->toptexture);
+    seg.toffset_mid_x = R_getAdjustedXOffset(seg.toffset_mid_x, seg.toffset_base_x + line->offset, side->midtexture);
+    seg.toffset_bottom_x =
+        R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x + line->offset, side->bottomtexture);
 
     seg.skew_top_step = seg.skew_mid_step = seg.skew_bottom_step = 0.0f;
     seg.skew_top_baseoffset = seg.skew_mid_baseoffset = seg.skew_bottom_baseoffset = 0.0f;

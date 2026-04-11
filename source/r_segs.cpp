@@ -407,7 +407,10 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             texx = segclip.len * basescale; // segclip.toffset_base_x added elsewhere due to needing to ignore scaling.
 
             if(ds_p->maskedtexturecol)
-                ds_p->maskedtexturecol[i] = texx * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
+            {
+                ds_p->maskedtexturecol[i] = (texx + segclip.toffset_seg_x) * segclip.tscale_mid_x +
+                                            segclip.toffset_base_x + segclip.toffset_mid_x;
+            }
 
             if(ds_p->maskedtextureskew)
             {
@@ -438,9 +441,10 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                                 column.texmid = segclip.toptexmid;
-                                column.source = R_GetRawColumn(
-                                    heap, segclip.toptex,
-                                    int(texx * segclip.tscale_top_x + segclip.toffset_base_x + segclip.toffset_top_x));
+                                column.source =
+                                    R_GetRawColumn(heap, segclip.toptex,
+                                                   int((texx + segclip.toffset_seg_x) * segclip.tscale_top_x +
+                                                       segclip.toffset_base_x + segclip.toffset_top_x));
                                 column.texheight = segclip.toptexh;
                                 column.step      = M_FloatToFixed(basescale * segclip.tscale_top_y);
 
@@ -463,9 +467,10 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                                 column.texmid = segclip.bottomtexmid;
-                                column.source    = R_GetRawColumn(heap, segclip.bottomtex,
-                                                                  int(texx * segclip.tscale_bottom_x +
-                                                                   segclip.toffset_base_x + segclip.toffset_bottom_x));
+                                column.source =
+                                    R_GetRawColumn(heap, segclip.bottomtex,
+                                                   int((texx + segclip.toffset_seg_x) * segclip.tscale_bottom_x +
+                                                       segclip.toffset_base_x + segclip.toffset_bottom_x));
                                 column.texheight = segclip.bottomtexh;
                                 column.step      = M_FloatToFixed(basescale * segclip.tscale_bottom_y);
 
@@ -502,9 +507,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                             M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) * segclip.tscale_mid_y +
                                                         segclip.skew_mid_baseoffset);
 
-                    column.source = R_GetRawColumn(
-                        heap, segclip.midtex,
-                        int(texx * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x));
+                    column.source    = R_GetRawColumn(heap, segclip.midtex,
+                                                      int((texx + segclip.toffset_seg_x) * segclip.tscale_mid_x +
+                                                       segclip.toffset_base_x + segclip.toffset_mid_x));
                     column.texheight = segclip.midtexh;
                     column.step      = M_FloatToFixed(basescale * segclip.tscale_mid_y);
 
@@ -545,9 +550,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                                                 segclip.tscale_top_y +
                                                             segclip.skew_top_baseoffset);
 
-                        column.source = R_GetRawColumn(
-                            heap, segclip.toptex,
-                            int(texx * segclip.tscale_top_x + segclip.toffset_base_x + segclip.toffset_top_x));
+                        column.source    = R_GetRawColumn(heap, segclip.toptex,
+                                                          int((texx + segclip.toffset_seg_x) * segclip.tscale_top_x +
+                                                           segclip.toffset_base_x + segclip.toffset_top_x));
                         column.texheight = segclip.toptexh;
                         column.step      = M_FloatToFixed(basescale * segclip.tscale_top_y);
 
@@ -594,9 +599,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                                             segclip.skew_bottom_baseoffset);
                         }
 
-                        column.source = R_GetRawColumn(
-                            heap, segclip.bottomtex,
-                            int(texx * segclip.tscale_bottom_x + segclip.toffset_base_x + segclip.toffset_bottom_x));
+                        column.source    = R_GetRawColumn(heap, segclip.bottomtex,
+                                                          int((texx + segclip.toffset_seg_x) * segclip.tscale_bottom_x +
+                                                           segclip.toffset_base_x + segclip.toffset_bottom_x));
                         column.texheight = segclip.bottomtexh;
                         column.step      = M_FloatToFixed(basescale * segclip.tscale_bottom_y);
 
@@ -809,7 +814,7 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
     for(i = segclip.x1; i <= segclip.x2; i++)
     {
         basescale = 1.0f / (segclip.dist * view.yfoc);
-        texx      = segclip.len * basescale * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
+        texx      = (segclip.len * basescale + segclip.toffset_seg_x) * segclip.tscale_mid_x + segclip.toffset_base_x + segclip.toffset_mid_x;
 
         if(maskedtexturecol)
             maskedtexturecol[i] = texx;
