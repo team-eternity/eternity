@@ -866,10 +866,10 @@ static void R_drawSingleMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &co
     {
         // calculate unclipped screen coordinates for post
         const float ty1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew)) - offset;
-        const float ty2 = ty1 + (maskedcolumn.scale * tcol->len) - 1;
+        const float ty2 = ty1 + (maskedcolumn.scale * tcol->len);
 
         const float y1 = emin(ty1, ty2);
-        const float y2 = emax(ty1, ty2);
+        const float y2 = emax(ty1, ty2) - 1;
 
         column.y1 = (int)((y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1));
         column.y2 = (int)((y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2));
