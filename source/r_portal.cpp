@@ -702,6 +702,8 @@ static void R_produceKaleidoscopePlane(rendercontext_t &context, ZoneHeap &heap,
     cbviewpoint_t         &cb_viewpoint = context.cb_view;
     const contextbounds_t &bounds       = context.bounds;
 
+    R_SectorColormap(context.cmapcontext, viewpoint, sector);
+
     visplane_t *vplane = R_FindPlane(
         context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds,
         sector->srf.ceiling.height + viewpoint.z,
@@ -736,6 +738,8 @@ static void R_produceHorizonPlanes(rendercontext_t &context, ZoneHeap &heap, con
     // haleyjd 01/05/08: angles
     const float angles[surf_NUM] = { sector->srf.floor.baseangle + sector->srf.ceiling.angle,
                                      sector->srf.ceiling.baseangle + sector->srf.ceiling.angle };
+
+    R_SectorColormap(context.cmapcontext, viewpoint, sector);
 
     visplane_t *topplane = R_FindPlane(
         context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
