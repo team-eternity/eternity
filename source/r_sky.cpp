@@ -165,10 +165,9 @@ static skytexture_t *R_addSkyTexture(int texturenum)
     // should we use it
     newSky->texturenum = texturenum;
     newSky->height     = textures[texturenum]->height;
-    newSky->mustTile   = !!(textures[texturenum]->flags & TF_TILESKY);
 
     // Determine the median color now
-    newSky->medianColor = newSky->mustTile ? 0 : R_getMedianTopColor(texturenum);
+    newSky->medianColor = R_getMedianTopColor(texturenum);
 
     // Preserve visual compatibility with certain Boom-compatible wads with tall sky textures
     if(newSky->height >= SKY_FREELOOK_HEIGHT &&

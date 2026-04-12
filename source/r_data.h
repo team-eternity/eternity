@@ -79,7 +79,6 @@ enum texflag_e
     TF_ANIMATED   = 0x08u, // Set if the texture is animated
     TF_WIDTHNP2   = 0x10u, // Set if texture width is non-power-of-two
     TF_NONVANILLA = 0x20u, // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
-    TF_TILESKY    = 0x40u,
 };
 
 struct texture_t

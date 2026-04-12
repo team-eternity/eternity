@@ -885,7 +885,7 @@ static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, visplane_t *p
     column.skycolor  = sky2->medianColor;
     column.step      = M_FloatToFixed(view.pspriteystep);
 
-    colfunc = sky2->mustTile ? r_column_engine->DrawColumn : r_column_engine->DrawSkyColumn;
+    colfunc = r_column_engine->DrawSkyColumn;
     for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
     {
         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -1022,7 +1022,7 @@ static void R_drawSky(ZoneHeap &heap, const visplane_t *pl, const skyflat_t *sky
     column.step     = M_FloatToFixed(view.pspriteystep);
     column.skycolor = sky->medianColor;
 
-    R_ColumnFunc colfunc = tilevert || sky->mustTile ? r_column_engine->DrawColumn : r_column_engine->DrawSkyColumn;
+    R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn : r_column_engine->DrawSkyColumn;
 
     // We need the translucency map to exist because we fade the sky to a single color when looking
     // above it.

@@ -59,7 +59,6 @@ struct skytexture_t
     fixed_t       texturemid;  // vertical offset
     skytexture_t *next;        // next skytexture in hash chain
     byte          medianColor; // median color for fading high pitch view of sky
-    bool          mustTile;
 };
 
 extern int stretchsky; // DEPRECATED

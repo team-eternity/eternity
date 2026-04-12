@@ -79,8 +79,6 @@ Improvements
   specified.
 * Relax UMAPINFO to tolerate "endbunny = false" and "endcast = false". Needed because of released WADs,
   and other popular source ports implementing the specification poorly.
-* Eternity now autodetects if a sky should tile or fade to a median color. Needed because some skies
-  are seamless and designed to tile vertically.
 
 Bug fixes
 ---------
