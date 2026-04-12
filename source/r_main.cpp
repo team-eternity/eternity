@@ -1144,7 +1144,11 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
     view.pitch           = (ANG90 - viewpitch) * PI / ANG180;
     view.lerp            = lerp;
     view.boomcolorsector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
-    viewpoint.sector     = view.boomcolorsector;
+
+    view.boomcolorviewpoint.x = viewpoint.x;
+    view.boomcolorviewpoint.y = viewpoint.y;
+
+    viewpoint.sector = view.boomcolorsector;
 
     R_SetupSolidSegs();
     R_PreRenderBSP();
@@ -1244,9 +1248,9 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         const sector_t &heightSector = sectors[view.boomcolorsector->heightsec];
 
         // Pick area ID the viewer is in
-        if(viewz < heightSector.srf.floor.getZAt(viewpoint.x, viewpoint.y))
+        if(viewz < heightSector.srf.floor.getZAt(view.boomcolorviewpoint.x, view.boomcolorviewpoint.y))
             area = ViewArea::below;
-        else if(viewz > heightSector.srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
+        else if(viewz > heightSector.srf.ceiling.getZAt(view.boomcolorviewpoint.x, view.boomcolorviewpoint.y))
             area = ViewArea::above;
         else
             area = ViewArea::normal;
