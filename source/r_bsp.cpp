@@ -2122,7 +2122,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
         else
             fmidtexmid = textop * seg.tscale_mid_y;
 
-        if(seg.toffset_mid_y > 0)
+        if(seg.tscale_mid_y > 0)
             fmidtexmid += seg.toffset_base_y + seg.toffset_mid_y;
         else
             fmidtexmid -= seg.toffset_base_y + seg.toffset_mid_y;
