@@ -435,11 +435,18 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                             // ioanch FIXME: copy-paste from other code
                             column.y1 = t;
                             column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
+
                             if(column.y2 >= column.y1)
                             {
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                                 column.texmid = segclip.toptexmid;
+
+                                if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_NONE)
+                                    column.texmid += M_FloatToFixed(segclip.skew_top_step * (segclip.len * basescale) *
+                                                                        segclip.tscale_top_y +
+                                                                    segclip.skew_top_baseoffset);
+
                                 column.source =
                                     R_GetRawColumn(heap, segclip.toptex,
                                                    int(floorf((texx + segclip.toffset_seg_x) * segclip.tscale_top_x +
@@ -461,11 +468,20 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                         {
                             column.y1 = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
                             column.y2 = b;
+
                             if(column.y2 >= column.y1)
                             {
                                 column.colormap =
                                     R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                                 column.texmid = segclip.bottomtexmid;
+
+                                if(segclip.skew_bottom_step && segclip.side->bottomSkewType() != SKEW_NONE)
+                                {
+                                    column.texmid += M_FloatToFixed(
+                                        segclip.skew_bottom_step * (segclip.len * basescale) * segclip.tscale_bottom_y +
+                                        segclip.skew_bottom_baseoffset);
+                                }
+
                                 column.source =
                                     R_GetRawColumn(heap, segclip.bottomtex,
                                                    int(floorf((texx + segclip.toffset_seg_x) * segclip.tscale_bottom_x +
