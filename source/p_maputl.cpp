@@ -589,6 +589,29 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
     return open;
 }
 
+void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
+                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop)
+{
+    const auto   &frontceiling = frontsector.srf.ceiling;
+    const auto   &backceiling  = backsector.srf.ceiling;
+    const fixed_t opentop      = frontceiling.height < backceiling.height ? frontceiling.height : backceiling.height;
+
+    const auto   &frontfloor = frontsector.srf.floor;
+    const auto   &backfloor  = backsector.srf.floor;
+    const fixed_t openbottom = frontfloor.height > backfloor.height ? frontfloor.height : backfloor.height;
+
+    if(line.flags & ML_DONTPEGBOTTOM)
+    {
+        texbot = side.offset_base_y + side.offset_mid_y + openbottom;
+        textop = texbot + textures[side.midtexture]->heightfrac;
+    }
+    else
+    {
+        textop = opentop + side.offset_base_y + side.offset_mid_y;
+        texbot = textop - textures[side.midtexture]->heightfrac;
+    }
+}
+
 //
 // P_LineOpening
 //
@@ -610,7 +633,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
     int     frontfloorgroupid, backfloorgroupid;
     // SoM: used for 3dmidtex
-    fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
+    fixed_t frontcz, frontfz, backcz, backfz;
 
     if(linedef->sidenum[1] == -1) // single sided line
     {
@@ -751,16 +774,6 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             open.floorpic = backfloor.pic;
     }
 
-    if(frontceiling.height < backceiling.height)
-        otop = frontceiling.height;
-    else
-        otop = backceiling.height;
-
-    if(frontfloor.height > backfloor.height)
-        obot = frontfloor.height;
-    else
-        obot = backfloor.height;
-
     open.sec = open.height;
 
     // SoM 9/02/02: Um... I know I told Quasar` I would do this after
@@ -773,16 +786,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         fixed_t textop, texbot, texmid;
         side_t *side = &sides[linedef->sidenum[0]];
 
-        if(linedef->flags & ML_DONTPEGBOTTOM)
-        {
-            texbot = side->offset_base_y + side->offset_mid_y + obot;
-            textop = texbot + textures[side->midtexture]->heightfrac;
-        }
-        else
-        {
-            textop = otop + side->offset_base_y + side->offset_mid_y;
-            texbot = textop - textures[side->midtexture]->heightfrac;
-        }
+        P_Get3DMidTexHeights(*linedef, *side, *openfrontsector, *openbacksector, texbot, textop);
+
         texmid = (textop + texbot) / 2;
 
         // SoM 9/7/02: use monster blocking line to provide better
