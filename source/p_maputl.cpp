@@ -600,9 +600,10 @@ void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t
     const auto   &backfloor  = backsector.srf.floor;
     const fixed_t openbottom = frontfloor.height > backfloor.height ? frontfloor.height : backfloor.height;
 
-    if(!side.scale_mid_y)
+    if(!side.scale_mid_y || line.extflags & EX_ML_WRAPMIDTEX)
     {
-        // Prevent division by zero: consider height infinite
+        // Prevent division by zero scale: consider height infinite
+        // Or if wrapmidtex is set, also consider it infinite.
         texbot = openbottom;
         textop = opentop;
         return;
