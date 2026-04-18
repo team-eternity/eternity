@@ -600,18 +600,17 @@ void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t
     const auto   &backfloor  = backsector.srf.floor;
     const fixed_t openbottom = frontfloor.height > backfloor.height ? frontfloor.height : backfloor.height;
 
-    // TODO: fix for negatives!
     const fixed_t offset = FixedDiv(side.offset_base_y + side.offset_mid_y, side.scale_mid_y);
     const fixed_t height = FixedDiv(textures[side.midtexture]->heightfrac, side.scale_mid_y);
     if(line.flags & ML_DONTPEGBOTTOM)
     {
-        texbot = offset + openbottom;
-        textop = texbot + height;
+        texbot = openbottom + offset;
+        textop = side.scale_mid_y >= 0 ? texbot + height : texbot - height;
     }
     else
     {
         textop = opentop + offset;
-        texbot = textop - height;
+        texbot = side.scale_mid_y >= 0 ? textop - height : textop + height;
     }
 }
 
