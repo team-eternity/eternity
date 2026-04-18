@@ -201,6 +201,10 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
         column.colormap = ds->fixedcolormap;
 
     // SoM: performance tuning (tm Lee Killough 1998)
+    if(!segclip.line->sidedef->scale_mid_y)
+    {
+        return; // prevent division by zero and "infinite" limit
+    }
     scale     = dist * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
     scalestep = diststep * view.yfoc / M_FixedToFloat(segclip.line->sidedef->scale_mid_y);
     texmidf   = M_FixedToFloat(column.texmid);
@@ -401,7 +405,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             basescale = 1.0f / (segclip.dist * view.yfoc);
 
             // column.step is no longer set here as it needs to be set per-texture due to scaling.
-            column.x    = i;
+            column.x = i;
 
             texx = segclip.len * basescale; // segclip.toffset_base_x added elsewhere due to needing to ignore scaling.
 
@@ -520,7 +524,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                                                  segclip.side->middleSkewType() == SKEW_FRONT_CEILING))
                         column.texmid +=
                             M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) * segclip.tscale_mid_y +
-                                                        segclip.skew_mid_baseoffset);
+                                           segclip.skew_mid_baseoffset);
 
                     column.source    = R_GetRawColumn(heap, segclip.midtex,
                                                       int(floorf((texx + segclip.toffset_seg_x) * segclip.tscale_mid_x +
