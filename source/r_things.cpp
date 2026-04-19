@@ -899,11 +899,18 @@ void R_DrawNewWrappedMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &colum
                                   const texcol_t *const tcol, const float *const mfloorclip,
                                   const float *const mceilingclip, const float skew)
 {
-    const float scaledtexheight = maskedcolumn.scale * column.texheight;
+    const float scaledtexheight = fabsf(maskedcolumn.scale * column.texheight);
 
-    // Start off from one below the modulo to ensure a top draw isn't missed.
-    const float basey1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew));
-    float       texy1  = fmodf(basey1, scaledtexheight) - scaledtexheight;
+    // Make sure that for negative scales the basey1 is adjusted by texture height. Needed because for negative it draws
+    // up, and the mfloorclip comparison would skip the bottom-most tile.
+    const float basey1 =
+        maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew)) - (maskedcolumn.scale < 0 ? scaledtexheight : 0);
+    float texy1 = fmodf(basey1, scaledtexheight);
+
+    // Make sure it starts from above the screen (also needed for negative scales when unpegged; this is in addition
+    // to the basey1 adjustment for negative scales.
+    if(texy1 > 0)
+        texy1 -= scaledtexheight;
 
     while(texy1 <= mfloorclip[column.x])
     {
