@@ -133,6 +133,20 @@ SaveArchive::SaveArchive(IInBuffer *pLoadFile) : savefile(nullptr), loadfile(pLo
         I_Error("SaveArchive: created a load file without a valid InBuffer\n");
 }
 
+SaveArchive::~SaveArchive()
+{
+    for(CachedString *string : mCacheStringHolder)
+        delete string;
+
+    SurfaceRef *ref = nullptr;
+    while((ref = mSlopeRefs.tableIterator((SurfaceRef *)nullptr)))
+    {
+        mSlopeRefs.removeObject(ref);
+        efree(ref);
+    }
+    mSlopeRefs.destroy();
+}
+
 //
 // Writes/reads strings with a fixed maximum length, which should be
 // null-extended prior to the call.

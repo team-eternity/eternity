@@ -93,11 +93,7 @@ protected:
 public:
     explicit SaveArchive(IOutBuffer *pSaveFile);
     explicit SaveArchive(IInBuffer *pLoadFile);
-    ~SaveArchive()
-    {
-        for(CachedString *string : mCacheStringHolder)
-            delete string;
-    }
+    ~SaveArchive();
 
     // Accessors
     bool        isSaving() const { return (savefile != nullptr); }
