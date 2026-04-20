@@ -643,8 +643,6 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 
     fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
     int     frontfloorgroupid, backfloorgroupid;
-    // SoM: used for 3dmidtex
-    fixed_t frontcz, frontfz, backcz, backfz;
 
     if(linedef->sidenum[1] == -1) // single sided line
     {
@@ -697,9 +695,6 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             frontceilz = frontceiling.getZAt(point);
             backceilz  = backceiling.getZAt(backpoint);
         }
-
-        frontcz = frontceiling.getZAt(point);
-        backcz  = backceiling.getZAt(backpoint);
     }
 
     const surface_t &frontfloor = openfrontsector->srf.floor;
@@ -733,9 +728,6 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             backfloorz        = backfloor.getZAt(backpoint);
             backfloorgroupid  = openbacksector->groupid;
         }
-
-        frontfz = frontfloor.getZAt(point);
-        backfz  = backfloor.getZAt(backpoint);
     }
 
     if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
