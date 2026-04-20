@@ -299,7 +299,7 @@ void PushThinker::Think()
             {
                 if((!sec->srf.floor.slope && thing->z > sec->srf.floor.height) ||
                    (sec->srf.floor.slope &&
-                    (thing->zref.sector.floor != sec || thing->z > thing->zref.floor))) // above ground
+                    (thing->zref.slope.floor != sec->srf.floor.slope || thing->z > thing->zref.floor))) // above ground
                 {
                     xspeed = yspeed = 0; // no force
                 }

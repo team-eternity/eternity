@@ -645,6 +645,12 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                           D_abs(s1.normal.z - s2.normal.z) < epsilon && //
                           D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
 }
+bool P_SlopesEqual(const pslope_t *s1, const pslope_t *s2)
+{
+    if(!s1 || !s2)
+        return false;
+    return P_SlopesEqual(*s1, *s2);
+}
 
 // Flexible overload which also allows null checks
 bool P_SlopesEqual(const sector_t *s1, const sector_t *s2, surf_e surf)

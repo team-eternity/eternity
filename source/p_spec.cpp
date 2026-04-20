@@ -1255,7 +1255,8 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
     // Sector specials don't apply in mid-air
     if(!sector->srf.floor.slope && player->mo->z != sector->srf.floor.height)
         return;
-    if(sector->srf.floor.slope && (player->mo->z != player->mo->zref.floor || player->mo->zref.sector.floor != sector))
+    if(sector->srf.floor.slope &&
+       (player->mo->z != player->mo->zref.floor || player->mo->zref.slope.floor != sector->srf.floor.slope))
     {
         return;
     }

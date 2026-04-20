@@ -276,7 +276,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
             }
             if((sec = m->m_sector)->flags & SECF_FRICTION && (sec->friction < friction || friction == ORIG_FRICTION))
             {
-                bool onfloor = sec->srf.floor.slope ? mo->zref.sector.floor == sec : mo->z <= sec->srf.floor.height;
+                bool onfloor = sec->srf.floor.slope ? mo->zref.slope.floor == sec->srf.floor.slope :
+                                                      mo->z <= sec->srf.floor.height;
                 if(onfloor || (sec->heightsec != -1 &&
                                mo->z <= sectors[sec->heightsec].srf.floor.getZAt(mo->x, mo->y) && demo_version >= 203))
                 {
@@ -414,12 +415,14 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
         clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
         clip.zref.floorgroupid              = bottomfloorsector->groupid;
         clip.zref.sector.floor              = bottomfloorsector;
+        clip.zref.slope.floor               = bottomfloorsector->srf.floor.slope;
     }
     else
     {
         clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
         clip.zref.floorgroupid              = newsubsec->sector->groupid;
         clip.zref.sector.floor              = newsubsec->sector;
+        clip.zref.slope.floor               = newsubsec->sector->srf.floor.slope;
     }
 
     // newsubsec->sector->ceilingheight + clip.thing->height;
@@ -429,11 +432,13 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
         const sector_t *topceilsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, newsubsec->sector, &totaldelta);
         clip.zref.ceiling             = topceilsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
         clip.zref.sector.ceiling      = topceilsector;
+        clip.zref.slope.ceiling       = topceilsector->srf.ceiling.slope;
     }
     else
     {
         clip.zref.ceiling        = newsubsec->sector->srf.ceiling.getZAt(x, y);
         clip.zref.sector.ceiling = newsubsec->sector;
+        clip.zref.slope.ceiling  = newsubsec->sector->srf.ceiling.slope;
     }
 
     clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
@@ -684,6 +689,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     {
         inter.zref.ceiling        = open.height.ceiling;
         inter.zref.sector.ceiling = open.ceilsector;
+        inter.zref.slope.ceiling  = open.ceilsector ? open.ceilsector->srf.ceiling.slope : nullptr;
         if(ld)
         {
             inter.ceilingline = ld;
@@ -696,6 +702,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         inter.zref.floor        = open.height.floor;
         inter.zref.floorgroupid = open.bottomgroupid;
         inter.zref.sector.floor = open.floorsector;
+        inter.zref.slope.floor  = open.floorsector ? open.floorsector->srf.floor.slope : nullptr;
 
         if(ld)
         {
@@ -708,10 +715,12 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     if(open.height.floor == inter.zref.floor && open.floorsector && !open.floorsector->srf.floor.slope)
     {
         inter.zref.sector.floor = open.floorsector;
+        inter.zref.slope.floor  = nullptr;
     }
     if(open.height.ceiling == inter.zref.ceiling && open.ceilsector && !open.ceilsector->srf.ceiling.slope)
     {
         inter.zref.sector.ceiling = open.ceilsector;
+        inter.zref.slope.ceiling  = nullptr;
     }
 
     // ioanch 20160116: this is crazy. If the lines belong in separate groups,
@@ -1277,12 +1286,14 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
         inter.zref.floor = inter.zref.dropoff = bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
         inter.zref.floorgroupid               = bottomsector->groupid;
         inter.zref.sector.floor               = bottomsector;
+        inter.zref.slope.floor                = bottomsector->srf.floor.slope;
     }
     else
     {
         inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
         inter.zref.floorgroupid               = sector.groupid;
         inter.zref.sector.floor               = &sector;
+        inter.zref.slope.floor                = sector.srf.floor.slope;
     }
 
     topsector = &sector;
@@ -1292,11 +1303,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
         topsector                 = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
         inter.zref.ceiling        = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
         inter.zref.sector.ceiling = topsector;
+        inter.zref.slope.ceiling  = topsector->srf.ceiling.slope;
     }
     else
     {
         inter.zref.ceiling        = sector.srf.ceiling.getZAt(x, y);
         inter.zref.sector.ceiling = &sector;
+        inter.zref.slope.ceiling  = sector.srf.ceiling.slope;
     }
 
     inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
@@ -1660,7 +1673,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
     const pslope_t *downslope;
     if(!(thing->flags & MF_NOGRAVITY) && thing->z <= thing->zref.floor)
-        downslope = thing->zref.sector.floor ? thing->zref.sector.floor->srf.floor.slope : nullptr;
+        downslope = thing->zref.slope.floor;
     else
         downslope = nullptr;
 
@@ -1945,8 +1958,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
     // If going down slope while still having some distance, stick to it to avoid sliding off it
     // endlessly.
-    if(downslope && downslope->zdelta && thing->zref.sector.floor && thing->zref.sector.floor->srf.floor.slope &&
-       thing->z > thing->zref.floor && thing->z <= thing->zref.floor + STEPSIZE)
+    if(downslope && downslope->zdelta && thing->zref.slope.floor && thing->z > thing->zref.floor &&
+       thing->z <= thing->zref.floor + STEPSIZE)
     {
         thing->z = thing->zref.floor;
     }
@@ -2041,12 +2054,12 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
             {
                 return true;
             }
-            if(mo->zref.sector.floor == ld->frontsector)
+            if(mo->zref.slope.floor == ld->frontsector->srf.floor.slope)
             {
                 frontfloor = mocheckz = mo->zref.floor;
                 backfloor             = ld->backsector->srf.floor.getZAt(mox, moy);
             }
-            else if(mo->zref.sector.floor == ld->backsector)
+            else if(mo->zref.slope.floor == ld->backsector->srf.floor.slope)
             {
                 frontfloor = ld->frontsector->srf.floor.getZAt(mox, moy);
                 backfloor = mocheckz = mo->zref.floor;
@@ -2326,7 +2339,7 @@ static void P_HitSlideLine(line_t *ld)
 
     // This also no longer works in modern demos due to there no longer being rounding errors,
     // so must be disabled for Eternity versions 4.05.00 and later.
-   
+
     if(!demo_compatibility && demo_version < 405)
         moveangle += 10;
     // ^ prevents sudden path reversal due to rounding error // phares
@@ -3343,6 +3356,7 @@ void P_ClearGlobalLevelReferences()
     clip.BlockingMobj                                  = nullptr; // also not ref-counted
     clip.numportalhit                                  = 0;
     clip.zref.sector                                   = {};
+    clip.zref.slope                                    = {};
     P_ClearTarget(clip.linetarget);
 }
 
@@ -3352,8 +3366,8 @@ void P_ClearGlobalLevelReferences()
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
     // Steep slopes are falling areas
-    if(mobj.zref.sector.floor && mobj.zref.sector.floor->srf.floor.slope &&
-       D_abs(mobj.zref.sector.floor->srf.floor.slope->zdelta) >= FRACUNIT && mobj.z > mobj.zref.dropoff + STEPSIZE)
+    if(mobj.zref.slope.floor && D_abs(mobj.zref.slope.floor->zdelta) >= FRACUNIT &&
+       mobj.z > mobj.zref.dropoff + STEPSIZE)
     {
         return false;
     }

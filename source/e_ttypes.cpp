@@ -142,10 +142,10 @@ cfg_opt_t edf_terrn_opts[] = {
     CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
     CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
     CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
     CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
     CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
     CFG_END()
 };
 
@@ -161,10 +161,10 @@ cfg_opt_t edf_terdelta_opts[] = {
     CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
     CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
     CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
     CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
     CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
     CFG_END()
 };
 
@@ -740,9 +740,10 @@ ETerrain *E_GetThingFloorType(const Mobj *thing)
         for(m = thing->touching_sectorlist; m; m = m->m_tnext)
         {
             // Handle sloped floors a bit differently, using the designated floorsector
-            if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.sector.floor)
+            const auto &mfloor = m->m_sector->srf.floor;
+            if(mfloor.slope && mfloor.slope == thing->zref.slope.floor)
                 break;
-            if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
+            if(!mfloor.slope && z == mfloor.height)
                 break;
         }
 
@@ -1055,14 +1056,14 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 
 //
 // Check if thing is standing on given sector, compatible with slopes and non-slopes
-// NOTE: this checks _exact_ floor equality, not <=
+// NOTE: for classic, non-sloped floors, this checks _exact_ floor equality, not <=
 //
 bool E_StandingOnExactly(const sector_t &sector, const Mobj &thing)
 {
     if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
         return true;
     // Different handling for sloped floors
-    if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.sector.floor == &sector)
+    if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.slope.floor == sector.srf.floor.slope)
         return true;
     return false;
 }

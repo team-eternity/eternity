@@ -637,13 +637,13 @@ inline static fixed_t P_getMBFBouncerGravity(const Mobj &thing, int multiplier)
 
 static void P_applySlopeGravity(Mobj &thing)
 {
-    if(!thing.zref.sector.floor || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
+    if(!thing.zref.slope.floor || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
        thing.flags & (MF_NOGRAVITY | MF_NOCLIP | MF_TELEPORT))
     {
         return;
     }
-    const pslope_t *slope = thing.zref.sector.floor->srf.floor.slope;
-    if(!slope || D_abs(slope->zdelta) < FRACUNIT)
+    const pslope_t *slope = thing.zref.slope.floor;
+    if(D_abs(slope->zdelta) < FRACUNIT)
         return;
 
     fixed_t gravity;
@@ -662,10 +662,10 @@ static void P_reduceVelocityBySlope(Mobj &thing)
     // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
     // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
-    if(!thing.zref.sector.floor)
+    if(!thing.zref.slope.floor || !thing.zref.sector.floor)
         return;
 
-    const pslope_t *slope = thing.zref.sector.floor->srf.floor.slope;
+    const pslope_t *slope = thing.zref.slope.floor;
     if(!slope || !slope->zdelta)
         return;
 
@@ -1119,9 +1119,9 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                    (fixed_t)(FRACUNIT * .45);
     };
 
-    if(thing.zref.sector[surf])
+    if(thing.zref.slope[surf])
     {
-        const pslope_t *slope = thing.zref.sector[surf]->srf[surf].slope;
+        const pslope_t *slope = thing.zref.slope[surf];
 
         // ONLY for no-gravity things, apply bouncing according to slope normal.
         // For falling things it has been noticed it's too wacky and unrealistic.
@@ -1132,7 +1132,7 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                            FixedMul(slope->normal.z, thing.momz);
             v3fixed_t normcomp = { FixedMul(prod, slope->normal.x), FixedMul(prod, slope->normal.y),
                                    FixedMul(prod, slope->normal.z) };
-            if(surf == surf_floor || !(thing.zref.sector[surf]->intflags & SIF_SKY))
+            if(surf == surf_floor || !thing.zref.sector[surf] || !(thing.zref.sector[surf]->intflags & SIF_SKY))
             {
                 // always bounce off non-sky ceiling
                 thing.momx -= 2 * normcomp.x;
@@ -1213,9 +1213,7 @@ static void P_ZMovement(Mobj *mo)
     // killough 8/9/98: added support for non-missile objects bouncing
     // (e.g. grenade, mine, pipebomb)
 
-    bool horizontalBounceOnSlope =
-        !mo->momz && ((mo->zref.sector.floor && mo->zref.sector.floor->srf.floor.slope) ||
-                      (mo->zref.sector.ceiling && mo->zref.sector.ceiling->srf.ceiling.slope));
+    bool horizontalBounceOnSlope = !mo->momz && (mo->zref.slope.floor || mo->zref.slope.ceiling);
 
     if(mo->flags & MF_BOUNCES && (mo->momz || horizontalBounceOnSlope))
     {
@@ -2496,9 +2494,11 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, bool nolastl
     mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
     mobj->zref.floorgroupid               = extremesector->groupid;
     mobj->zref.sector.floor               = extremesector;
+    mobj->zref.slope.floor                = extremesector->srf.floor.slope;
     extremesector                         = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
     mobj->zref.ceiling                    = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
     mobj->zref.sector.ceiling             = extremesector;
+    mobj->zref.slope.ceiling              = extremesector->srf.ceiling.slope;
 
     mobj->z = (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
 

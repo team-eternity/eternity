@@ -36,6 +36,7 @@ struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
 struct polyobj_t; // ioanch 20160122
+struct pslope_t;
 struct sector_t;
 
 //=============================================================================
@@ -222,6 +223,7 @@ struct zrefs_t
     // Sometimes we need to know if we're on top of a floor slope or below a ceiling slope. To that
     // end, we need the complete floor or ceiling sector reference
     Surfaces<const sector_t *> sector;
+    Surfaces<const pslope_t *> slope; // when the slope is detached from sector
 
     int floorgroupid;
 

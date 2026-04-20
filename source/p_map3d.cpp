@@ -377,6 +377,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
             clip.zref.floor        = topz;
             clip.zref.floorgroupid = thing->groupid;
             clip.zref.sector.floor = nullptr; // no slopes on things
+            clip.zref.slope.floor  = nullptr;
         }
     }
 

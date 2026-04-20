@@ -877,7 +877,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
     // Global world variables here
     if(arc.saveVersion() >= 23)
         arc << totalKilledMonsters << totalmonsters;
-    else if (arc.isLoading())
+    else if(arc.isLoading())
     {
         totalKilledMonsters = 0;
         for(int i = 0; i < MAXPLAYERS; ++i)

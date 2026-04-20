@@ -530,6 +530,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
         fixed_t                    floorz       = actor->zref.floor;
         int                        floorgroupid = actor->zref.floorgroupid;
         Surfaces<const sector_t *> sector       = actor->zref.sector;
+        Surfaces<const pslope_t *> slope        = actor->zref.slope;
         fixed_t                    ceilingz     = actor->zref.ceiling;
         fixed_t                    dropoffz     = actor->zref.dropoff;
 
@@ -546,6 +547,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
             actor->zref.floor        = floorz;
             actor->zref.floorgroupid = floorgroupid;
             actor->zref.sector       = sector;
+            actor->zref.slope        = slope;
             actor->zref.ceiling      = ceilingz;
             actor->zref.dropoff      = dropoffz;
             P_SetThingPosition(actor);
@@ -806,7 +808,7 @@ struct avoiddropoff_t
 {
     v2fixed_t       delta;
     fixed_t         floorz;
-    const sector_t *floorsector;
+    const pslope_t *floorslope;
 };
 static avoiddropoff_t avoiddropoff; // currently we change global state
 
@@ -831,7 +833,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
         // and the other must be a tall dropoff (more than 24).
 
         bool backmatch =
-            (backslope && line->backsector == avoiddropoff.floorsector) || (!backslope && back == avoiddropoff.floorz);
+            (backslope && backslope == avoiddropoff.floorslope) || (!backslope && back == avoiddropoff.floorz);
         const surface_t &frontfloor = line->frontsector->srf.floor;
         bool             frontlow =
             (frontslope && emin(frontfloor.getZAt(i1), frontfloor.getZAt(i2)) < avoiddropoff.floorz - STEPSIZE) ||
@@ -845,8 +847,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
         else
         {
             // back side dropoff
-            bool frontmatch = (frontslope && line->frontsector == avoiddropoff.floorsector) ||
-                              (!frontslope && front == avoiddropoff.floorz);
+            bool frontmatch =
+                (frontslope && frontslope == avoiddropoff.floorslope) || (!frontslope && front == avoiddropoff.floorz);
             const surface_t &backfloor = line->backsector->srf.floor;
             bool             backlow =
                 (backslope && emin(backfloor.getZAt(i1), backfloor.getZAt(i2)) < avoiddropoff.floorz - STEPSIZE) ||
@@ -879,8 +881,8 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
     int xl = ((clip.bbox[BOXLEFT] = actor->x - actor->radius) - bmaporgx) >> MAPBLOCKSHIFT;
     int bx, by;
 
-    avoiddropoff.floorz      = actor->z; // remember floor height
-    avoiddropoff.floorsector = actor->zref.sector.floor;
+    avoiddropoff.floorz     = actor->z; // remember floor height
+    avoiddropoff.floorslope = actor->zref.slope.floor;
 
     avoiddropoff.delta = {};
 
@@ -1638,7 +1640,7 @@ void P_ClericTeleport(Mobj *actor)
    bt.boss      = actor;                    // teleport leader cleric
    bt.state     = E_SafeState(S_LCLER_TELE1); // put cleric in this state
    bt.fxtype    = E_SafeThingType(MT_IFOG); // spawn item fog for fx
-   bt.zpamt     = 24*FRACUNIT;              // add 24 units to fog z 
+   bt.zpamt     = 24*FRACUNIT;              // add 24 units to fog z
    bt.hereThere = BOSSTELE_BOTH;            // spawn fx @ origin & dest.
    bt.soundNum  = sfx_itmbk;                // use item respawn sound
 

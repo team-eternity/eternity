@@ -84,6 +84,7 @@ float P_GetZAtf(pslope_t *slope, float x, float y);
 float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, const v3float_t *pnormal);
 
 bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
+bool P_SlopesEqual(const pslope_t *s1, const pslope_t *s2);
 bool P_SlopesEqual(const sector_t *s1, const sector_t *s2, surf_e surf);
 bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2);
 
