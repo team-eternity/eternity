@@ -27,6 +27,7 @@
 #include "e_hash.h"
 #include "m_collection.h"
 #include "m_qstrkeys.h"
+#include "m_surf.h"
 
 //
 // Cached string, stored in an EHashTable
@@ -55,23 +56,38 @@ struct spectransfer_t;
 struct mapthing_t;
 struct sector_t;
 struct line_t;
+struct pslope_t;
 struct v2fixed_t;
 struct zrefs_t;
 
 class SaveArchive
 {
 private:
+    struct SurfaceRef
+    {
+        int    sectorIndex;
+        surf_e surf;
+
+        int64_t                ptrval;
+        DLListItem<SurfaceRef> ptrvalLink;
+    };
+
+    int             getSurfaceIdentifier(const pslope_t *slope, surf_e &surf);
+    const pslope_t *getSlopeIdentifier(const SurfaceRef &ref);
+
     // The string table for this save archive. Mapped both by string and by ID, depending on use
     EHashTable<CachedString, ENCQStrHashKey, &CachedString::string, &CachedString::stringLink> mStringTable;
     EHashTable<CachedString, EIntHashKey, &CachedString::identifier, &CachedString::idLink>    mIdTable;
     int                                                                                        mNextCachedStringID = 0;
     PODCollection<CachedString *> mCacheStringHolder; // to be cleared on destruction
 
+    EHashTable<SurfaceRef, EInt64HashKey, &SurfaceRef::ptrval, &SurfaceRef::ptrvalLink> mSlopeRefs;
+
 protected:
     IOutBuffer *savefile; // valid when saving
     IInBuffer  *loadfile; // valid when loading
 
-    static constexpr int WRITE_SAVE_VERSION = 24; // Version of saves that EE writes
+    static constexpr int WRITE_SAVE_VERSION = 25; // Version of saves that EE writes
     int                  read_save_version;       // Version of currently-read save
 
 public:

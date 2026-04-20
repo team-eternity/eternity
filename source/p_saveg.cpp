@@ -69,6 +69,47 @@
 // save files from causing excessive memory allocation
 static constexpr int SAVEGAME_ALLOC_THRESHOLD = 10000000;
 
+static_assert(sizeof(int64_t) >= sizeof(intptr_t));
+
+//=============================================================================
+//
+// Private methods
+//
+
+int SaveArchive::getSurfaceIdentifier(const pslope_t *slope, surf_e &surface)
+{
+    if(!mSlopeRefs.isInitialized())
+    {
+        mSlopeRefs.initialize(127);
+        for(int i = 0; i < numsectors; ++i)
+        {
+            for(surf_e surf : SURFS)
+            {
+                auto *slope = sectors[i].srf[surf].slope;
+                if(!slope)
+                    continue;
+                auto surfaceRef         = estructalloc(SurfaceRef, 1);
+                surfaceRef->sectorIndex = i;
+                surfaceRef->surf        = surf;
+                surfaceRef->ptrval      = reinterpret_cast<int64_t>(slope);
+                mSlopeRefs.addObject(surfaceRef);
+            }
+        }
+    }
+    const auto *ref = mSlopeRefs.objectForKey(reinterpret_cast<int64_t>(slope));
+    if(ref)
+    {
+        surface = ref->surf;
+        return ref->sectorIndex;
+    }
+    return -1;
+}
+
+const pslope_t *SaveArchive::getSlopeIdentifier(const SurfaceRef &ref)
+{
+    return ref.sectorIndex == -1 ? nullptr : sectors[ref.sectorIndex].srf[ref.surf].slope;
+}
+
 //=============================================================================
 //
 // Basic IO
@@ -526,6 +567,33 @@ SaveArchive &SaveArchive::operator<<(zrefs_t &zref)
         *this << val;
         if(isLoading())
             zref.sector.ceiling = val >= 0 ? sectors + val : nullptr;
+    }
+    if(saveVersion() >= 25)
+    {
+        int32_t index;
+        int8_t  surfvar;
+        if(isSaving())
+        {
+            surf_e surface = surf_floor; // default for -1
+
+            index   = getSurfaceIdentifier(zref.slope.floor, surface);
+            surfvar = (int8_t)surface;
+            *this << index << surfvar;
+            index   = getSurfaceIdentifier(zref.slope.ceiling, surface);
+            surfvar = (int8_t)surface;
+            *this << index << surfvar;
+        }
+        else
+        {
+            SurfaceRef ref;
+
+            *this << index << surfvar;
+            ref              = { .sectorIndex = index, .surf = (surf_e)surfvar };
+            zref.slope.floor = getSlopeIdentifier(ref);
+            *this << index << surfvar;
+            ref                = { .sectorIndex = index, .surf = (surf_e)surfvar };
+            zref.slope.ceiling = getSlopeIdentifier(ref);
+        }
     }
     return *this;
 }
