@@ -79,6 +79,7 @@ Improvements
   specified.
 * Relax UMAPINFO to tolerate "endbunny = false" and "endcast = false". Needed because of released WADs,
   and other popular source ports implementing the specification poorly.
+* Right Alt key can now active the fast exit and fullscreen toggle.
 
 Bug fixes
 ---------
