@@ -593,15 +593,8 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
 void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
                           const sector_t &backsector, fixed_t &texbot, fixed_t &textop, const v2fixed_t *point)
 {
-    if(point)
-    {
-        if(const auto *slopes = P_Get3DMidTexSlopes(line))
-        {
-            textop = P_GetZAt(slopes->floor, point->x, point->y);
-            texbot = P_GetZAt(slopes->ceiling, point->x, point->y);
-            return;
-        }
-    }
+    Surfaces<pslope_t *> *const slopes = point ? P_Get3DMidTexSlopes(line) : nullptr;
+
     // For the usual case we must use the editor-specified heights to get the unsloped 3dmidtex positions
     const auto   &frontceiling = frontsector.srf.ceiling;
     const auto   &backceiling  = backsector.srf.ceiling;
@@ -631,6 +624,16 @@ void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t
     {
         textop = opentop + offset;
         texbot = side.scale_mid_y >= 0 ? textop - height : textop + height;
+    }
+
+    if(slopes) // IMPORTANT: we update the slopes each time
+    {
+        slopes->floor->o.z    = textop;
+        slopes->floor->of.z   = M_FixedToFloat(textop);
+        slopes->ceiling->o.z  = texbot;
+        slopes->ceiling->of.z = M_FixedToFloat(texbot);
+        textop                = P_GetZAt(slopes->floor, point->x, point->y);
+        texbot                = P_GetZAt(slopes->ceiling, point->x, point->y);
     }
 }
 

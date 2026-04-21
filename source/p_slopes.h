@@ -59,7 +59,7 @@ fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, co
 void P_PostProcessSlopes();
 void P_Spawn3DMidTexSlopes();
 
-const Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line);
+Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line);
 
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line

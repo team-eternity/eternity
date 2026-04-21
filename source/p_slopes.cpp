@@ -312,7 +312,7 @@ void P_Spawn3DMidTexSlopes()
     }
 }
 
-const Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line)
+Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line)
 {
     midtexslopes_t *element = pMidTex3DSlopes.objectForKey(eindex(&line - lines));
     return element ? &element->slopes : nullptr;
