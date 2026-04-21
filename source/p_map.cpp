@@ -689,7 +689,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     {
         inter.zref.ceiling        = open.height.ceiling;
         inter.zref.sector.ceiling = open.ceilsector;
-        inter.zref.slope.ceiling  = open.ceilsector ? open.ceilsector->srf.ceiling.slope : nullptr;
+        inter.zref.slope.ceiling  = open.ceilsector ? open.ceilsector->srf.ceiling.slope : open.midtexslopes.ceiling;
         if(ld)
         {
             inter.ceilingline = ld;
@@ -702,7 +702,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         inter.zref.floor        = open.height.floor;
         inter.zref.floorgroupid = open.bottomgroupid;
         inter.zref.sector.floor = open.floorsector;
-        inter.zref.slope.floor  = open.floorsector ? open.floorsector->srf.floor.slope : nullptr;
+        inter.zref.slope.floor  = open.floorsector ? open.floorsector->srf.floor.slope : open.midtexslopes.floor;
 
         if(ld)
         {

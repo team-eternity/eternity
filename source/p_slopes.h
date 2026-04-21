@@ -57,6 +57,9 @@ fixed_t P_GetSlopedSectorCeilingDelta(const rendersector_t &sector, const pslope
 fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, const pslope_t *slope);
 
 void P_PostProcessSlopes();
+void P_Spawn3DMidTexSlopes();
+
+const Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line);
 
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line
@@ -78,7 +81,7 @@ void P_CopySectorSlope(line_t *line, int staticFn);
 fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y);
 
 // Returns the height of the sloped plane at (x, y) as a float
-float P_GetZAtf(pslope_t *slope, float x, float y);
+float P_GetZAtf(const pslope_t *slope, float x, float y);
 
 // Returns the distance of the given point from the given origin and normal.
 float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, const v3float_t *pnormal);

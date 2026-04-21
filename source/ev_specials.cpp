@@ -45,6 +45,7 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "polyobj.h"
@@ -92,9 +93,11 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
     // haleyjd 05/02/06: ONLY on two-sided lines.
     if((line->flags & ML_3DMIDTEX) && line->backsector && sidedef && sidedef->midtexture)
     {
+        const linkoffset_t *link     = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
+        const v2fixed_t     thingpos = { thing->x + link->x, thing->y + link->y };
 
         fixed_t textop, texbot;
-        P_Get3DMidTexHeights(*line, *sidedef, *line->frontsector, *line->backsector, texbot, textop);
+        P_Get3DMidTexHeights(*line, *sidedef, *line->frontsector, *line->backsector, texbot, textop, &thingpos);
 
         if(thing->z > textop || thing->z + thing->height < texbot)
             return false;

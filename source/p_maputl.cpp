@@ -41,6 +41,7 @@
 #include "p_portalcross.h"
 #include "p_portalclip.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "polyobj.h"
 #include "r_context.h"
@@ -590,8 +591,18 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
 }
 
 void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
-                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop)
+                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop, const v2fixed_t *point)
 {
+    if(point)
+    {
+        if(const auto *slopes = P_Get3DMidTexSlopes(line))
+        {
+            textop = P_GetZAt(slopes->floor, point->x, point->y);
+            texbot = P_GetZAt(slopes->ceiling, point->x, point->y);
+            return;
+        }
+    }
+    // For the usual case we must use the editor-specified heights to get the unsloped 3dmidtex positions
     const auto   &frontceiling = frontsector.srf.ceiling;
     const auto   &backceiling  = backsector.srf.ceiling;
     const fixed_t opentop      = frontceiling.height < backceiling.height ? frontceiling.height : backceiling.height;
@@ -789,7 +800,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         fixed_t textop, texbot, texmid;
         side_t *side = &sides[linedef->sidenum[0]];
 
-        P_Get3DMidTexHeights(*linedef, *side, *openfrontsector, *openbacksector, texbot, textop);
+        const auto *midtexslopes = P_Get3DMidTexSlopes(*linedef);
+        P_Get3DMidTexHeights(*linedef, *side, *openfrontsector, *openbacksector, texbot, textop, &point);
 
         texmid = (textop + texbot) / 2;
 
@@ -809,6 +821,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             {
                 open.height.ceiling = texbot;
                 open.ceilsector     = nullptr; // not under a slope now
+                if(midtexslopes)
+                    open.midtexslopes.ceiling = midtexslopes->ceiling;
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling
@@ -822,6 +836,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
                 open.height.floor  = textop;
                 open.bottomgroupid = linedef->frontsector->groupid;
                 open.floorsector   = nullptr; // not on a slope now
+                if(midtexslopes)
+                    open.midtexslopes.floor = midtexslopes->floor;
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling

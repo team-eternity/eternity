@@ -261,6 +261,8 @@ struct lineopening_t
     // 1 == 3DMidTex involved but not responsible for floorz
     // 2 == 3DMidTex responsible for floorz
     int touch3dside;
+
+    Surfaces<const pslope_t *> midtexslopes;
 };
 
 struct doom_mapinter_t

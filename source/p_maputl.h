@@ -168,7 +168,7 @@ int       P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t d
 //  ioanch 20150113: added optional portal detection
 
 void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
-                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop);
+                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop, const v2fixed_t *point);
 
 lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed_t *ppoint = nullptr,
                             bool portaldetect = false, uint32_t *lineclipflags = nullptr);

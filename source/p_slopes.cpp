@@ -25,10 +25,13 @@
 
 #include "c_io.h"
 #include "doomdef.h"
+#include "e_hash.h"
+#include "e_exdata.h"
 #include "ev_specials.h"
 #include "i_system.h"
 #include "m_bbox.h"
 #include "p_map3d.h"
+#include "p_maputl.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -37,12 +40,21 @@
 
 slopeheight_t *pSlopeHeights;
 
+struct midtexslopes_t
+{
+    Surfaces<pslope_t *>       slopes;
+    int                        lineindex;
+    DLListItem<midtexslopes_t> indexlink;
+};
+
+static EHashTable<midtexslopes_t, EIntHashKey, &midtexslopes_t::lineindex, &midtexslopes_t::indexlink> pMidTex3DSlopes;
+
 //
 // P_MakeSlope
 //
 // Alocates and fill the contents of a slope structure.
 //
-static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float zdelta, const surface_t &surface,
+static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float zdelta, const surface_t *surface,
                              surf_e type)
 {
     pslope_t *ret = ecalloctag(pslope_t *, 1, sizeof(pslope_t), PU_LEVEL, nullptr);
@@ -89,8 +101,11 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
     //
     // Setup the sector refs
     //
-    ret->surfaceZOffset  = ret->o.z - surface.height;
-    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
+    if(surface)
+    {
+        ret->surfaceZOffset  = ret->o.z - surface->height;
+        ret->surfaceZOffsetF = ret->of.z - surface->heightf;
+    }
 
     return ret;
 }
@@ -241,6 +256,66 @@ void P_PostProcessSlopes()
 {
     P_initSlopeHeights();
     P_repositionThingsOnSlopes();
+}
+
+void P_Spawn3DMidTexSlopes()
+{
+    pMidTex3DSlopes.destroy();
+    pMidTex3DSlopes.initialize(127);
+    for(int i = 0; i < numlines; ++i)
+    {
+        const line_t &line = lines[i];
+        if(!line.backsector || !(line.flags & ML_TWOSIDED) || !(line.flags & ML_3DMIDTEX) ||
+           line.extflags & EX_ML_WRAPMIDTEX)
+        {
+            continue;
+        }
+        const side_t   &side        = sides[line.sidenum[0]];
+        const int       skew        = side.middleSkewType();
+        const pslope_t *sectorSlope = nullptr;
+        switch(skew)
+        {
+        case SKEW_NONE:          continue;
+        case SKEW_FRONT_FLOOR:   sectorSlope = line.frontsector->srf.floor.slope; break;
+        case SKEW_FRONT_CEILING: sectorSlope = line.frontsector->srf.ceiling.slope; break;
+        case SKEW_BACK_FLOOR:    sectorSlope = line.backsector->srf.floor.slope; break;
+        case SKEW_BACK_CEILING:  sectorSlope = line.backsector->srf.ceiling.slope; break;
+        default:                 I_Error("Wrong skew case\n");
+        }
+        if(!sectorSlope || !sectorSlope->zdelta)
+            continue;
+
+        const float lineLength = sqrtf(powf(line.v2->fx - line.v1->fx, 2) + powf(line.v2->fy - line.v1->fy, 2));
+        if(!lineLength)
+            continue;
+
+        const float zdiff =
+            P_GetZAtf(sectorSlope, line.v2->fx, line.v2->fy) - P_GetZAtf(sectorSlope, line.v1->fx, line.v1->fy);
+
+        fixed_t texbot = 0;
+        fixed_t textop = 0;
+
+        // Deliberately no point; this is for building up
+        P_Get3DMidTexHeights(line, side, *line.frontsector, *line.backsector, texbot, textop, nullptr);
+
+        Surfaces<pslope_t *> lineSlopes;
+        const v2float_t      normDir = { -line.ny, line.nx };
+        const float          zdelta  = zdiff / lineLength;
+        lineSlopes.floor   = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(textop) }, normDir, zdelta,
+                                         nullptr, surf_floor);
+        lineSlopes.ceiling = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(texbot) }, normDir, zdelta,
+                                         nullptr, surf_ceil);
+        auto element       = estructalloctag(midtexslopes_t, 1, PU_LEVEL);
+        element->lineindex = i;
+        element->slopes    = lineSlopes;
+        pMidTex3DSlopes.addObject(element);
+    }
+}
+
+const Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line)
+{
+    midtexslopes_t *element = pMidTex3DSlopes.objectForKey(eindex(&line - lines));
+    return element ? &element->slopes : nullptr;
 }
 
 //
@@ -409,7 +484,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.backsector->srf.floor.heightf - point.z) / extent;
 
             line.frontsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, line.frontsector->srf.floor, surf_floor);
+                P_MakeSlope(point, direction, dz, &line.frontsector->srf.floor, surf_floor);
         }
         if(frontceil)
         {
@@ -417,7 +492,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.backsector->srf.ceiling.heightf - point.z) / extent;
 
             line.frontsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, line.frontsector->srf.ceiling, surf_ceil);
+                P_MakeSlope(point, direction, dz, &line.frontsector->srf.ceiling, surf_ceil);
         }
     }
 
@@ -446,7 +521,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.floor.heightf - point.z) / extent;
 
             line.backsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, line.backsector->srf.floor, surf_floor);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.floor, surf_floor);
         }
         if(backceil)
         {
@@ -454,7 +529,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.ceiling.heightf - point.z) / extent;
 
             line.backsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, line.backsector->srf.ceiling, surf_ceil);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.ceiling, surf_ceil);
         }
     }
 
@@ -608,7 +683,7 @@ fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y)
 //
 // Returns the height of the sloped plane at (x, y) as a float
 //
-float P_GetZAtf(pslope_t *slope, float x, float y)
+float P_GetZAtf(const pslope_t *slope, float x, float y)
 {
     float dist = (x - slope->of.x) * slope->df.x + (y - slope->of.y) * slope->df.y;
     return slope->of.z + (dist * slope->zdeltaf);
