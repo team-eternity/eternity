@@ -65,14 +65,21 @@ class SaveArchive
 private:
     struct SurfaceRef
     {
-        int    sectorIndex;
+        enum class Type
+        {
+            sector,
+            midtex
+        };
+
+        Type   type;
+        int    index;
         surf_e surf;
 
         int64_t                ptrval;
         DLListItem<SurfaceRef> ptrvalLink;
     };
 
-    int             getSurfaceIdentifier(const pslope_t *slope, surf_e &surf);
+    SurfaceRef      getSurfaceIdentifier(const pslope_t *slope);
     const pslope_t *getSlopeIdentifier(const SurfaceRef &ref);
 
     // The string table for this save archive. Mapped both by string and by ID, depending on use

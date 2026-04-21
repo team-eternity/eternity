@@ -40,6 +40,7 @@
 #include "p_spec.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "p_slopes.h"
 #include "p_enemy.h"
 #include "p_portal.h"
 #include "p_hubs.h"
@@ -76,7 +77,7 @@ static_assert(sizeof(int64_t) >= sizeof(intptr_t));
 // Private methods
 //
 
-int SaveArchive::getSurfaceIdentifier(const pslope_t *slope, surf_e &surface)
+SaveArchive::SurfaceRef SaveArchive::getSurfaceIdentifier(const pslope_t *slope)
 {
     if(!mSlopeRefs.isInitialized())
     {
@@ -88,10 +89,28 @@ int SaveArchive::getSurfaceIdentifier(const pslope_t *slope, surf_e &surface)
                 auto *slope = sectors[i].srf[surf].slope;
                 if(!slope)
                     continue;
-                auto surfaceRef         = estructalloc(SurfaceRef, 1);
-                surfaceRef->sectorIndex = i;
-                surfaceRef->surf        = surf;
-                surfaceRef->ptrval      = reinterpret_cast<int64_t>(slope);
+                auto surfaceRef    = estructalloc(SurfaceRef, 1);
+                surfaceRef->type   = SurfaceRef::Type::sector;
+                surfaceRef->index  = i;
+                surfaceRef->surf   = surf;
+                surfaceRef->ptrval = reinterpret_cast<int64_t>(slope);
+                mSlopeRefs.addObject(surfaceRef);
+            }
+        }
+        for(int i = 0; i < numlines; ++i)
+        {
+            const Surfaces<pslope_t *> *slopes = P_Get3DMidTexSlopes(lines[i]);
+            if(!slopes)
+                continue;
+            for(surf_e surf : SURFS)
+            {
+                if(!(*slopes)[surf])
+                    continue;
+                auto surfaceRef    = estructalloc(SurfaceRef, 1);
+                surfaceRef->type   = SurfaceRef::Type::midtex;
+                surfaceRef->index  = i;
+                surfaceRef->surf   = surf;
+                surfaceRef->ptrval = reinterpret_cast<int64_t>((*slopes)[surf]);
                 mSlopeRefs.addObject(surfaceRef);
             }
         }
@@ -99,15 +118,43 @@ int SaveArchive::getSurfaceIdentifier(const pslope_t *slope, surf_e &surface)
     const auto *ref = mSlopeRefs.objectForKey(reinterpret_cast<int64_t>(slope));
     if(ref)
     {
-        surface = ref->surf;
-        return ref->sectorIndex;
+        return *ref;
     }
-    return -1;
+    return SurfaceRef{ .index = -1 };
 }
 
 const pslope_t *SaveArchive::getSlopeIdentifier(const SurfaceRef &ref)
 {
-    return ref.sectorIndex == -1 ? nullptr : sectors[ref.sectorIndex].srf[ref.surf].slope;
+    if(ref.index == -1)
+    {
+        return nullptr;
+    }
+    if(ref.surf != surf_floor && ref.surf != surf_ceil)
+        throw std::runtime_error(qstring::Format("Invalid surface identifier for %d", ref.surf).constPtr());
+    switch(ref.type)
+    {
+    case SurfaceRef::Type::sector:
+        if(ref.index < 0 || ref.index >= numsectors)
+        {
+            throw std::runtime_error(
+                qstring::Format("Invalid sector index %d when loading zref slope", ref.index).constPtr());
+        }
+        return sectors[ref.index].srf[ref.surf].slope;
+    case SurfaceRef::Type::midtex:
+    {
+        if(ref.index < 0 || ref.index >= numlines)
+        {
+            throw std::runtime_error(
+                qstring::Format("Invalid line index %d when loading zref slope", ref.index).constPtr());
+        }
+        auto slopes = P_Get3DMidTexSlopes(lines[ref.index]);
+        if(!slopes)
+            throw std::runtime_error("Null midtex slope");
+
+        return (*slopes)[ref.surf];
+    }
+    default: throw std::runtime_error(qstring::Format("Invalid slope type %d", (int)ref.type).constPtr());
+    }
 }
 
 //=============================================================================
@@ -584,28 +631,33 @@ SaveArchive &SaveArchive::operator<<(zrefs_t &zref)
     }
     if(saveVersion() >= 25)
     {
+        int8_t  type;
         int32_t index;
         int8_t  surfvar;
         if(isSaving())
         {
-            surf_e surface = surf_floor; // default for -1
+            SurfaceRef ref;
 
-            index   = getSurfaceIdentifier(zref.slope.floor, surface);
-            surfvar = (int8_t)surface;
-            *this << index << surfvar;
-            index   = getSurfaceIdentifier(zref.slope.ceiling, surface);
-            surfvar = (int8_t)surface;
-            *this << index << surfvar;
+            ref     = getSurfaceIdentifier(zref.slope.floor);
+            type    = (int8_t)ref.type;
+            index   = (int32_t)ref.index;
+            surfvar = (int8_t)ref.surf;
+            *this << type << index << surfvar;
+            ref     = getSurfaceIdentifier(zref.slope.ceiling);
+            type    = (int8_t)ref.type;
+            index   = (int32_t)ref.index;
+            surfvar = (int8_t)ref.surf;
+            *this << type << index << surfvar;
         }
-        else
+        else // loading
         {
             SurfaceRef ref;
 
-            *this << index << surfvar;
-            ref              = { .sectorIndex = index, .surf = (surf_e)surfvar };
+            *this << type << index << surfvar;
+            ref              = { .type = (SurfaceRef::Type)type, .index = index, .surf = (surf_e)surfvar };
             zref.slope.floor = getSlopeIdentifier(ref);
-            *this << index << surfvar;
-            ref                = { .sectorIndex = index, .surf = (surf_e)surfvar };
+            *this << type << index << surfvar;
+            ref                = { .type = (SurfaceRef::Type)type, .index = index, .surf = (surf_e)surfvar };
             zref.slope.ceiling = getSlopeIdentifier(ref);
         }
     }
