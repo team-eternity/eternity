@@ -823,7 +823,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             if(texbot < open.height.ceiling)
             {
                 open.height.ceiling = texbot;
-                open.ceilsector     = nullptr; // not under a slope now
+                open.ceilsector     = nullptr;
                 if(midtexslopes)
                     open.midtexslopes.ceiling = midtexslopes->ceiling;
             }
@@ -838,7 +838,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             {
                 open.height.floor  = textop;
                 open.bottomgroupid = linedef->frontsector->groupid;
-                open.floorsector   = nullptr; // not on a slope now
+                open.floorsector   = nullptr;
                 if(midtexslopes)
                     open.midtexslopes.floor = midtexslopes->floor;
             }

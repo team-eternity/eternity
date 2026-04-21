@@ -187,14 +187,16 @@ struct pslope_t
     //
     // IMPORTANT
     //
-    // The following are references to the containing sector. They work simply because we follow the
-    // rule that each sector may have its own slope, no slopes are shared. If we decide to share
-    // slopes, we MUST make sure to decouple the following fields from pslope_t
+    // The following are references to the containing item. They work simply because we follow the
+    // rule that each item may have its own slope, no slopes are shared. If we decide to share
+    // slopes, we MUST make sure to decouple the following fields from pslope_t.
+    // An 'item' is a sector or 3dmidtex line.
     //
 
     // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
     fixed_t surfaceZOffset;
     float   surfaceZOffsetF; // floating-point variant
+    int     groupid;         // so we don't need to look up the containing 'item'.
 };
 
 //

@@ -662,15 +662,15 @@ static void P_reduceVelocityBySlope(Mobj &thing)
     // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
     // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
-    if(!thing.zref.slope.floor || !thing.zref.sector.floor)
+    if(!thing.zref.slope.floor)
         return;
 
     const pslope_t *slope = thing.zref.slope.floor;
-    if(!slope || !slope->zdelta)
+    if(!slope->zdelta)
         return;
 
     // Offset to the corner that touches the slope. Also add portal if any
-    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, thing.zref.sector.floor->groupid);
+    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, thing.zref.slope.floor->groupid);
     const v2fixed_t     slopeoffset = { ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
                                         ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y };
     const v2fixed_t     source      = { thing.x, thing.y };
