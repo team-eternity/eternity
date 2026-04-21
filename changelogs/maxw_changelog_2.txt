@@ -388,6 +388,10 @@ Adopted blockmap overflow P_PathTraverse fix from PR+.
 Added wall texture scaling.
 Added wrapping middle textures.
 
+--------------------------------------------------------------------------------
+2026/04/20
+Right Alt can now fast exit and toggle fullscreen.
+
 ================================================================================
 EOF
 ================================================================================
