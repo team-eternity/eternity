@@ -113,7 +113,7 @@ result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, in
             // last move was rejected?
         }
         if(instant)
-            P_SaveSectorPosition(*sector, ssurf_floor);
+            P_SaveSectorPosition(*sector, surf_floor);
         return pastdest;
     }
     else
@@ -228,7 +228,7 @@ result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int 
                 P_MoveAttached(sector, surf_floor, lastpos - destheight, crush, instant);
         }
         if(instant)
-            P_SaveSectorPosition(*sector, ssurf_floor);
+            P_SaveSectorPosition(*sector, surf_floor);
         return pastdest;
     }
     else
@@ -351,7 +351,7 @@ result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, 
         }
 
         if(instant)
-            P_SaveSectorPosition(*sector, ssurf_ceiling);
+            P_SaveSectorPosition(*sector, surf_ceil);
         return pastdest;
     }
     else
@@ -463,7 +463,7 @@ result_e T_MoveCeilingUp(sector_t *const sector, fixed_t speed, fixed_t dest, in
                 P_MoveAttached(sector, surf_ceil, lastpos - dest, crush, instant);
         }
         if(instant)
-            P_SaveSectorPosition(*sector, ssurf_ceiling);
+            P_SaveSectorPosition(*sector, surf_ceil);
         return pastdest;
     }
     else

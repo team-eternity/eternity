@@ -361,18 +361,18 @@ void P_SaveSectorPosition(const sector_t &sec)
 //
 // Saves but for a single surface
 //
-void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
+void P_SaveSectorPosition(const sector_t &sec, surf_e surf)
 {
     auto &si = sectorinterps[&sec - sectors];
     switch(surf)
     {
-    case ssurf_floor:
+    case surf_floor:
         si.prevfloorheight  = sec.srf.floor.height;
         si.prevfloorheightf = sec.srf.floor.heightf;
         if(sec.srf.floor.slope)
             si.prevfloorslopezf = sec.srf.floor.slope->of.z;
         break;
-    case ssurf_ceiling:
+    case surf_ceil:
         si.prevceilingheight  = sec.srf.ceiling.height;
         si.prevceilingheightf = sec.srf.ceiling.heightf;
         if(sec.srf.ceiling.slope)

@@ -2493,7 +2493,7 @@ bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, const in
             ok = false;
         }
         if(nointerp)
-            P_SaveSectorPosition(*list[i].sector, surf == surf_ceil ? ssurf_ceiling : ssurf_floor);
+            P_SaveSectorPosition(*list[i].sector, surf);
     };
 
     for(i = 0; i < count; i++)
