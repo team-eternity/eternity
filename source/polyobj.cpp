@@ -133,7 +133,7 @@ static polymaplink_t *bmap_freelist; // free list of blockmap links
 // Static Functions
 //
 
-inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
+inline static void Polyobj_bboxAdd(fixed_t *bbox, const vertex_t *add)
 {
     bbox[BOXTOP]    += add->y;
     bbox[BOXBOTTOM] += add->y;
@@ -141,7 +141,7 @@ inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
     bbox[BOXRIGHT]  += add->x;
 }
 
-inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
+inline static void Polyobj_bboxSub(fixed_t *bbox, const vertex_t *sub)
 {
     bbox[BOXTOP]    -= sub->y;
     bbox[BOXBOTTOM] -= sub->y;
@@ -149,7 +149,7 @@ inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
     bbox[BOXRIGHT]  -= sub->x;
 }
 
-inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
+inline static void Polyobj_vecAdd(vertex_t *dst, const vertex_t *add)
 {
     dst->x  += add->x;
     dst->y  += add->y;
@@ -157,7 +157,7 @@ inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
     dst->fy  = M_FixedToFloat(dst->y);
 }
 
-inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
+inline static void Polyobj_vecSub(vertex_t *dst, const vertex_t *sub)
 {
     dst->x  -= sub->x;
     dst->y  -= sub->y;
@@ -165,7 +165,7 @@ inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
     dst->fy  = M_FixedToFloat(dst->y);
 }
 
-inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
+inline static void Polyobj_vecSub2(vertex_t *dst, const vertex_t *v1, const vertex_t *v2)
 {
     dst->x  = v1->x - v2->x;
     dst->y  = v1->y - v2->y;
@@ -601,7 +601,7 @@ static void Polyobj_relinkLine(const line_t &line)
 // Translates the polyobject's vertices with respect to the difference between
 // the anchor and spawn spots. Updates linedef bounding boxes as well.
 //
-static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
+static void Polyobj_moveToSpawnSpot(const mapthing_t *anchor)
 {
     polyobj_t *po;
     vertex_t   dist, sspot;
@@ -853,7 +853,7 @@ inline static bool Polyobj_canPushThing(const Mobj &mo)
 // blocking the motion of a polyobject. The default thrust amount is only one
 // unit, but the motion of the polyobject can be used to change this.
 //
-static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
+static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
 {
     angle_t lineangle;
     fixed_t momx, momy;
@@ -892,7 +892,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 // portal walls.
 // Returns true if something was hit.
 //
-static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const vertex_t *vec = nullptr)
+static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t *vec = nullptr)
 {
     bool    hitthing = false;
     fixed_t linebox[4];
@@ -1486,7 +1486,7 @@ polyobj_t *Polyobj_GetForNum(int id)
 // Retrieves the mirroring polyobject if one exists. Returns nullptr
 // otherwise.
 //
-static polyobj_t *Polyobj_GetMirror(polyobj_t *po)
+static polyobj_t *Polyobj_GetMirror(const polyobj_t *po)
 {
     return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : nullptr;
 }
