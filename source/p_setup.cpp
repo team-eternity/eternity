@@ -758,15 +758,15 @@ static void P_createSectorInterps()
 
     for(int i = 0; i < numsectors; i++)
     {
-        sectorinterps[i].prevfloorheight    = sectors[i].srf.floor.height;
-        sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
-        sectorinterps[i].prevfloorheightf   = sectors[i].srf.floor.heightf;
-        sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
+        sectorinterps[i].prevheight.floor    = sectors[i].srf.floor.height;
+        sectorinterps[i].prevheight.ceiling  = sectors[i].srf.ceiling.height;
+        sectorinterps[i].prevheightf.floor   = sectors[i].srf.floor.heightf;
+        sectorinterps[i].prevheightf.ceiling = sectors[i].srf.ceiling.heightf;
 
         if(sectors[i].srf.floor.slope)
-            sectorinterps[i].prevfloorslopezf = sectors[i].srf.floor.slope->of.z;
+            sectorinterps[i].prevslopezf.floor = sectors[i].srf.floor.slope->of.z;
         if(sectors[i].srf.ceiling.slope)
-            sectorinterps[i].prevceilingslopezf = sectors[i].srf.ceiling.slope->of.z;
+            sectorinterps[i].prevslopezf.ceiling = sectors[i].srf.ceiling.slope->of.z;
     }
 }
 

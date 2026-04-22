@@ -229,22 +229,18 @@ struct sectorinterp_t
 {
     bool interpolated; // if true, interpolated
 
-    fixed_t prevfloorheight; // previous values, stored for interpolation
-    fixed_t prevceilingheight;
-    float   prevfloorheightf;
-    float   prevceilingheightf;
+    // previous values, stored for interpolation
+    Surfaces<fixed_t> prevheight;
+    Surfaces<float>   prevheightf;
 
-    fixed_t backfloorheight; // backup values, used as cache during rendering
-    fixed_t backceilingheight;
-    float   backfloorheightf;
-    float   backceilingheightf;
+    // backup values, used as cache during rendering
+    Surfaces<fixed_t> backheight;
+    Surfaces<float>   backheightf;
 
     // as the above sets of values, but for slope origin Z
-    float prevfloorslopezf;
-    float prevceilingslopezf;
+    Surfaces<float> prevslopezf;
 
-    float backfloorslopezf;
-    float backceilingslopezf;
+    Surfaces<float> backslopezf;
 };
 
 //
