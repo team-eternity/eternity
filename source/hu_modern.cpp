@@ -110,6 +110,9 @@ void ModernHUD::DrawStatus(int x, int y)
     }
     else if(hud_overlaylayout == HUD_DISTRIB)
     {
+        if(hud_hidesecrets)
+            y += 8;
+
         tempstr << FC_RED "KILLS" FC_GRAY "  " << totalKilledMonsters << "/" << totalmonsters;
         V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, m_screen);
         tempstr.clear();
@@ -126,6 +129,9 @@ void ModernHUD::DrawStatus(int x, int y)
     }
     else
     {
+        if(hud_hidesecrets)
+            y += 8;
+
         tempstr << totalKilledMonsters << "/" << totalmonsters << "  " FC_RED "KILLS";
         FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
         tempstr.clear();
