@@ -1627,13 +1627,13 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             // and will affect weather or not the sector will keep moving,
             // thus keeping compatibility for all thinker types.
         case EV_STATIC_3DMIDTEX_ATTACH_FLOOR: //
-            P_AttachLines(&lines[i], false);
+            P_AttachLines(&lines[i], surf_floor);
             break;
         case EV_STATIC_3DMIDTEX_ATTACH_CEILING: //
-            P_AttachLines(&lines[i], true);
+            P_AttachLines(&lines[i], surf_ceil);
             break;
         case EV_STATIC_3DMIDTEX_ATTACH_PARAM: //
-            P_AttachLines(&lines[i], !!lines[i].args[ev_AttachMidtex_Arg_DoCeiling]);
+            P_AttachLines(&lines[i], lines[i].args[ev_AttachMidtex_Arg_DoCeiling] ? surf_ceil : surf_floor);
             break;
 
             // SoM 12/10/03: added skybox/portal specials
@@ -2325,7 +2325,7 @@ static void P_addLineToAttachList(const line_t *line, int *&attached, int &numat
 //
 // SoM 11/9/04: Now attaches lines and records another list of sectors
 //
-void P_AttachLines(const line_t *cline, bool ceiling)
+void P_AttachLines(const line_t *cline, surf_e surf)
 {
     // FIXME / TODO: replace with a collection
     static int  maxattach = 0;
@@ -2343,25 +2343,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
     // Check to ensure that this sector doesn't already
     // have attachments.
-    if(!ceiling && cline->frontsector->srf.floor.numattached)
+    if(cline->frontsector->srf[surf].numattached)
     {
-        numattach = cline->frontsector->srf.floor.numattached;
-
-        if(numattach >= maxattach)
-        {
-            maxattach = numattach + 5;
-            attached  = erealloc(int *, attached, sizeof(int) * maxattach);
-        }
-
-        memcpy(attached, cline->frontsector->srf.floor.attached, sizeof(int) * numattach);
-        Z_Free(cline->frontsector->srf.floor.attached);
-        cline->frontsector->srf.floor.attached    = nullptr;
-        cline->frontsector->srf.floor.numattached = 0;
-        Z_Free(cline->frontsector->srf.floor.attsectors);
-    }
-    else if(ceiling && cline->frontsector->srf.ceiling.numattached)
-    {
-        numattach = cline->frontsector->srf.ceiling.numattached;
+        numattach = cline->frontsector->srf[surf].numattached;
 
         if(numattach >= maxattach)
         {
@@ -2373,11 +2357,11 @@ void P_AttachLines(const line_t *cline, bool ceiling)
         if(!attached)
             I_Error("P_AttachLines: no attached list\n");
 
-        memcpy(attached, cline->frontsector->srf.ceiling.attached, sizeof(int) * numattach);
-        Z_Free(cline->frontsector->srf.ceiling.attached);
-        cline->frontsector->srf.ceiling.attached    = nullptr;
-        cline->frontsector->srf.ceiling.numattached = 0;
-        Z_Free(cline->frontsector->srf.ceiling.attsectors);
+        memcpy(attached, cline->frontsector->srf[surf].attached, sizeof(int) * numattach);
+        Z_Free(cline->frontsector->srf[surf].attached);
+        cline->frontsector->srf[surf].attached    = nullptr;
+        cline->frontsector->srf[surf].numattached = 0;
+        Z_Free(cline->frontsector->srf[surf].attsectors);
     }
 
     // ioanch: param specisl
@@ -2439,24 +2423,12 @@ void P_AttachLines(const line_t *cline, bool ceiling)
     }
 
     // Copy the list to the c_attached or f_attached list.
-    if(ceiling)
-    {
-        cline->frontsector->srf.ceiling.numattached = numattach;
-        cline->frontsector->srf.ceiling.attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.ceiling.attached, attached, sizeof(int) * numattach);
+    cline->frontsector->srf[surf].numattached = numattach;
+    cline->frontsector->srf[surf].attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+    memcpy(cline->frontsector->srf[surf].attached, attached, sizeof(int) * numattach);
 
-        alist     = cline->frontsector->srf.ceiling.attached;
-        alistsize = cline->frontsector->srf.ceiling.numattached;
-    }
-    else
-    {
-        cline->frontsector->srf.floor.numattached = numattach;
-        cline->frontsector->srf.floor.attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.floor.attached, attached, sizeof(int) * numattach);
-
-        alist     = cline->frontsector->srf.floor.attached;
-        alistsize = cline->frontsector->srf.floor.numattached;
-    }
+    alist     = cline->frontsector->srf[surf].attached;
+    alistsize = cline->frontsector->srf[surf].numattached;
 
     // (re)create the sectors list.
     numattach = 0;
@@ -2501,18 +2473,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
     }
 
     // Copy the attached sectors list.
-    if(ceiling)
-    {
-        cline->frontsector->srf.ceiling.numsectors = numattach;
-        cline->frontsector->srf.ceiling.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.ceiling.attsectors, attached, sizeof(int) * numattach);
-    }
-    else
-    {
-        cline->frontsector->srf.floor.numsectors = numattach;
-        cline->frontsector->srf.floor.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.floor.attsectors, attached, sizeof(int) * numattach);
-    }
+    cline->frontsector->srf[surf].numsectors = numattach;
+    cline->frontsector->srf[surf].attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+    memcpy(cline->frontsector->srf[surf].attsectors, attached, sizeof(int) * numattach);
 }
 
 //

@@ -1653,7 +1653,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual = false);
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachLines(const line_t *cline, bool ceiling);
+void P_AttachLines(const line_t *cline, surf_e surf);
 bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, int crush, bool nointerp);
 void P_AttachSectors(const line_t *line, int staticFn);
 
