@@ -77,10 +77,10 @@ result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, in
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, false, dest - lastpos, crush);
+            flag = P_Scroll3DSides(sector, surf_floor, dest - lastpos, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, false, lastpos - dest, crush);
+                P_Scroll3DSides(sector, surf_floor, lastpos - dest, crush);
                 return crushed;
             }
         }
@@ -105,7 +105,7 @@ result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, in
             // SoM: if the move in the master sector was bad,
             // keep the 3d sides consistant.
             if(move3dsides)
-                P_Scroll3DSides(sector, false, lastpos - dest, crush);
+                P_Scroll3DSides(sector, surf_floor, lastpos - dest, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_floor, lastpos - dest, crush, instant);
 
@@ -121,10 +121,10 @@ result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, in
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, false, -speed, crush);
+            flag = P_Scroll3DSides(sector, surf_floor, -speed, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, false, speed, crush);
+                P_Scroll3DSides(sector, surf_floor, speed, crush);
                 return crushed;
             }
         }
@@ -152,7 +152,7 @@ result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, in
             P_ChangeSector(sector, crush);
 
             if(move3dsides)
-                P_Scroll3DSides(sector, false, speed, crush);
+                P_Scroll3DSides(sector, surf_floor, speed, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_floor, speed, crush, false);
 
@@ -197,10 +197,10 @@ result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int 
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, false, destheight - lastpos, crush);
+            flag = P_Scroll3DSides(sector, surf_floor, destheight - lastpos, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, false, lastpos - destheight, crush);
+                P_Scroll3DSides(sector, surf_floor, lastpos - destheight, crush);
                 return crushed;
             }
         }
@@ -223,7 +223,7 @@ result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int 
             // jff 3/19/98 use faster chk
             P_CheckSector(sector, crush, lastpos - destheight, CheckSectorPlane::floor);
             if(move3dsides)
-                P_Scroll3DSides(sector, false, lastpos - destheight, crush);
+                P_Scroll3DSides(sector, surf_floor, lastpos - destheight, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_floor, lastpos - destheight, crush, instant);
         }
@@ -236,10 +236,10 @@ result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int 
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, false, speed, crush);
+            flag = P_Scroll3DSides(sector, surf_floor, speed, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, false, -speed, crush);
+                P_Scroll3DSides(sector, surf_floor, -speed, crush);
                 return crushed;
             }
         }
@@ -271,7 +271,7 @@ result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int 
             // jff 3/19/98 use faster chk
             P_CheckSector(sector, crush, -speed, CheckSectorPlane::floor);
             if(move3dsides)
-                P_Scroll3DSides(sector, false, -speed, crush);
+                P_Scroll3DSides(sector, surf_floor, -speed, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_floor, -speed, crush, false);
 
@@ -318,10 +318,10 @@ result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, 
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, true, destheight - lastpos, crush);
+            flag = P_Scroll3DSides(sector, surf_ceil, destheight - lastpos, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, true, lastpos - destheight, crush);
+                P_Scroll3DSides(sector, surf_ceil, lastpos - destheight, crush);
                 return crushed;
             }
         }
@@ -345,7 +345,7 @@ result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, 
             P_CheckSector(sector, crush, destheight - lastpos, CheckSectorPlane::ceiling);
 
             if(move3dsides)
-                P_Scroll3DSides(sector, true, lastpos - destheight, crush);
+                P_Scroll3DSides(sector, surf_ceil, lastpos - destheight, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_ceil, lastpos - destheight, crush, instant);
         }
@@ -359,10 +359,10 @@ result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, 
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, true, -speed, crush);
+            flag = P_Scroll3DSides(sector, surf_ceil, -speed, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, true, speed, crush);
+                P_Scroll3DSides(sector, surf_ceil, speed, crush);
                 return crushed;
             }
         }
@@ -395,7 +395,7 @@ result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, 
             P_CheckSector(sector, crush, speed, CheckSectorPlane::ceiling);
 
             if(move3dsides)
-                P_Scroll3DSides(sector, true, speed, crush);
+                P_Scroll3DSides(sector, surf_ceil, speed, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_ceil, speed, crush, false);
 
@@ -431,10 +431,10 @@ result_e T_MoveCeilingUp(sector_t *const sector, fixed_t speed, fixed_t dest, in
         // SoM 9/19/02: If we are go, move 3d sides first.
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, true, dest - lastpos, crush);
+            flag = P_Scroll3DSides(sector, surf_ceil, dest - lastpos, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, true, lastpos - dest, crush);
+                P_Scroll3DSides(sector, surf_ceil, lastpos - dest, crush);
                 return crushed;
             }
         }
@@ -458,7 +458,7 @@ result_e T_MoveCeilingUp(sector_t *const sector, fixed_t speed, fixed_t dest, in
             // jff 3/19/98 use faster chk
             P_CheckSector(sector, crush, lastpos - dest, CheckSectorPlane::ceiling);
             if(move3dsides)
-                P_Scroll3DSides(sector, true, lastpos - dest, crush);
+                P_Scroll3DSides(sector, surf_ceil, lastpos - dest, crush);
             if(moveattached)
                 P_MoveAttached(sector, surf_ceil, lastpos - dest, crush, instant);
         }
@@ -470,10 +470,10 @@ result_e T_MoveCeilingUp(sector_t *const sector, fixed_t speed, fixed_t dest, in
     {
         if(move3dsides)
         {
-            flag = P_Scroll3DSides(sector, true, speed, crush);
+            flag = P_Scroll3DSides(sector, surf_ceil, speed, crush);
             if(!flag)
             {
-                P_Scroll3DSides(sector, true, -speed, crush);
+                P_Scroll3DSides(sector, surf_ceil, -speed, crush);
                 return crushed;
             }
         }

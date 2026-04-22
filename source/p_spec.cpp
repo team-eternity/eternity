@@ -2228,7 +2228,7 @@ void P_ZeroSectorSpecial(sector_t *sec)
 // Runs through the given attached sector list and scrolls both
 // sides of any linedef it finds with same tag.
 //
-bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int crush)
+bool P_Scroll3DSides(const sector_t *sector, surf_e surf, fixed_t delta, int crush)
 {
     bool    ok = true;
     int     i;
@@ -2239,20 +2239,10 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int cr
     int  numattsectors;
     int *attsectors;
 
-    if(ceiling)
-    {
-        numattached   = sector->srf.ceiling.numattached;
-        attached      = sector->srf.ceiling.attached;
-        numattsectors = sector->srf.ceiling.numsectors;
-        attsectors    = sector->srf.ceiling.attsectors;
-    }
-    else
-    {
-        numattached   = sector->srf.floor.numattached;
-        attached      = sector->srf.floor.attached;
-        numattsectors = sector->srf.floor.numsectors;
-        attsectors    = sector->srf.floor.attsectors;
-    }
+    numattached   = sector->srf[surf].numattached;
+    attached      = sector->srf[surf].attached;
+    numattsectors = sector->srf[surf].numsectors;
+    attsectors    = sector->srf[surf].attsectors;
 
     // Go through the sectors list one sector at a time.
     // Move any qualifying linedef's side offsets up/down based
