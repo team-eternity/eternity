@@ -405,6 +405,11 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
     Mobj   *mo1  = nullptr;
     Mobj   *mo2  = nullptr;
 
+    if(argV[2])
+    {
+        doom_warningf("Unexpected nonzero flags for ACS CheckSight.");
+    }
+
     while((mo1 = P_FindMobjFromTID(tid1, mo1, info->mo)))
     {
         while((mo2 = P_FindMobjFromTID(tid2, mo2, info->mo)))
