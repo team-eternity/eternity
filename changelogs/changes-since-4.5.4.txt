@@ -129,3 +129,4 @@ Bug fixes
 * Fixed bad polyobject coordinate control in ACS GetPolyobjX, GetPolyobjY and SetPolyobjXY.
 * Fixed plane and horizon portals getting the wrong colormap.
 * Fixed the Boom sector colormap being chosen for the wrong coordinates from portals.
+* Fixed buggy rendering of 2-sided line dynasegs when crossing lines and viewed on the back side.
