@@ -119,8 +119,10 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     }
     // killough 4/11/98: end translucent 2s normal code
 
-    segclip.frontsec = segclip.line->frontsector;
-    segclip.backsec  = segclip.line->backsector;
+    const bool midtex = linedef->flags & ML_3DMIDTEX && linedef->flags & ML_TWOSIDED;
+
+    segclip.frontsec = midtex ? linedef->frontsector : segclip.line->frontsector;
+    segclip.backsec  = midtex ? linedef->backsector : segclip.line->backsector;
 
     texnum = texturetranslation[segclip.line->sidedef->midtexture];
 
