@@ -55,7 +55,7 @@ static EHashTable<midtexslopes_t, EIntHashKey, &midtexslopes_t::lineindex, &midt
 // Alocates and fill the contents of a slope structure.
 //
 static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float zdelta, const surface_t *surface,
-                             surf_e type, int groupid)
+                             surf_e type, const int *groupid)
 {
     pslope_t *ret = ecalloctag(pslope_t *, 1, sizeof(pslope_t), PU_LEVEL, nullptr);
 
@@ -304,9 +304,9 @@ void P_Spawn3DMidTexSlopes()
         const v2float_t      normDir = { -line.ny, line.nx };
         const float          zdelta  = zdiff / lineLength;
         lineSlopes.floor   = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(textop) }, normDir, zdelta,
-                                         nullptr, surf_floor, line.frontsector->groupid);
+                                         nullptr, surf_floor, &line.frontsector->groupid);
         lineSlopes.ceiling = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(texbot) }, normDir, zdelta,
-                                         nullptr, surf_ceil, line.frontsector->groupid);
+                                         nullptr, surf_ceil, &line.frontsector->groupid);
         auto element       = estructalloctag(midtexslopes_t, 1, PU_LEVEL);
         element->lineindex = i;
         element->slopes    = lineSlopes;
@@ -486,15 +486,15 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.backsector->srf.floor.heightf - point.z) / extent;
 
             line.frontsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, &line.frontsector->srf.floor, surf_floor, line.frontsector->groupid);
+                P_MakeSlope(point, direction, dz, &line.frontsector->srf.floor, surf_floor, &line.frontsector->groupid);
         }
         if(frontceil)
         {
             point.z = line.frontsector->srf.ceiling.heightf;
             dz      = (line.backsector->srf.ceiling.heightf - point.z) / extent;
 
-            line.frontsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, &line.frontsector->srf.ceiling, surf_ceil, line.frontsector->groupid);
+            line.frontsector->srf.ceiling.slope = P_MakeSlope(point, direction, dz, &line.frontsector->srf.ceiling,
+                                                              surf_ceil, &line.frontsector->groupid);
         }
     }
 
@@ -523,7 +523,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.floor.heightf - point.z) / extent;
 
             line.backsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, &line.backsector->srf.floor, surf_floor, line.backsector->groupid);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.floor, surf_floor, &line.backsector->groupid);
         }
         if(backceil)
         {
@@ -531,7 +531,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.ceiling.heightf - point.z) / extent;
 
             line.backsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, &line.backsector->srf.ceiling, surf_ceil, line.backsector->groupid);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.ceiling, surf_ceil, &line.backsector->groupid);
         }
     }
 

@@ -670,7 +670,7 @@ static void P_reduceVelocityBySlope(Mobj &thing)
         return;
 
     // Offset to the corner that touches the slope. Also add portal if any
-    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, thing.zref.slope.floor->groupid);
+    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, *slope->groupid);
     const v2fixed_t     slopeoffset = { ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
                                         ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y };
     const v2fixed_t     source      = { thing.x, thing.y };
