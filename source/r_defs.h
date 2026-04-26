@@ -194,9 +194,9 @@ struct pslope_t
     //
 
     // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
-    fixed_t surfaceZOffset;
-    float   surfaceZOffsetF; // floating-point variant
-    int     groupid;         // so we don't need to look up the containing 'item'.
+    fixed_t    surfaceZOffset;
+    float      surfaceZOffsetF; // floating-point variant
+    const int *groupid;         // so we don't need to look up the containing 'item'.
 };
 
 //
