@@ -33,6 +33,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_mod.h"
+#include "e_exdata.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
@@ -44,6 +45,7 @@
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_slopes.h"
@@ -884,6 +886,12 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
     }
 }
 
+inline static bool lineCanCarry(const line_t &line)
+{
+    return line.flags & ML_3DMIDTEX && line.flags & ML_TWOSIDED && line.backsector && !(line.flags & ML_BLOCKING) &&
+           !(line.extflags & (EX_ML_WRAPMIDTEX | EX_ML_BLOCKALL));
+}
+
 //
 // Polyobj_clipThings
 //
@@ -921,6 +929,18 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                     // always push players even if not solid
                     if(Polyobj_canPushThing(*mo) && !Polyobj_untouched(line, mo))
                     {
+                        if (lineCanCarry(*line))
+                        {
+                            fixed_t texbot, textop;
+                            P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], *line->frontsector, *line->backsector,
+                                                 texbot, textop, nullptr);
+                            if (mo->z >= textop || mo->z + mo->height <= texbot)
+                            {
+                                mo = next;
+                                continue;
+                            }
+                        }
+
                         // ioanch 20160226: in case of portal lines, just make sure
                         // the mobj budges a bit just to detect the specline
                         if(line->pflags & PS_PASSABLE)
@@ -1100,6 +1120,63 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
                      });
 }
 
+static int polyvalidcount;
+static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
+{
+    // Subtract vector because line was already moved
+    fixed_t linebox[4];
+    linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS - vector.x;
+    linebox[BOXRIGHT]  = line.bbox[BOXRIGHT] + MAXRADIUS - vector.x;
+    linebox[BOXBOTTOM] = line.bbox[BOXBOTTOM] - MAXRADIUS - vector.y;
+    linebox[BOXTOP]    = line.bbox[BOXTOP] + MAXRADIUS - vector.y;
+
+    // Make it portal aware because standing things may be from upper layers
+    P_TransPortalBlockWalker(linebox, line.frontsector->groupid, false, [&line, &vector](int x, int y, int groupid) {
+        struct context_t
+        {
+            const line_t    &line;
+            const v2fixed_t &vector;
+        } context = {
+            line, { vector.x, vector.y }
+        };
+
+        return P_BlockThingsIterator(
+            x, y, groupid,
+            [](Mobj *mobj, void *vcontext) {
+                // same flags as with P_CheckSector
+                if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+                    return true;
+                auto context = static_cast<context_t *>(vcontext);
+
+                mobj->x     += context->vector.x;
+                mobj->y     += context->vector.y;
+                bool online  = !Polyobj_untouched(&context->line, mobj);
+                mobj->x     -= context->vector.x;
+                mobj->y     -= context->vector.y;
+                if(!online)
+                    return true;
+
+                fixed_t texbot, textop;
+                P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], *context->line.frontsector,
+                                     *context->line.backsector, texbot, textop, nullptr);
+                if(mobj->z != textop)
+                    return true;
+                mobj->validcount = polyvalidcount;
+
+                
+                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, 0))
+                {
+                    // Prevent levitating things left behind
+                    P_CheckPosition(mobj, mobj->x, mobj->y);
+                    mobj->zref = clip.zref;
+                }
+                DebugLogger() << validcount << " Move thing to " >> mobj->x >> mobj->y;
+                return true;
+            },
+            &context);
+    });
+}
+
 //
 // Polyobj_moveXY
 //
@@ -1176,10 +1253,18 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         po->spawnSpot.y += vec.y;
 
         // 04/19/09: translate sound origins
+        ++polyvalidcount;
         for(i = 0; i < po->numLines; ++i)
         {
             po->lines[i]->soundorg.x += vec.x;
             po->lines[i]->soundorg.y += vec.y;
+
+            if(onload || !lineCanCarry(*po->lines[i]))
+            {
+                continue;
+            }
+
+            Polyobj_carry3DMidTexThings(*po->lines[i], vec);
         }
 
         Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
