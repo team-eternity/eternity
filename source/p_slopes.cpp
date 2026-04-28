@@ -126,11 +126,11 @@ void P_CopySlope(const pslope_t &src, sector_t &sector, surf_e surf)
     //
     // Setup the sector refs
     //
-    const surface_t &surface = sector.srf[surf];
-    ret->surfaceZOffset      = ret->o.z - surface.height;
-    ret->surfaceZOffsetF     = ret->of.z - surface.heightf;
+    surface_t &surface   = sector.srf[surf];
+    ret->surfaceZOffset  = ret->o.z - surface.height;
+    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
 
-    sector.srf[surf].slope = ret;
+    surface.slope = ret;
 }
 
 // Calculate difference from nominal floor height given by slope on top of a sector
@@ -582,31 +582,38 @@ static void P_copySectorSlopeParam(line_t *line)
         }
     }
 
+    const int     shareslope       = line->args[4];
+    constexpr int frontFloorToBack = 1;
+    constexpr int backFloorToFront = 2;
+    constexpr int floorBits        = frontFloorToBack | backFloorToFront;
+    constexpr int frontCeilToBack  = 4;
+    constexpr int backCeilToFront  = 8;
+    constexpr int ceilingBits      = frontCeilToBack | backCeilToFront;
     if(line->backsector)
     {
-        if((line->args[4] & 3) == 1)
+        if((shareslope & floorBits) == frontFloorToBack)
         {
             P_CopySlope(*line->frontsector->srf.floor.slope, *line->backsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 2)
+        else if((shareslope & floorBits) == backFloorToFront)
         {
             P_CopySlope(*line->backsector->srf.floor.slope, *line->frontsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 3)
+        else if((shareslope & floorBits) == floorBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 1 and 2 are mutually"
                               " exclusive.\n");
         }
 
-        if((line->args[4] & 12) == 4)
+        if((shareslope & ceilingBits) == frontCeilToBack)
         {
             P_CopySlope(*line->frontsector->srf.ceiling.slope, *line->backsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 8)
+        else if((shareslope & ceilingBits) == backCeilToFront)
         {
             P_CopySlope(*line->backsector->srf.ceiling.slope, *line->frontsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 12)
+        else if((shareslope & ceilingBits) == ceilingBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
                               " exclusive.\n");
