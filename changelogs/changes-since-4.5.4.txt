@@ -80,6 +80,8 @@ Improvements
 * Relax UMAPINFO to tolerate "endbunny = false" and "endcast = false". Needed because of released WADs,
   and other popular source ports implementing the specification poorly.
 * Right Alt key can now active the fast exit and fullscreen toggle.
+* Fixed Plane_Copy linedef special from crashing if the fifth argument is nonzero but the designated source sector
+  surface has no slope. Now it will just clear the slope of the other surface and match its height.
 
 Bug fixes
 ---------

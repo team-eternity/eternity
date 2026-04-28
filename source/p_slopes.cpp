@@ -32,6 +32,7 @@
 #include "m_bbox.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -115,20 +116,30 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
 //
 // P_CopySlope
 //
-// Allocates and returns a copy of the given slope structure.
+// If source sector is sloped, this allocates and places a copy of the slope structure to the targeted sector surface.
+// If source is not sloped, this removes the target surface slope and matches its flat height.
 //
-static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
+static void P_CopySlope(const sector_t &sourceSector, sector_t &destinationSector, surf_e surf)
 {
+    const pslope_t *sourceSlope        = sourceSector.srf[surf].slope;
+    surface_t      &destinationSurface = destinationSector.srf[surf];
+    if(!sourceSlope)
+    {
+        destinationSurface.slope = nullptr; // clear the slope if source is none
+        P_SetSectorHeight(destinationSector, surf, sourceSector.srf[surf].height);
+        return;
+    }
     pslope_t *ret = emalloctag(pslope_t *, sizeof(pslope_t), PU_LEVEL, nullptr);
-    *ret          = *src;
+    *ret          = *sourceSlope;
+    ret->groupid  = &destinationSector.groupid;
 
     //
     // Setup the sector refs
     //
-    ret->surfaceZOffset  = ret->o.z - surface.height;
-    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
+    ret->surfaceZOffset  = ret->o.z - destinationSurface.height;
+    ret->surfaceZOffsetF = ret->of.z - destinationSurface.heightf;
 
-    return ret;
+    destinationSurface.slope = ret;
 }
 
 // Calculate difference from nominal floor height given by slope on top of a sector
@@ -553,7 +564,7 @@ static void P_copyPlane(int tag, sector_t *dest, surf_e type)
         const sector_t &srcsec = sectors[secnum];
         if(srcsec.srf[type].slope)
         {
-            dest->srf[type].slope = P_CopySlope(srcsec.srf[type].slope, dest->srf[type]);
+            P_CopySlope(srcsec, *dest, type);
             return;
         }
     }
@@ -580,35 +591,38 @@ static void P_copySectorSlopeParam(line_t *line)
         }
     }
 
+    const int     shareslope       = line->args[4];
+    constexpr int frontFloorToBack = 1;
+    constexpr int backFloorToFront = 2;
+    constexpr int floorBits        = frontFloorToBack | backFloorToFront;
+    constexpr int frontCeilToBack  = 4;
+    constexpr int backCeilToFront  = 8;
+    constexpr int ceilingBits      = frontCeilToBack | backCeilToFront;
     if(line->backsector)
     {
-        if((line->args[4] & 3) == 1)
+        if((shareslope & floorBits) == frontFloorToBack)
         {
-            line->backsector->srf.floor.slope =
-                P_CopySlope(line->frontsector->srf.floor.slope, line->backsector->srf.floor);
+            P_CopySlope(*line->frontsector, *line->backsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 2)
+        else if((shareslope & floorBits) == backFloorToFront)
         {
-            line->frontsector->srf.floor.slope =
-                P_CopySlope(line->backsector->srf.floor.slope, line->frontsector->srf.floor);
+            P_CopySlope(*line->backsector, *line->frontsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 3)
+        else if((shareslope & floorBits) == floorBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 1 and 2 are mutually"
                               " exclusive.\n");
         }
 
-        if((line->args[4] & 12) == 4)
+        if((shareslope & ceilingBits) == frontCeilToBack)
         {
-            line->backsector->srf.ceiling.slope =
-                P_CopySlope(line->frontsector->srf.ceiling.slope, line->backsector->srf.ceiling);
+            P_CopySlope(*line->frontsector, *line->backsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 8)
+        else if((shareslope & ceilingBits) == backCeilToFront)
         {
-            line->frontsector->srf.ceiling.slope =
-                P_CopySlope(line->backsector->srf.ceiling.slope, line->frontsector->srf.ceiling);
+            P_CopySlope(*line->backsector, *line->frontsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 12)
+        else if((shareslope & ceilingBits) == ceilingBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
                               " exclusive.\n");
@@ -654,10 +668,10 @@ void P_CopySectorSlope(line_t *line, int staticFn)
         const sector_t *srcsec = &sectors[i];
 
         if(copyFloor && !fsec->srf.floor.slope && srcsec->srf.floor.slope)
-            fsec->srf.floor.slope = P_CopySlope(srcsec->srf.floor.slope, fsec->srf.floor);
+            P_CopySlope(*srcsec, *fsec, surf_floor);
 
         if(copyCeiling && !fsec->srf.ceiling.slope && srcsec->srf.ceiling.slope)
-            fsec->srf.ceiling.slope = P_CopySlope(srcsec->srf.ceiling.slope, fsec->srf.ceiling);
+            P_CopySlope(*srcsec, *fsec, surf_ceil);
     }
 
     line->special = 0;
