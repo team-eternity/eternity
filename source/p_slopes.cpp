@@ -115,23 +115,22 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
 //
 // P_CopySlope
 //
-// Allocates and returns a copy of the given slope structure.
+// Allocates and places a copy of the given slope structure to the targeted sector surface.
 //
-static pslope_t *P_CopySlope(const pslope_t *src, const sector_t &sector, surf_e surf)
+void P_CopySlope(const pslope_t &src, sector_t &sector, surf_e surf)
 {
-    const surface_t &surface = sector.srf[surf];
-
     pslope_t *ret = emalloctag(pslope_t *, sizeof(pslope_t), PU_LEVEL, nullptr);
-    *ret          = *src;
+    *ret          = src;
     ret->groupid  = &sector.groupid;
 
     //
     // Setup the sector refs
     //
-    ret->surfaceZOffset  = ret->o.z - surface.height;
-    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
+    const surface_t &surface = sector.srf[surf];
+    ret->surfaceZOffset      = ret->o.z - surface.height;
+    ret->surfaceZOffsetF     = ret->of.z - surface.heightf;
 
-    return ret;
+    sector.srf[surf].slope = ret;
 }
 
 // Calculate difference from nominal floor height given by slope on top of a sector
@@ -556,7 +555,7 @@ static void P_copyPlane(int tag, sector_t *dest, surf_e type)
         const sector_t &srcsec = sectors[secnum];
         if(srcsec.srf[type].slope)
         {
-            dest->srf[type].slope = P_CopySlope(srcsec.srf[type].slope, *dest, type);
+            P_CopySlope(*srcsec.srf[type].slope, *dest, type);
             return;
         }
     }
@@ -587,13 +586,11 @@ static void P_copySectorSlopeParam(line_t *line)
     {
         if((line->args[4] & 3) == 1)
         {
-            line->backsector->srf.floor.slope =
-                P_CopySlope(line->frontsector->srf.floor.slope, *line->backsector, surf_floor);
+            P_CopySlope(*line->frontsector->srf.floor.slope, *line->backsector, surf_floor);
         }
         else if((line->args[4] & 3) == 2)
         {
-            line->frontsector->srf.floor.slope =
-                P_CopySlope(line->backsector->srf.floor.slope, *line->frontsector, surf_floor);
+            P_CopySlope(*line->backsector->srf.floor.slope, *line->frontsector, surf_floor);
         }
         else if((line->args[4] & 3) == 3)
         {
@@ -603,13 +600,11 @@ static void P_copySectorSlopeParam(line_t *line)
 
         if((line->args[4] & 12) == 4)
         {
-            line->backsector->srf.ceiling.slope =
-                P_CopySlope(line->frontsector->srf.ceiling.slope, *line->backsector, surf_ceil);
+            P_CopySlope(*line->frontsector->srf.ceiling.slope, *line->backsector, surf_ceil);
         }
         else if((line->args[4] & 12) == 8)
         {
-            line->frontsector->srf.ceiling.slope =
-                P_CopySlope(line->backsector->srf.ceiling.slope, *line->frontsector, surf_ceil);
+            P_CopySlope(*line->backsector->srf.ceiling.slope, *line->frontsector, surf_ceil);
         }
         else if((line->args[4] & 12) == 12)
         {
@@ -657,10 +652,10 @@ void P_CopySectorSlope(line_t *line, int staticFn)
         const sector_t *srcsec = &sectors[i];
 
         if(copyFloor && !fsec->srf.floor.slope && srcsec->srf.floor.slope)
-            fsec->srf.floor.slope = P_CopySlope(srcsec->srf.floor.slope, *fsec, surf_floor);
+            P_CopySlope(*srcsec->srf.floor.slope, *fsec, surf_floor);
 
         if(copyCeiling && !fsec->srf.ceiling.slope && srcsec->srf.ceiling.slope)
-            fsec->srf.ceiling.slope = P_CopySlope(srcsec->srf.ceiling.slope, *fsec, surf_ceil);
+            P_CopySlope(*srcsec->srf.ceiling.slope, *fsec, surf_ceil);
     }
 
     line->special = 0;
