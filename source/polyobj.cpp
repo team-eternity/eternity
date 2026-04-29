@@ -929,12 +929,12 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                     // always push players even if not solid
                     if(Polyobj_canPushThing(*mo) && !Polyobj_untouched(line, mo))
                     {
-                        if (lineCanCarry(*line))
+                        if(lineCanCarry(*line))
                         {
                             fixed_t texbot, textop;
                             P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], *line->frontsector, *line->backsector,
                                                  texbot, textop, nullptr);
-                            if (mo->z >= textop || mo->z + mo->height <= texbot)
+                            if(mo->z >= textop - STEPSIZE || mo->z + mo->height <= texbot)
                             {
                                 mo = next;
                                 continue;
@@ -1120,7 +1120,7 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
                      });
 }
 
-static int polyvalidcount;
+static int  polyvalidcount;
 static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
 {
     // Subtract vector because line was already moved
@@ -1159,18 +1159,16 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
                 fixed_t texbot, textop;
                 P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], *context->line.frontsector,
                                      *context->line.backsector, texbot, textop, nullptr);
-                if(mobj->z != textop)
+                if(mobj->z > textop || mobj->z < textop - STEPSIZE)
                     return true;
                 mobj->validcount = polyvalidcount;
 
-                
                 if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, 0))
                 {
                     // Prevent levitating things left behind
                     P_CheckPosition(mobj, mobj->x, mobj->y);
                     mobj->zref = clip.zref;
                 }
-                DebugLogger() << validcount << " Move thing to " >> mobj->x >> mobj->y;
                 return true;
             },
             &context);
