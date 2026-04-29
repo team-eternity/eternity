@@ -47,6 +47,7 @@
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_saveg.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_slopes.h"
 #include "p_spec.h"
@@ -1163,12 +1164,9 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
                     return true;
                 mobj->validcount = polyvalidcount;
 
-                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, 0))
-                {
-                    // Prevent levitating things left behind
-                    P_CheckPosition(mobj, mobj->x, mobj->y);
-                    mobj->zref = clip.zref;
-                }
+                mobj->momx += FixedMul(context->vector.x, CARRYFACTOR);
+                mobj->momy += FixedMul(context->vector.y, CARRYFACTOR);
+
                 return true;
             },
             &context);
