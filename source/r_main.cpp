@@ -1028,8 +1028,16 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
                 return;
             dynaseg.validcount = dvcount;
 
-            R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
-            R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+            if(seg->dyv1->validcount != dvcount)
+            {
+                seg->dyv1->validcount = dvcount;
+                R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
+            }
+            if(seg->dyv2->validcount != dvcount)
+            {
+                seg->dyv2->validcount = dvcount;
+                R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+            }
 
             dynaseg.prev.len    = seg->len;
             dynaseg.prev.offset = seg->offset;
@@ -1049,14 +1057,24 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
 
             seg->offset = prev.offset;
             seg->len    = prev.len;
-            seg->v1->x  = prev.org[0].x;
-            seg->v1->y  = prev.org[0].y;
-            seg->v2->x  = prev.org[1].x;
-            seg->v2->y  = prev.org[1].y;
-            seg->v1->fx = prev.forg[0].x;
-            seg->v1->fy = prev.forg[0].y;
-            seg->v2->fx = prev.forg[1].x;
-            seg->v2->fy = prev.forg[1].y;
+            if(seg->dyv1->validcount != dvcount)
+            {
+                seg->dyv1->validcount = dvcount;
+
+                seg->v1->x  = prev.org[0].x;
+                seg->v1->y  = prev.org[0].y;
+                seg->v1->fx = prev.forg[0].x;
+                seg->v1->fy = prev.forg[0].y;
+            }
+            if(seg->dyv2->validcount != dvcount)
+            {
+                seg->dyv2->validcount = dvcount;
+
+                seg->v2->x  = prev.org[1].x;
+                seg->v2->y  = prev.org[1].y;
+                seg->v2->fx = prev.forg[1].x;
+                seg->v2->fy = prev.forg[1].y;
+            }
         });
         break;
     }
