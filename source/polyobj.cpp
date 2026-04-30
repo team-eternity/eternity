@@ -1160,7 +1160,8 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
                 fixed_t texbot, textop;
                 P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], *context->line.frontsector,
                                      *context->line.backsector, texbot, textop, nullptr);
-                if(mobj->z > textop || mobj->z < textop - STEPSIZE)
+                if(mobj->z > textop || mobj->z < textop - STEPSIZE ||
+                   (mobj->z == textop && mobj->zref.passfloor && mobj->zref.secfloor))
                     return true;
                 mobj->validcount = polyvalidcount;
 
