@@ -1174,6 +1174,28 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
     });
 }
 
+enum class PolyMove
+{
+    teleport,
+    travel
+};
+
+static void Polyobj_applyMovement(polyobj_t *po, PolyMove move)
+{
+    Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+    R_DetachPolyObject(po);
+    Polyobj_linkToBlockmap(po); // relink to blockmap
+    v2fixed_t oldcentre;
+    if(move == PolyMove::travel)
+        oldcentre = { po->centerPt.x, po->centerPt.y };
+    Polyobj_setCenterPt(po);
+    if(move == PolyMove::travel)
+        Polyobj_crossLines(po, oldcentre);
+    R_AttachPolyObject(po);
+
+    Polyobj_updateAnchoredPortals(*po);
+}
+
 //
 // Polyobj_moveXY
 //
@@ -1264,16 +1286,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             Polyobj_carry3DMidTexThings(*po->lines[i], vec);
         }
 
-        Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
-        R_DetachPolyObject(po);
-        Polyobj_linkToBlockmap(po); // relink to blockmap
-        v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
-        Polyobj_setCenterPt(po);
-        if(!onload)
-            Polyobj_crossLines(po, oldcentre);
-        R_AttachPolyObject(po);
-
-        Polyobj_updateAnchoredPortals(*po);
+        Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
         for(const portalthing_t &pt : pts)
         {
@@ -1372,13 +1385,7 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
         Polyobj_relinkLine(line);
     }
 
-    Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
-    R_DetachPolyObject(po);
-    Polyobj_linkToBlockmap(po); // relink to blockmap
-    Polyobj_setCenterPt(po);
-    R_AttachPolyObject(po);
-
-    Polyobj_updateAnchoredPortals(*po); // finally update the anchored portals.
+    Polyobj_applyMovement(po, PolyMove::teleport);
 }
 
 //
@@ -1521,16 +1528,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
         // update polyobject's angle
         po->angle += delta;
 
-        Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
-        R_DetachPolyObject(po);
-        Polyobj_linkToBlockmap(po); // relink to blockmap
-        v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
-        Polyobj_setCenterPt(po);
-        if(!onload)
-            Polyobj_crossLines(po, oldcentre);
-        R_AttachPolyObject(po);
-
-        Polyobj_updateAnchoredPortals(*po);
+        Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
     }
 
     return !hitthing;
