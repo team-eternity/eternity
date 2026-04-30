@@ -100,6 +100,7 @@ struct dynavertex_t : vertex_t
     int                  refcount;
     v2fixed_t            backup;
     v2float_t            fbackup;
+    int                  validcount;
 };
 
 void R_AddTicDynaSeg(dynaseg_t &seg);
