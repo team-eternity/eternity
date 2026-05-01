@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Max Waine, et al.
 //
@@ -289,6 +289,12 @@ bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, GiveAmo
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
 
+// Find the best pickup effect for an item, by name.
+// This is used for determining what pickup effect to use when an item is picked up,
+// and is based on the item's name and properties.
+// Returns nullptr if no appropriate pickup effect is found.
+const e_pickupfx_t *E_FindBestPickupFX(const char *itemname, const itemeffect_t *effect);
+
 pickupflags_e E_PickupFlagsForStr(const char *flagstr);
 
 const PODCollection<e_autouseid_t> &E_GetAutouseList();
@@ -320,7 +326,6 @@ itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *
 // out items that don't persist.
 void E_InventoryEndHub(const player_t *player);
 
-// Call to completely clear a player's inventory.
 void E_ClearInventory(player_t *player);
 
 // Get allocated size of player inventory arrays

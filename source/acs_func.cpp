@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, David Hill, et al.
 //
@@ -67,6 +67,7 @@
 #include "doomstat.h"
 #include "metaapi.h"
 #include "e_lib.h"
+#include "e_string.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -2716,6 +2717,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     const auto  info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
+    const bool  silent   = argC > 2 ? argV[2] : true; // if not silent, apply pickup effects (flash, message, sound)
 
     ScriptedItem item = getScriptedItem(itemname);
 
@@ -2731,18 +2733,76 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     if(amount == 0)
         return false;
 
+    // Apply pickup effects (flash, message, sound) if not silent.
+    auto applyPickupEffects = [&](player_t *player) {
+        if(silent || !player)
+            return;
+
+        // First try a direct named lookup (standalone pickupeffect definitions)
+        const e_pickupfx_t *pickup = E_PickupFXForName(itemname);
+
+        // Fall back: scan mobjinfo for a ThingType whose inline PickupEffect
+        // references the given inventory item effect
+        if(!pickup)
+        {
+            // Get the item effect pointer for the given item, if it is an item effect at all
+            if(const auto *effPtr = std::get_if<itemeffect_t *>(&item))
+            {
+                // Scan all ThingTypes for a PickupEffect that references this item effect
+                const itemeffect_t *eff = *effPtr;
+                for(int i = 0; i < NUMMOBJTYPES && !pickup; i++)
+                {
+                    const e_pickupfx_t *pfx = mobjinfo[i]->pickupfx;
+
+                    if(!pfx)
+                        continue;
+
+                    const auto end = pfx->effects + pfx->numEffects;
+
+                    // If this pickupfx references the item effect, use it for the pickup and
+                    // stop searching
+                    if(std::find(pfx->effects, end, eff) != end)
+                        pickup = pfx;
+                }
+            }
+        }
+
+        if(!pickup)
+            return;
+
+        const char *message = pickup->message;
+        const char *sound   = pickup->sound;
+
+        // Display pickup message
+        if(message)
+        {
+            if(message[0] == '$')
+                message = E_StringOrDehForName(message + 1);
+            player_printf(player, "%s", message);
+        }
+
+        // Play pickup sound
+        if(sound)
+            S_StartSoundName(player->mo, sound);
+
+        // Flash screen if not disabled for this pickup
+        if(!(pickup->flags & PFXF_NOSCREENFLASH))
+            player->bonuscount += 6;
+    };
+
+    // Give the item to the player(s) and apply pickup effects if not silent
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
-        if(info->mo->player)
-            P_GiveInventory(info->mo->player, item, amount);
+        if(info->mo->player && P_GiveInventory(info->mo->player, item, amount))
+            applyPickupEffects(info->mo->player);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
-            if(playeringame[pnum])
-                P_GiveInventory(&players[pnum], item, amount);
+            if(playeringame[pnum] && P_GiveInventory(&players[pnum], item, amount))
+                applyPickupEffects(&players[pnum]);
         }
     }
     return false;
@@ -2862,6 +2922,38 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
         thread->dataStk.push(0);
     else
         thread->dataStk.push(P_GetMaxInventory(mo->player, item));
+
+    return false;
+}
+
+//
+// int GetArmorInfo(int infotype);
+//
+bool ACS_CF_GetArmorInfo(ACS_CF_ARGS)
+{
+    auto      info     = &static_cast<ACSThread *>(thread)->info;
+    int const infotype = argV[0];
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+    {
+        switch(infotype)
+        {
+        case 0: // ARMORINFO_ARMORPOINTS
+            thread->dataStk.push(info->mo->player->armorpoints);
+            break;
+        case 1: // ARMORINFO_ARMORFACTOR
+            thread->dataStk.push(info->mo->player->armorfactor);
+            break;
+        case 2: // ARMORINFO_ARMORDIVISOR
+            thread->dataStk.push(info->mo->player->armordivisor);
+            break;
+        default: // UNKNOWN
+            thread->dataStk.push(0);
+            break;
+        }
+    }
 
     return false;
 }
@@ -3150,4 +3242,3 @@ bool ACS_CF_TagWait(ACS_CF_ARGS)
 }
 
 // EOF
-
