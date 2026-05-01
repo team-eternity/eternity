@@ -1123,28 +1123,12 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
 
 static int polyvalidcount;
 
-static void Polyobj_carryThing(Mobj &mobj, const line_t &line, v2fixed_t vector)
+static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
 {
-    // same flags as with P_CheckSector
-    if(mobj.validcount == polyvalidcount || mobj.flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
-        return;
-
-    mobj.x      += vector.x;
-    mobj.y      += vector.y;
-    bool online  = !Polyobj_untouched(&line, &mobj);
-    mobj.x      -= vector.x;
-    mobj.y      -= vector.y;
-    if(!online)
-        return;
-
     fixed_t texbot, textop;
     P_Get3DMidTexHeights(line, sides[line.sidenum[0]], *line.frontsector, *line.backsector, texbot, textop, nullptr);
-    if(mobj.z > textop || mobj.z < textop - STEPSIZE || (mobj.z == textop && mobj.zref.passfloor && mobj.zref.secfloor))
-        return;
-    mobj.validcount = polyvalidcount;
-
-    mobj.momx += FixedMul(vector.x, CARRYFACTOR);
-    mobj.momy += FixedMul(vector.y, CARRYFACTOR);
+    return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
+           (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor);
 }
 
 static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
@@ -1170,7 +1154,25 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
             x, y, groupid,
             [](Mobj *mobj, void *vcontext) {
                 auto context = static_cast<context_t *>(vcontext);
-                Polyobj_carryThing(*mobj, context->line, context->vector);
+                // same flags as with P_CheckSector
+                if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+                    return true;
+
+                mobj->x     += context->vector.x;
+                mobj->y     += context->vector.y;
+                bool online  = !Polyobj_untouched(&context->line, mobj);
+                mobj->x     -= context->vector.x;
+                mobj->y     -= context->vector.y;
+                if(!online)
+                    return true;
+
+                if(!Polyobj_canCarryThing(context->line, *mobj))
+                    return true;
+
+                mobj->validcount = polyvalidcount;
+
+                mobj->momx += FixedMul(context->vector.x, CARRYFACTOR);
+                mobj->momy += FixedMul(context->vector.y, CARRYFACTOR);
                 return true;
             },
             &context);
@@ -1468,6 +1470,64 @@ static void Polyobj_rotateLine(line_t *ld)
         P_MakeLineNormal(ld);
 }
 
+struct mobjmove_t
+{
+    Mobj     *mobj;
+    v2fixed_t vector;
+};
+
+static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const line_t &line, const angle_t angle,
+                                                  PODCollection<mobjmove_t> &collection)
+{
+    // Subtract vector because line was already moved
+    fixed_t linebox[4];
+    linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS;
+    linebox[BOXRIGHT]  = line.bbox[BOXRIGHT] + MAXRADIUS;
+    linebox[BOXBOTTOM] = line.bbox[BOXBOTTOM] - MAXRADIUS;
+    linebox[BOXTOP]    = line.bbox[BOXTOP] + MAXRADIUS;
+
+    // Make it portal aware because standing things may be from upper layers
+    P_TransPortalBlockWalker(
+        linebox, line.frontsector->groupid, false, [angle, &line, &po, &collection](int x, int y, int groupid) {
+            struct context_t
+            {
+                const angle_t              angle;
+                const v2fixed_t            center;
+                const line_t              &line;
+                PODCollection<mobjmove_t> &collection;
+            } context = {
+                angle, { po.spawnSpot.x, po.spawnSpot.y },
+                 line, collection
+            };
+
+            return P_BlockThingsIterator(
+                x, y, groupid,
+                [](Mobj *mobj, void *vcontext) {
+                    auto context = static_cast<context_t *>(vcontext);
+                    // same flags as with P_CheckSector
+                    if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP) ||
+                       Polyobj_untouched(&context->line, mobj))
+                    {
+                        return true;
+                    }
+
+                    if(!Polyobj_canCarryThing(context->line, *mobj))
+                        return true;
+
+                    mobj->validcount = polyvalidcount;
+
+                    mobjmove_t move    = { .mobj = mobj };
+                    vertex_t   rotinfo = { .x = mobj->x - context->center.x, .y = mobj->y - context->center.y };
+                    Polyobj_rotatePoint(rotinfo, context->center, context->angle >> ANGLETOFINESHIFT);
+                    move.vector.x = rotinfo.x - mobj->x;
+                    move.vector.y = rotinfo.y - mobj->y;
+                    context->collection.add(move);
+                    return true;
+                },
+                &context);
+        });
+}
+
 //
 // Polyobj_rotate
 //
@@ -1488,6 +1548,19 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     // point about which to rotate is the spawn spot
     origin.x = po->spawnSpot.x;
     origin.y = po->spawnSpot.y;
+
+    PODCollection<mobjmove_t> thingsToCarry;
+    if(!onload)
+    {
+        ++polyvalidcount;
+        for(i = 0; i < po->numLines; ++i)
+        {
+            if(!lineCanCarry(*po->lines[i]))
+                continue;
+
+            Polyobj_collect3DMidTexThingsToRotate(*po, *po->lines[i], delta, thingsToCarry);
+        }
+    }
 
     // save current positions and rotate all vertices
     for(i = 0; i < po->numVertices; ++i)
@@ -1532,6 +1605,13 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
         po->angle += delta;
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
+
+        for(const mobjmove_t &move : thingsToCarry)
+        {
+            move.mobj->momx  += FixedMul(move.vector.x, CARRYFACTOR);
+            move.mobj->momy  += FixedMul(move.vector.y, CARRYFACTOR);
+            move.mobj->angle += delta;
+        }
     }
 
     return !hitthing;
@@ -2611,4 +2691,3 @@ int EV_DoPolyDoor(const polydoordata_t *doordata)
 }
 
 // EOF
-
