@@ -1121,7 +1121,32 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
                      });
 }
 
-static int  polyvalidcount;
+static int polyvalidcount;
+
+static void Polyobj_carryThing(Mobj &mobj, const line_t &line, v2fixed_t vector)
+{
+    // same flags as with P_CheckSector
+    if(mobj.validcount == polyvalidcount || mobj.flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+        return;
+
+    mobj.x      += vector.x;
+    mobj.y      += vector.y;
+    bool online  = !Polyobj_untouched(&line, &mobj);
+    mobj.x      -= vector.x;
+    mobj.y      -= vector.y;
+    if(!online)
+        return;
+
+    fixed_t texbot, textop;
+    P_Get3DMidTexHeights(line, sides[line.sidenum[0]], *line.frontsector, *line.backsector, texbot, textop, nullptr);
+    if(mobj.z > textop || mobj.z < textop - STEPSIZE || (mobj.z == textop && mobj.zref.passfloor && mobj.zref.secfloor))
+        return;
+    mobj.validcount = polyvalidcount;
+
+    mobj.momx += FixedMul(vector.x, CARRYFACTOR);
+    mobj.momy += FixedMul(vector.y, CARRYFACTOR);
+}
+
 static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
 {
     // Subtract vector because line was already moved
@@ -1144,30 +1169,8 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
         return P_BlockThingsIterator(
             x, y, groupid,
             [](Mobj *mobj, void *vcontext) {
-                // same flags as with P_CheckSector
-                if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
-                    return true;
                 auto context = static_cast<context_t *>(vcontext);
-
-                mobj->x     += context->vector.x;
-                mobj->y     += context->vector.y;
-                bool online  = !Polyobj_untouched(&context->line, mobj);
-                mobj->x     -= context->vector.x;
-                mobj->y     -= context->vector.y;
-                if(!online)
-                    return true;
-
-                fixed_t texbot, textop;
-                P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], *context->line.frontsector,
-                                     *context->line.backsector, texbot, textop, nullptr);
-                if(mobj->z > textop || mobj->z < textop - STEPSIZE ||
-                   (mobj->z == textop && mobj->zref.passfloor && mobj->zref.secfloor))
-                    return true;
-                mobj->validcount = polyvalidcount;
-
-                mobj->momx += FixedMul(context->vector.x, CARRYFACTOR);
-                mobj->momy += FixedMul(context->vector.y, CARRYFACTOR);
-
+                Polyobj_carryThing(*mobj, context->line, context->vector);
                 return true;
             },
             &context);
