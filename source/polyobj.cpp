@@ -1171,8 +1171,12 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
 
                 mobj->validcount = polyvalidcount;
 
-                mobj->momx += FixedMul(context->vector.x, CARRYFACTOR);
-                mobj->momy += FixedMul(context->vector.y, CARRYFACTOR);
+                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, 1))
+                {
+                    P_CheckPosition(mobj, mobj->x, mobj->y);
+                    mobj->zref = clip.zref;
+                }
+
                 return true;
             },
             &context);
@@ -1608,8 +1612,11 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
         for(const mobjmove_t &move : thingsToCarry)
         {
-            move.mobj->momx  += FixedMul(move.vector.x, CARRYFACTOR);
-            move.mobj->momy  += FixedMul(move.vector.y, CARRYFACTOR);
+            if(!P_TryMove(move.mobj, move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, 1))
+            {
+                P_CheckPosition(move.mobj, move.mobj->x, move.mobj->y);
+                move.mobj->zref = clip.zref;
+            }
             move.mobj->angle += delta;
         }
     }
