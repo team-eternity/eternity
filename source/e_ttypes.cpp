@@ -918,6 +918,16 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
             reduceAlpha();
             P_SetTarget<Mobj>(&mo->target, thing);
 
+            if(sector->srf.floor.slope)
+            {
+                P_CheckPosition(mo, mo->x, mo->y);
+                mo->zref = clip.zref;
+                if(mo->zref.floor > mo->z)
+                {
+                    mo->z = mo->zref.floor;
+                }
+            }
+
             if(splash->chunkxvelshift != -1)
                 mo->momx = P_SubRandom(pr_splash) << splash->chunkxvelshift;
             if(splash->chunkyvelshift != -1)
@@ -1126,4 +1136,3 @@ bool E_UnderBoomLiquidFakeFloor(const Mobj &thing)
 }
 
 // EOF
-

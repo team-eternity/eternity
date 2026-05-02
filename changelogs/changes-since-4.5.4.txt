@@ -83,6 +83,8 @@ Improvements
 * Right Alt key can now active the fast exit and fullscreen toggle.
 * Fixed Plane_Copy linedef special from crashing if the fifth argument is nonzero but the designated source sector
   surface has no slope. Now it will just clear the slope of the other surface and match its height.
+* Terrain splashes now spawn correctly on sloped liquids.
+* Removed foot-clip on sloped liquids because it would cut off the sprite even when not submerged
 
 Bug fixes
 ---------
@@ -136,3 +138,4 @@ Bug fixes
 * Fixed lack of interpolation with 2-sided linedef polyobjects.
 * Fixed lack of interpolation with polyobjects subject to multiple movements (e.g. rotation and translation
   simultaneously).
+* Fixed monster interpolation bug when going up slopes, especially on liquid ones.

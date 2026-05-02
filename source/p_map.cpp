@@ -1958,8 +1958,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
     // If going down slope while still having some distance, stick to it to avoid sliding off it
     // endlessly.
-    if(downslope && downslope->zdelta && thing->zref.slope.floor && thing->z > thing->zref.floor &&
-       thing->z <= thing->zref.floor + STEPSIZE)
+    // If going up slope, also adjust z to never be below zref floor, because otherwise we get bad interpolation with
+    // monsters.
+    if(downslope && downslope->zdelta && thing->zref.slope.floor && thing->z <= thing->zref.floor + STEPSIZE)
     {
         thing->z = thing->zref.floor;
     }
@@ -3483,4 +3484,3 @@ bool P_OnGroundOrThing(const Mobj &mobj)
 //
 //
 //----------------------------------------------------------------------------
-

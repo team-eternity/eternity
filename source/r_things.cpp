@@ -1470,6 +1470,10 @@ static void R_projectSprite(cmapcontext_t &cmapcontext, spritecontext_t &spritec
     // This needs to be scaled down (?) I don't get why this works...
     vis->texturemid = (fixed_t)((gzt - viewpoint.z - vis->footclip) / thing->yscale);
 
+    // printz: disable footclip on slopes because it doesn't match the slope
+    if(thing->zref.sector.floor && thing->zref.sector.floor->srf.floor.slope)
+        vis->footclip = 0;
+
     vis->patch = lump;
 
     // get light level

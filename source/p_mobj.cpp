@@ -4083,7 +4083,7 @@ void P_AdjustFloorClip(Mobj *thing)
         if(m->m_sector->heightsec == -1 &&
            ((!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height) ||
             (m->m_sector->srf.floor.slope && P_SlopesEqual(thing->zref.sector.floor, m->m_sector, surf_floor) &&
-             thing->z == thing->zref.floor)))
+             thing->z <= thing->zref.floor)))
         {
             fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
@@ -5181,4 +5181,3 @@ AMX_NATIVE_INFO mobj_Natives[] = {
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-
