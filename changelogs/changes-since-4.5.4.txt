@@ -133,3 +133,5 @@ Bug fixes
 * Fixed the Boom sector colormap being chosen for the wrong coordinates from portals.
 * Fixed buggy rendering of 2-sided line dynasegs when crossing lines and viewed on the back side.
 * Fixed lack of interpolation with 2-sided linedef polyobjects.
+* Fixed lack of interpolation with polyobjects subject to multiple movements (e.g. rotation and translation
+  simultaneously).

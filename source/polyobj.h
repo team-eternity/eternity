@@ -78,6 +78,7 @@ struct polyobj_t
     vertex_t  *origVerts;        // original positions relative to spawn spot
     vertex_t  *tmpVerts;         // temporary vertex backups for rotation
     vertex_t **vertices;         // vertices this polyobject must move
+    int        lastBackupTic;
 
     int      numLines;      // number of linedefs
     int      numLinesAlloc; // number of linedefs allocated

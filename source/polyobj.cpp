@@ -660,6 +660,7 @@ static void Polyobj_moveToSpawnSpot(const mapthing_t *anchor)
         po->tmpVerts[i] = *po->vertices[i]; // backup position
         Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
     }
+    po->lastBackupTic = gametic;
 
     // Update sound origins
     for(i = 0; i < po->numLines; ++i)
@@ -1235,12 +1236,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     // translate vertices
     for(i = 0; i < po->numVertices; ++i)
     {
-        if(!onload)
+        if(!onload && po->lastBackupTic != gametic)
             po->tmpVerts[i] = *po->vertices[i];
         Polyobj_vecAdd(po->vertices[i], &vec);
         if(onload)
             po->tmpVerts[i] = *po->vertices[i];
     }
+    po->lastBackupTic = gametic;
 
     // translate each line
     for(i = 0; i < po->numLines; ++i)
@@ -1380,6 +1382,7 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
         po->tmpVerts[i] = *po->vertices[i]; // backup position
         Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &dest);
     }
+    po->lastBackupTic = gametic;
 
     po->spawnSpot.x = dest.x;
     po->spawnSpot.y = dest.y;
@@ -1567,15 +1570,20 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     }
 
     // save current positions and rotate all vertices
+    PODCollection<vertex_t> restoreVertices;
+    restoreVertices.resize(po->numVertices);
     for(i = 0; i < po->numVertices; ++i)
     {
-        po->tmpVerts[i] = *(po->vertices[i]);
+        if(po->lastBackupTic != gametic || onload)
+            po->tmpVerts[i] = *(po->vertices[i]);
+        restoreVertices[i] = *(po->vertices[i]);
 
         // use original pts to rotate to new position
         *(po->vertices[i]) = po->origVerts[i];
 
         Polyobj_rotatePoint(*po->vertices[i], origin, angle);
     }
+    po->lastBackupTic = gametic;
 
     // rotate lines
     for(i = 0; i < po->numLines; ++i)
@@ -1594,7 +1602,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     {
         // reset vertices to previous positions
         for(i = 0; i < po->numVertices; ++i)
-            *(po->vertices[i]) = po->tmpVerts[i];
+            *(po->vertices[i]) = restoreVertices[i];
 
         // reset lines
         for(i = 0; i < po->numLines; ++i)
