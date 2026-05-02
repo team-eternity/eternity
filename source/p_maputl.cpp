@@ -685,7 +685,12 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     const sector_t *openfrontsector, *openbacksector;
 
     if(isPolyObj3DMidTex)
-        openfrontsector = openbacksector = R_PointInSubsector(point)->sector;
+    {
+        // For a polyobject 3D line, we don't actually have a top and bottom limit -- that's established by other lines
+        // and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
+        // callback anyway, but it's not reliable in general.
+        openfrontsector = openbacksector = R_PointInSubsector(mo ? mo->x : point.x, mo ? mo->y : point.y)->sector;
+    }
     else
     {
         openfrontsector = linedef->frontsector;
