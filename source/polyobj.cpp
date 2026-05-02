@@ -40,6 +40,7 @@
 #include "m_compare.h"
 #include "m_collection.h"
 #include "m_queue.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -866,7 +867,15 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
     fixed_t momx, momy;
 
     // calculate angle of line and subtract 90 degrees to get normal
-    lineangle   = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
+    lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
+
+    // Unless vanilla Hexen, make sure to always push away from two-sided lines
+    if(!P_LevelIsVanillaHexen() && line->flags & ML_TWOSIDED && line->backsector &&
+       P_PointOnLineSide(mo->x, mo->y, line))
+    {
+        lineangle += ANG180;
+    }
+
     lineangle >>= ANGLETOFINESHIFT;
     momx        = FixedMul(po->thrust, finecosine[lineangle]);
     momy        = FixedMul(po->thrust, finesine[lineangle]);
