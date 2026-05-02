@@ -936,7 +936,8 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                         {
                             fixed_t texbot, textop;
                             P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], texbot, textop, nullptr);
-                            if(mo->z >= textop - STEPSIZE || mo->z + mo->height <= texbot)
+                            if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) ||
+                               mo->z + mo->height <= texbot)
                             {
                                 mo = next;
                                 continue;
@@ -1129,7 +1130,7 @@ static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
     fixed_t texbot, textop;
     P_Get3DMidTexHeights(line, sides[line.sidenum[0]], texbot, textop, nullptr);
     return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
-           (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor);
+           (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
 
 static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
