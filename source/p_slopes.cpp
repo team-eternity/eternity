@@ -301,6 +301,8 @@ void P_Spawn3DMidTexExtras()
 
             element->referenceHeights.floor   = sector->srf.floor.height;
             element->referenceHeights.ceiling = sector->srf.ceiling.height;
+
+            continue; // slopes irrelevant if polyobject
         }
 
         const side_t   &side        = sides[line.sidenum[0]];

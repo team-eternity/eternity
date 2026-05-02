@@ -837,9 +837,11 @@ inline static bool Polyobj_untouched(const line_t *ld, const Mobj *mo)
 {
     fixed_t x, y, tmbbox[4];
 
-    return (tmbbox[BOXRIGHT] = (x = mo->x) + mo->radius) <= ld->bbox[BOXLEFT] ||
+    const linkoffset_t *link = P_GetLinkOffset(mo->groupid, ld->frontsector->groupid);
+
+    return (tmbbox[BOXRIGHT] = (x = mo->x + link->x) + mo->radius) <= ld->bbox[BOXLEFT] ||
            (tmbbox[BOXLEFT] = x - mo->radius) >= ld->bbox[BOXRIGHT] ||
-           (tmbbox[BOXTOP] = (y = mo->y) + mo->radius) <= ld->bbox[BOXBOTTOM] ||
+           (tmbbox[BOXTOP] = (y = mo->y + link->y) + mo->radius) <= ld->bbox[BOXBOTTOM] ||
            (tmbbox[BOXBOTTOM] = y - mo->radius) >= ld->bbox[BOXTOP] || P_BoxOnLineSide(tmbbox, ld) != -1;
 }
 
@@ -1125,10 +1127,9 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
 
 static int polyvalidcount;
 
-static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
+inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, fixed_t texbot, fixed_t textop)
 {
-    fixed_t texbot, textop;
-    P_Get3DMidTexHeights(line, sides[line.sidenum[0]], texbot, textop, nullptr);
+
     return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
@@ -1146,11 +1147,14 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
     P_TransPortalBlockWalker(linebox, line.frontsector->groupid, false, [&line, &vector](int x, int y, int groupid) {
         struct context_t
         {
-            const line_t    &line;
-            const v2fixed_t &vector;
+            const line_t   &line;
+            const v2fixed_t vector;
+            fixed_t         texbot, textop;
         } context = {
-            line, { vector.x, vector.y }
+            .line = line, .vector = { vector.x, vector.y }
         };
+
+        P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
 
         return P_BlockThingsIterator(
             x, y, groupid,
@@ -1168,7 +1172,7 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
                 if(!online)
                     return true;
 
-                if(!Polyobj_canCarryThing(context->line, *mobj))
+                if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
                     return true;
 
                 mobj->validcount = polyvalidcount;
@@ -1502,10 +1506,13 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
                 const v2fixed_t            center;
                 const line_t              &line;
                 PODCollection<mobjmove_t> &collection;
+                fixed_t                    texbot, textop;
             } context = {
-                angle, { po.spawnSpot.x, po.spawnSpot.y },
-                 line, collection
+                .angle = angle, .center = { po.spawnSpot.x, po.spawnSpot.y },
+                     .line = line, .collection = collection
             };
+
+            P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
 
             return P_BlockThingsIterator(
                 x, y, groupid,
@@ -1518,13 +1525,14 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
                         return true;
                     }
 
-                    if(!Polyobj_canCarryThing(context->line, *mobj))
+                    if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
                         return true;
 
                     mobj->validcount = polyvalidcount;
 
-                    mobjmove_t move    = { .mobj = mobj };
-                    vertex_t   rotinfo = { .x = mobj->x - context->center.x, .y = mobj->y - context->center.y };
+                    mobjmove_t move = {};
+                    P_SetTarget(&move.mobj, mobj);
+                    vertex_t rotinfo = { .x = mobj->x - context->center.x, .y = mobj->y - context->center.y };
                     Polyobj_rotatePoint(rotinfo, context->center, context->angle >> ANGLETOFINESHIFT);
                     move.vector.x = rotinfo.x - mobj->x;
                     move.vector.y = rotinfo.y - mobj->y;
@@ -1627,6 +1635,12 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
             }
             move.mobj->angle += delta;
         }
+    }
+
+    // Remember to clear targets!
+    for(mobjmove_t &move : thingsToCarry)
+    {
+        P_ClearTarget(move.mobj);
     }
 
     return !hitthing;
