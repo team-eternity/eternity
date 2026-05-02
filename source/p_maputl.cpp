@@ -590,21 +590,29 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
     return open;
 }
 
-void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
-                          const sector_t &backsector, fixed_t &texbot, fixed_t &textop, const v2fixed_t *point)
+void P_Get3DMidTexHeights(const line_t &line, const side_t &side, fixed_t &texbot, fixed_t &textop,
+                          const v2fixed_t *point)
 {
     // Polyobject 3dmidtex lines can't be skewed
     Surfaces<pslope_t *> *const slopes =
         point && !(line.intflags & MLI_DYNASEGLINE) ? P_Get3DMidTexSlopes(line) : nullptr;
 
-    // For the usual case we must use the editor-specified heights to get the unsloped 3dmidtex positions
-    const auto   &frontceiling = frontsector.srf.ceiling;
-    const auto   &backceiling  = backsector.srf.ceiling;
-    const fixed_t opentop      = frontceiling.height < backceiling.height ? frontceiling.height : backceiling.height;
+    const Surfaces<fixed_t> *polyref = P_Get3DMidTexPolyobjectReference(line);
+    Surfaces<fixed_t>        frontReferenceHeights;
+    Surfaces<fixed_t>        backReferenceHeights;
+    if(polyref && line.intflags & MLI_DYNASEGLINE && !(line.extflags & EX_ML_WRAPMIDTEX))
+        frontReferenceHeights = backReferenceHeights = *polyref;
+    else
+    {
+        frontReferenceHeights.floor   = line.frontsector->srf.floor.height;
+        frontReferenceHeights.ceiling = line.frontsector->srf.ceiling.height;
+        backReferenceHeights.floor    = line.backsector->srf.floor.height;
+        backReferenceHeights.ceiling  = line.backsector->srf.ceiling.height;
+    }
 
-    const auto   &frontfloor = frontsector.srf.floor;
-    const auto   &backfloor  = backsector.srf.floor;
-    const fixed_t openbottom = frontfloor.height > backfloor.height ? frontfloor.height : backfloor.height;
+    // For the usual case we must use the editor-specified heights to get the unsloped 3dmidtex positions
+    const fixed_t opentop    = emin(frontReferenceHeights.ceiling, backReferenceHeights.ceiling);
+    const fixed_t openbottom = emax(frontReferenceHeights.floor, backReferenceHeights.floor);
 
     if(!side.scale_mid_y || line.extflags & EX_ML_WRAPMIDTEX)
     {
@@ -670,11 +678,22 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     {
         *lineclipflags = 0;
     }
-    const sector_t *openfrontsector = linedef->frontsector;
-    const sector_t *openbacksector  = linedef->backsector;
-    sector_t       *beyond          = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
-                                          linedef->beyondportalline->frontsector :
-                                          nullptr;
+
+    const bool isPolyObj3DMidTex =
+        linedef->flags & ML_3DMIDTEX && !(linedef->extflags & EX_ML_WRAPMIDTEX) && linedef->intflags & MLI_DYNASEGLINE;
+
+    const sector_t *openfrontsector, *openbacksector;
+
+    if(isPolyObj3DMidTex)
+        openfrontsector = openbacksector = R_PointInSubsector(point)->sector;
+    else
+    {
+        openfrontsector = linedef->frontsector;
+        openbacksector  = linedef->backsector;
+    }
+    sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
+                           linedef->beyondportalline->frontsector :
+                           nullptr;
     if(beyond)
     {
         openbacksector = beyond;
@@ -806,7 +825,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         side_t *side = &sides[linedef->sidenum[0]];
 
         const auto *midtexslopes = P_Get3DMidTexSlopes(*linedef);
-        P_Get3DMidTexHeights(*linedef, *side, *openfrontsector, *openbacksector, texbot, textop, &point);
+        P_Get3DMidTexHeights(*linedef, *side, texbot, textop, &point);
 
         texmid = (textop + texbot) / 2;
 
@@ -1631,4 +1650,3 @@ void P_CheckSpriteTouchingSectorLists()
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

@@ -935,8 +935,7 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                         if(lineCanCarry(*line))
                         {
                             fixed_t texbot, textop;
-                            P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], *line->frontsector, *line->backsector,
-                                                 texbot, textop, nullptr);
+                            P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], texbot, textop, nullptr);
                             if(mo->z >= textop - STEPSIZE || mo->z + mo->height <= texbot)
                             {
                                 mo = next;
@@ -1128,7 +1127,7 @@ static int polyvalidcount;
 static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
 {
     fixed_t texbot, textop;
-    P_Get3DMidTexHeights(line, sides[line.sidenum[0]], *line.frontsector, *line.backsector, texbot, textop, nullptr);
+    P_Get3DMidTexHeights(line, sides[line.sidenum[0]], texbot, textop, nullptr);
     return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor);
 }

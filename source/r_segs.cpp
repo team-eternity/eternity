@@ -32,6 +32,7 @@
 #include "e_exdata.h"
 #include "m_compare.h"
 #include "p_info.h"
+#include "p_slopes.h"
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_bsp.h"
@@ -119,10 +120,25 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     }
     // killough 4/11/98: end translucent 2s normal code
 
-    const bool midtex = linedef->flags & ML_3DMIDTEX && linedef->flags & ML_TWOSIDED;
+    segclip.frontsec = segclip.line->frontsector;
+    segclip.backsec  = segclip.line->backsector;
 
-    segclip.frontsec = midtex ? linedef->frontsector : segclip.line->frontsector;
-    segclip.backsec  = midtex ? linedef->backsector : segclip.line->backsector;
+    const bool polyobject3DMidTex = linedef->flags & ML_3DMIDTEX && linedef->flags & ML_TWOSIDED &&
+                                    !(linedef->extflags & EX_ML_WRAPMIDTEX) && linedef->intflags & MLI_DYNASEGLINE;
+
+    Surfaces<fixed_t> frontReferenceHeights;
+    Surfaces<fixed_t> backReferenceHeights;
+
+    const Surfaces<fixed_t> *const polyrefs = polyobject3DMidTex ? P_Get3DMidTexPolyobjectReference(*linedef) : nullptr;
+    if(polyrefs)
+        frontReferenceHeights = backReferenceHeights = *polyrefs;
+    else
+    {
+        frontReferenceHeights.floor   = segclip.frontsec->srf.floor.height;
+        frontReferenceHeights.ceiling = segclip.frontsec->srf.ceiling.height;
+        backReferenceHeights.floor    = segclip.backsec->srf.floor.height;
+        backReferenceHeights.ceiling  = segclip.backsec->srf.ceiling.height;
+    }
 
     texnum = texturetranslation[segclip.line->sidedef->midtexture];
 
@@ -173,9 +189,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     // find positioning
     if(linedef->flags & ML_DONTPEGBOTTOM)
     {
-        column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height ?
-                            segclip.frontsec->srf.floor.height :
-                            segclip.backsec->srf.floor.height;
+        column.texmid = emax(frontReferenceHeights.floor, backReferenceHeights.floor);
         column.texmid = column.texmid - viewpos.z;
         column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
 
@@ -184,9 +198,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     }
     else
     {
-        column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height ?
-                            segclip.frontsec->srf.ceiling.height :
-                            segclip.backsec->srf.ceiling.height;
+        column.texmid = emin(frontReferenceHeights.ceiling, backReferenceHeights.ceiling);
         column.texmid = column.texmid - viewpos.z;
         column.texmid = FixedMul(column.texmid, segclip.line->sidedef->scale_mid_y);
 
@@ -800,7 +812,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext, planecontext_t &plan
         while(i < stop && floorclip[i] < ceilingclip[i])
             ++i;
 
-        // from startx to i - 1 is solid.
+            // from startx to i - 1 is solid.
 #ifdef RANGECHECK
         if(startx > i - 1 || startx < bounds.startcolumn || i - 1 >= bounds.endcolumn || startx >= bounds.endcolumn ||
            i - 1 < bounds.startcolumn)

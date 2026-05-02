@@ -97,7 +97,7 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
         const v2fixed_t     thingpos = { thing->x + link->x, thing->y + link->y };
 
         fixed_t textop, texbot;
-        P_Get3DMidTexHeights(*line, *sidedef, *line->frontsector, *line->backsector, texbot, textop, &thingpos);
+        P_Get3DMidTexHeights(*line, *sidedef, texbot, textop, &thingpos);
 
         if(thing->z > textop || thing->z + thing->height < texbot)
             return false;
@@ -1706,4 +1706,3 @@ CONSOLE_COMMAND(ev_mapspecials, cf_level)
 }
 
 // EOF
-
