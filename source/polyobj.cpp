@@ -47,7 +47,6 @@
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_saveg.h"
-#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_slopes.h"
 #include "p_spec.h"
@@ -487,6 +486,8 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
         po->next                   = PolyObjects[hashkey].first;
         PolyObjects[hashkey].first = num;
     }
+
+    po->lastBackupTic = -1;
 }
 
 static void Polyobj_setCenterPt(polyobj_t *po);
@@ -1486,7 +1487,6 @@ struct mobjmove_t
 static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const line_t &line, const angle_t angle,
                                                   PODCollection<mobjmove_t> &collection)
 {
-    // Subtract vector because line was already moved
     fixed_t linebox[4];
     linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS;
     linebox[BOXRIGHT]  = line.bbox[BOXRIGHT] + MAXRADIUS;
