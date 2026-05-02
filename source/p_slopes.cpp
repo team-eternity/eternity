@@ -42,16 +42,15 @@
 
 slopeheight_t *pSlopeHeights;
 
-struct midtex3dextras_t
+struct midtexextras_t
 {
-    Surfaces<pslope_t *>         slopes;
-    Surfaces<fixed_t>            referenceHeights;
-    int                          lineindex;
-    DLListItem<midtex3dextras_t> indexlink;
+    Surfaces<pslope_t *>       slopes;
+    Surfaces<fixed_t>          referenceHeights;
+    int                        lineindex;
+    DLListItem<midtexextras_t> indexlink;
 };
 
-static EHashTable<midtex3dextras_t, EIntHashKey, &midtex3dextras_t::lineindex, &midtex3dextras_t::indexlink>
-    pMidTex3DExtras;
+static EHashTable<midtexextras_t, EIntHashKey, &midtexextras_t::lineindex, &midtexextras_t::indexlink> pMidTexExtras;
 
 //
 // P_MakeSlope
@@ -274,10 +273,10 @@ void P_PostProcessSlopes()
     P_repositionThingsOnSlopes();
 }
 
-void P_Spawn3DMidTexExtras()
+void P_SpawnMidTexExtras()
 {
-    pMidTex3DExtras.destroy();
-    pMidTex3DExtras.initialize(127);
+    pMidTexExtras.destroy();
+    pMidTexExtras.initialize(127);
     for(int i = 0; i < numlines; ++i)
     {
         const line_t &line = lines[i];
@@ -287,12 +286,12 @@ void P_Spawn3DMidTexExtras()
         if(!lineLength)
             continue;
 
-        midtex3dextras_t *element = nullptr;
+        midtexextras_t *element = nullptr;
         if(line.intflags & MLI_DYNASEGLINE)
         {
-            element            = estructalloctag(midtex3dextras_t, 1, PU_LEVEL);
+            element            = estructalloctag(midtexextras_t, 1, PU_LEVEL);
             element->lineindex = i;
-            pMidTex3DExtras.addObject(element);
+            pMidTexExtras.addObject(element);
             const v2fixed_t middle = { line.v1->x + line.dx / 2, line.v1->y + line.dy / 2 };
             const sector_t *sector = R_PointInSubsector(middle)->sector;
 
@@ -340,9 +339,9 @@ void P_Spawn3DMidTexExtras()
                                          nullptr, surf_ceil, &line.frontsector->groupid);
         if(!element)
         {
-            element            = estructalloctag(midtex3dextras_t, 1, PU_LEVEL);
+            element            = estructalloctag(midtexextras_t, 1, PU_LEVEL);
             element->lineindex = i;
-            pMidTex3DExtras.addObject(element);
+            pMidTexExtras.addObject(element);
             element->referenceHeights.floor = element->referenceHeights.ceiling = D_MININT;
         }
         element->slopes = lineSlopes;
@@ -351,13 +350,13 @@ void P_Spawn3DMidTexExtras()
 
 Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line)
 {
-    midtex3dextras_t *element = pMidTex3DExtras.objectForKey(eindex(&line - lines));
+    midtexextras_t *element = pMidTexExtras.objectForKey(eindex(&line - lines));
     return element && element->slopes.floor && element->slopes.ceiling ? &element->slopes : nullptr;
 }
 
-const Surfaces<fixed_t> *P_Get3DMidTexPolyobjectReference(const line_t &line)
+const Surfaces<fixed_t> *P_GetMidTexPolyobjectReference(const line_t &line)
 {
-    const midtex3dextras_t *element = pMidTex3DExtras.objectForKey(eindex(&line - lines));
+    const midtexextras_t *element = pMidTexExtras.objectForKey(eindex(&line - lines));
     return element && element->referenceHeights.floor != D_MININT ? &element->referenceHeights : nullptr;
 }
 

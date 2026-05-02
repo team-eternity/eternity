@@ -34,6 +34,7 @@
 #include "ev_specials.h"
 #include "m_bbox.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
@@ -597,7 +598,7 @@ void P_Get3DMidTexHeights(const line_t &line, const side_t &side, fixed_t &texbo
     Surfaces<pslope_t *> *const slopes =
         point && !(line.intflags & MLI_DYNASEGLINE) ? P_Get3DMidTexSlopes(line) : nullptr;
 
-    const Surfaces<fixed_t> *polyref = P_Get3DMidTexPolyobjectReference(line);
+    const Surfaces<fixed_t> *polyref = P_GetMidTexPolyobjectReference(line);
     Surfaces<fixed_t>        frontReferenceHeights;
     Surfaces<fixed_t>        backReferenceHeights;
     if(polyref && line.intflags & MLI_DYNASEGLINE && !(line.extflags & EX_ML_WRAPMIDTEX))
@@ -679,15 +680,15 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         *lineclipflags = 0;
     }
 
-    const bool isPolyObj3DMidTex =
-        linedef->flags & ML_3DMIDTEX && !(linedef->extflags & EX_ML_WRAPMIDTEX) && linedef->intflags & MLI_DYNASEGLINE;
+    const bool isPolyObj2Sided =
+        !P_LevelIsVanillaHexen() && linedef->flags & ML_TWOSIDED && linedef->intflags & MLI_DYNASEGLINE;
 
     const sector_t *openfrontsector, *openbacksector;
 
-    if(isPolyObj3DMidTex)
+    if(isPolyObj2Sided)
     {
-        // For a polyobject 3D line, we don't actually have a top and bottom limit -- that's established by other lines
-        // and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
+        // For a polyobject 2-sided line, we don't actually have a top and bottom limit -- that's established by other
+        // lines and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
         // callback anyway, but it's not reliable in general.
         openfrontsector = openbacksector = R_PointInSubsector(mo ? mo->x : point.x, mo ? mo->y : point.y)->sector;
     }

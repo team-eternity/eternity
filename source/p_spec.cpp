@@ -1785,7 +1785,7 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
     }
 
     P_PostProcessSlopes();
-    P_Spawn3DMidTexExtras();
+    P_SpawnMidTexExtras();
 }
 
 // haleyjd 04/11/10:

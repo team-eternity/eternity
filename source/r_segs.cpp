@@ -123,12 +123,12 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos
     segclip.frontsec = segclip.line->frontsector;
     segclip.backsec  = segclip.line->backsector;
 
-    const bool polyobject3DMidTex = linedef->flags & ML_TWOSIDED && linedef->intflags & MLI_DYNASEGLINE;
+    const bool polyobjectMidTex = linedef->flags & ML_TWOSIDED && linedef->intflags & MLI_DYNASEGLINE;
 
     Surfaces<fixed_t> frontReferenceHeights;
     Surfaces<fixed_t> backReferenceHeights;
 
-    const Surfaces<fixed_t> *const polyrefs = polyobject3DMidTex ? P_Get3DMidTexPolyobjectReference(*linedef) : nullptr;
+    const Surfaces<fixed_t> *const polyrefs = polyobjectMidTex ? P_GetMidTexPolyobjectReference(*linedef) : nullptr;
     if(polyrefs)
         frontReferenceHeights = backReferenceHeights = *polyrefs;
     else

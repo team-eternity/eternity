@@ -349,6 +349,10 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l, int contro
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
 static constexpr int SCROLL_SHIFT = 5;
 
+// Factor to scale scrolling effect into mobj-carrying properties = 3/32.
+// (This is so scrolling floors and objects on them can move at same speed.)
+static constexpr fixed_t CARRYFACTOR = fixed_t(FRACUNIT * .09375);
+
 // This makes it so certain values are approx 1 unit per second
 static constexpr int ZDSCROLLFACTOR = 10;
 
@@ -908,4 +912,3 @@ void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fi
 // killough 3/7/98 -- end generalized scroll effects
 
 // EOF
-
