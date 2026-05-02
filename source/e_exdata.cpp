@@ -208,7 +208,7 @@ static cfg_opt_t linedef_opts[] =
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
    CFG_STR(FIELD_LINE_ARGS,   nullptr, CFGF_LIST),
    CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
-   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
+   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE),
    CFG_INT(FIELD_LINE_PORTALID,    0, CFGF_NONE),
    CFG_END()
 };
@@ -234,6 +234,7 @@ static dehflags_t extlineflags[] = {
     { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
     { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
     { "POLYOBJECT",   EX_ML_POLYOBJECT   },
+    { "WRAPMIDTEX",   EX_ML_WRAPMIDTEX   },
     { nullptr,        0                  }
 };
 
@@ -282,7 +283,7 @@ static cfg_opt_t sector_opts[] =
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB2),
    CFG_INT(FIELD_SECTOR_PORTALID_F,        0,         CFGF_NONE),
    CFG_INT(FIELD_SECTOR_PORTALID_C,        0,         CFGF_NONE),
-   
+
    CFG_END()
 };
 
@@ -1716,4 +1717,3 @@ void E_GetEDLines(maplinedefext_t **lines, int *numlines)
 }
 
 // EOF
-

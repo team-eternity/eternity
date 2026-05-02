@@ -281,11 +281,8 @@ void P_Spawn3DMidTexExtras()
     for(int i = 0; i < numlines; ++i)
     {
         const line_t &line = lines[i];
-        if(!line.backsector || !(line.flags & ML_TWOSIDED) || !(line.flags & ML_3DMIDTEX) ||
-           line.extflags & EX_ML_WRAPMIDTEX)
-        {
+        if(!line.backsector || !(line.flags & ML_TWOSIDED))
             continue;
-        }
         const float lineLength = sqrtf(powf(line.v2->fx - line.v1->fx, 2) + powf(line.v2->fy - line.v1->fy, 2));
         if(!lineLength)
             continue;
@@ -303,6 +300,11 @@ void P_Spawn3DMidTexExtras()
             element->referenceHeights.ceiling = sector->srf.ceiling.height;
 
             continue; // slopes irrelevant if polyobject
+        }
+
+        if(!(line.flags & ML_3DMIDTEX) || line.extflags & EX_ML_WRAPMIDTEX)
+        {
+            continue;
         }
 
         const side_t   &side        = sides[line.sidenum[0]];
