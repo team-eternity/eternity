@@ -593,7 +593,9 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
 void P_Get3DMidTexHeights(const line_t &line, const side_t &side, const sector_t &frontsector,
                           const sector_t &backsector, fixed_t &texbot, fixed_t &textop, const v2fixed_t *point)
 {
-    Surfaces<pslope_t *> *const slopes = point ? P_Get3DMidTexSlopes(line) : nullptr;
+    // Polyobject 3dmidtex lines can't be skewed
+    Surfaces<pslope_t *> *const slopes =
+        point && !(line.intflags & MLI_DYNASEGLINE) ? P_Get3DMidTexSlopes(line) : nullptr;
 
     // For the usual case we must use the editor-specified heights to get the unsloped 3dmidtex positions
     const auto   &frontceiling = frontsector.srf.ceiling;
