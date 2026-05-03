@@ -56,6 +56,7 @@
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portal.h" // ioanch 20160116
+#include "p_portalcross.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "r_data.h"
@@ -626,7 +627,8 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_CeilTex:
     {
         const char *const textureName = thread->scopeMap->getString(val)->str;
-        const int         pic         = mo->subsector->sector->srf.ceiling.pic;
+        const sector_t   *sector      = P_ExtremeSectorAtPoint(mo, surf_ceil);
+        const int         pic         = sector->srf.ceiling.pic;
         return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
     }
     case ACS_TP_CeilZ: return static_cast<uint32_t>(mo->zref.ceiling) == val;
