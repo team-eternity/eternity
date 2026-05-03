@@ -635,7 +635,8 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_FloorTex:
     {
         const char *const textureName = thread->scopeMap->getString(val)->str;
-        const int         pic         = mo->subsector->sector->srf.floor.pic;
+        const sector_t   *sector      = P_ExtremeSectorAtPoint(mo, surf_floor);
+        const int         pic         = sector->srf.floor.pic;
         return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
     }
     case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
