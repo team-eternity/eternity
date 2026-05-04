@@ -85,7 +85,7 @@ Improvements
   surface has no slope. Now it will just clear the slope of the other surface and match its height.
 * Terrain splashes now spawn correctly on sloped liquids.
 * Removed foot-clip on sloped liquids because it would cut off the sprite even when not submerged
-* ACS CheckActorCeilingTexture CheckActorFloorTexture are now portal-aware.
+* ACS CheckActorCeilingTexture and CheckActorFloorTexture are now portal-aware.
 
 Bug fixes
 ---------
@@ -140,3 +140,4 @@ Bug fixes
 * Fixed lack of interpolation with polyobjects subject to multiple movements (e.g. rotation and translation
   simultaneously).
 * Fixed monster interpolation bug when going up slopes, especially on liquid ones.
+* ACS ReplaceTextures wasn't updating the sky status when switching a sky texture.

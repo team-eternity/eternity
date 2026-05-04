@@ -1737,7 +1737,7 @@ bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
                 sector->srf.floor.pic = newflat;
 
             if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldflat)
-                sector->srf.ceiling.pic = newflat;
+                P_SetSectorCeilingPic(sector, newflat);
         }
     }
 
