@@ -1906,8 +1906,6 @@ enum
     BLOCK_EVERYTHING,
     BLOCK_RAILING,
     BLOCK_PLAYERS,
-    BLOCK_MONSTERS_OFF,
-    BLOCK_MONSTERS_ON,
 };
 
 //
@@ -1926,27 +1924,41 @@ static void ACS_setLineBlocking(const ACSThread *thread, int tag, int block)
         {
         case BLOCK_NOTHING:
             // clear the flags
-            l->flags    &= ~ML_BLOCKING;
+            l->flags    &= ~(ML_BLOCKING | ML_BLOCKPLAYERS);
             l->extflags &= ~EX_ML_BLOCKALL;
             break;
         case BLOCK_CREATURES: //
             l->extflags &= ~EX_ML_BLOCKALL;
             l->flags    |= ML_BLOCKING;
+            l->flags    &= ~ML_BLOCKPLAYERS;
             break;
         case BLOCK_EVERYTHING: // ZDoom extension - block everything
             l->flags    |= ML_BLOCKING;
+            l->flags    &= ~ML_BLOCKPLAYERS;
             l->extflags |= EX_ML_BLOCKALL;
             break;
-        case BLOCK_MONSTERS_OFF: //
-            l->flags &= ~ML_BLOCKMONSTERS;
-            break;
-        case BLOCK_MONSTERS_ON: //
-            l->flags |= ML_BLOCKMONSTERS;
+        case BLOCK_PLAYERS:
+            l->flags    |= ML_BLOCKPLAYERS;
+            l->flags    &= ~ML_BLOCKING;
+            l->extflags &= ~EX_ML_BLOCKALL;
             break;
         default: // Others not implemented yet :P
+            // printz: but warn.
+            doom_printf("Invalid option %d for SetLineBlocking", block);
             break;
         }
     }
+}
+
+static void ACS_setLineMonsterBlocking(line_t *defaultLine, int tag, bool block)
+{
+    line_t *line;
+    int     linenum = -1;
+    while((line = P_FindLine(tag, &linenum, defaultLine)))
+        if(block)
+            line->flags |= ML_BLOCKMONSTERS;
+        else
+            line->flags &= ML_BLOCKMONSTERS;
 }
 
 //
@@ -1963,8 +1975,12 @@ bool ACS_CF_SetLineBlocking(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineMonsterBlocking(ACS_CF_ARGS)
 {
-    ACS_setLineBlocking(static_cast<const ACSThread *>(thread), argV[0],
-                        argV[1] ? BLOCK_MONSTERS_ON : BLOCK_MONSTERS_OFF);
+    if(argV[1] != 0 && argV[1] != 1)
+    {
+        doom_warningf("Invalid second argument to SetLineMonsterBlocking");
+        return false;
+    }
+    ACS_setLineMonsterBlocking(static_cast<const ACSThread *>(thread)->info.line, argV[0], !!argV[1]);
     return false;
 }
 

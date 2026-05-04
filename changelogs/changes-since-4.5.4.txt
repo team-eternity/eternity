@@ -86,6 +86,7 @@ Improvements
 * Terrain splashes now spawn correctly on sloped liquids.
 * Removed foot-clip on sloped liquids because it would cut off the sprite even when not submerged
 * ACS CheckActorCeilingTexture and CheckActorFloorTexture are now portal-aware.
+* ACS SetLineBlocking now also supports BLOCK_PLAYERS.
 
 Bug fixes
 ---------
