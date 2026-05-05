@@ -2087,7 +2087,7 @@ bool ACS_CF_SetSkyScrollSpeed(ACS_CF_ARGS)
 }
 
 //
-// void SetActorAngle(int tid, fixed angle, int interpolate = 0);
+// void SetActorAngle(int tid, fixed angle);
 //
 bool ACS_CF_SetActorAngle(ACS_CF_ARGS)
 {
@@ -2120,7 +2120,7 @@ bool ACS_CF_ChangeActorAngle(ACS_CF_ARGS)
 }
 
 //
-// int SetActorVelocity(int tid, fixed momx, fixed momy, fixed momz, int add);
+// int SetActorVelocity(int tid, fixed momx, fixed momy, fixed momz, bool add, bool bob);
 //
 bool ACS_CF_SetActorVelocity(ACS_CF_ARGS)
 {
@@ -2129,8 +2129,19 @@ bool ACS_CF_SetActorVelocity(ACS_CF_ARGS)
     fixed_t momx = argV[1];
     fixed_t momy = argV[2];
     fixed_t momz = argV[3];
-    bool    add  = argV[4] ? true : false;
-    Mobj   *mo   = nullptr;
+    int     add  = argV[4];
+    if(add != 0 && add != 1)
+    {
+        doom_warningf("Invalid add %d for SetActorVelocity", add);
+        return false;
+    }
+    int bob = argV[5];
+    if(bob != 0 && bob != 1)
+    {
+        doom_warningf("Invalid bob %d for SetActorVelocity", bob);
+        return false;
+    }
+    Mobj *mo = nullptr;
 
     while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
     {
@@ -2145,6 +2156,11 @@ bool ACS_CF_SetActorVelocity(ACS_CF_ARGS)
             mo->momx = momx;
             mo->momy = momy;
             mo->momz = momz;
+        }
+        if(mo->player && bob)
+        {
+            mo->player->momx = mo->momx;
+            mo->player->momy = mo->momy;
         }
     }
 
