@@ -1958,7 +1958,7 @@ static void ACS_setLineMonsterBlocking(line_t *defaultLine, int tag, bool block)
         if(block)
             line->flags |= ML_BLOCKMONSTERS;
         else
-            line->flags &= ML_BLOCKMONSTERS;
+            line->flags &= ~ML_BLOCKMONSTERS;
 }
 
 //
