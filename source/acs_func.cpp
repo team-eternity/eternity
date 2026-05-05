@@ -2169,7 +2169,7 @@ bool ACS_CF_SetActorVelocity(ACS_CF_ARGS)
 }
 
 //
-// void SetActorPitch(int tid, fixed pitch, int interpolate = 0);
+// void SetActorPitch(int tid, fixed pitch);
 //
 bool ACS_CF_SetActorPitch(ACS_CF_ARGS)
 {
@@ -2184,7 +2184,12 @@ bool ACS_CF_ChangeActorPitch(ACS_CF_ARGS)
     auto        athread     = static_cast<ACSThread *>(thread);
     int         tid         = static_cast<int>(argV[0]);
     ACSVM::Word val         = argV[1];
-    bool        interpolate = argC > 2 ? !!argV[2] : false;
+    int         interpolate = argC > 2 ? argV[2] : false;
+    if(interpolate != 0 && interpolate != 1)
+    {
+        doom_warningf("Invalid interpolate %d for ChangeActorPitch", interpolate);
+        return false;
+    }
 
     thread->dataStk.push(0);
 
