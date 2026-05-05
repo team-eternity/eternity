@@ -2010,8 +2010,13 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineTexture(ACS_CF_ARGS)
 {
-    line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
-    P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true, triggerLine);
+    line_t           *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+    const char *const texture     = thread->scopeMap->getString(argV[3])->str;
+    const int         pos         = argV[2];
+    const int         side        = argV[1];
+    const int         tag         = argV[0];
+
+    P_ChangeLineTex(texture, pos, side, tag, triggerLine);
     return false;
 }
 

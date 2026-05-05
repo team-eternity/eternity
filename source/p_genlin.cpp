@@ -1564,11 +1564,16 @@ enum
 //
 // EV_ChangeLineTex
 //
-// Sets the indicated texture on all lines of lineid tag (if usetag false) or of
-// the given tag (if usetag true)
+// Sets the indicated texture on all lines of the given tag
 //
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine)
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, line_t *triggerLine)
 {
+    if(side != 0 && side != 1)
+    {
+        doom_warningf("Invalid side %d for SetLineTexture", side);
+        return;
+    }
+
     line_t *l = nullptr;
     int     linenum, texnum;
 
@@ -1596,6 +1601,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
             R_CacheIfSkyTexture(sides[l->sidenum[side]].bottomtexture, texnum);
             sides[l->sidenum[side]].bottomtexture = texnum;
             break;
+        default: doom_warningf("Invalid side part %d for SetLineTexture", pos); break;
         }
     }
 }
