@@ -76,6 +76,16 @@
 // Local Utilities
 //
 
+static bool checkBoolean(int value, const char *name, const char *function)
+{
+    if(value != 0 && value != 1)
+    {
+        doom_warningf("Invalid %s %d in %s", name, value, function);
+        return false;
+    }
+    return true;
+}
+
 //
 // ACS_ChkThingProp
 //
@@ -409,6 +419,7 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
     if(argV[2])
     {
         doom_warningf("Unexpected nonzero flags for ACS CheckSight.");
+        return false;
     }
 
     while((mo1 = P_FindMobjFromTID(tid1, mo1, info->mo)))
@@ -1975,11 +1986,8 @@ bool ACS_CF_SetLineBlocking(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineMonsterBlocking(ACS_CF_ARGS)
 {
-    if(argV[1] != 0 && argV[1] != 1)
-    {
-        doom_warningf("Invalid second argument to SetLineMonsterBlocking");
+    if(!checkBoolean(argV[1], "block", "SetLineMonsterBlocking"))
         return false;
-    }
     ACS_setLineMonsterBlocking(static_cast<const ACSThread *>(thread)->info.line, argV[0], !!argV[1]);
     return false;
 }
@@ -2130,17 +2138,11 @@ bool ACS_CF_SetActorVelocity(ACS_CF_ARGS)
     fixed_t momy = argV[2];
     fixed_t momz = argV[3];
     int     add  = argV[4];
-    if(add != 0 && add != 1)
-    {
-        doom_warningf("Invalid add %d for SetActorVelocity", add);
+    if(!checkBoolean(add, "add", "SetActorVelocity"))
         return false;
-    }
     int bob = argV[5];
-    if(bob != 0 && bob != 1)
-    {
-        doom_warningf("Invalid bob %d for SetActorVelocity", bob);
+    if(!checkBoolean(bob, "bob", "SetActorVelocity"))
         return false;
-    }
     Mobj *mo = nullptr;
 
     while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
@@ -2185,11 +2187,8 @@ bool ACS_CF_ChangeActorPitch(ACS_CF_ARGS)
     int         tid         = static_cast<int>(argV[0]);
     ACSVM::Word val         = argV[1];
     int         interpolate = argC > 2 ? argV[2] : false;
-    if(interpolate != 0 && interpolate != 1)
-    {
-        doom_warningf("Invalid interpolate %d for ChangeActorPitch", interpolate);
+    if(!checkBoolean(interpolate, "interpolate", "ChangeActorPitch"))
         return false;
-    }
 
     thread->dataStk.push(0);
 
@@ -2218,9 +2217,12 @@ bool ACS_CF_SetActorPosition(ACS_CF_ARGS)
     fixed_t  x    = argV[1];
     fixed_t  y    = argV[2];
     fixed_t  z    = argV[3];
-    bool     fog  = argV[4] ? true : false;
+    int      fog  = argV[4];
     uint32_t res  = 0;
     Mobj    *mo;
+
+    if(!checkBoolean(fog, "fog", "SetActorPosition"))
+        return false;
 
     if((mo = P_FindMobjFromTID(tid, nullptr, info->mo)))
     {
