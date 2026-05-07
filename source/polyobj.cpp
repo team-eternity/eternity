@@ -954,6 +954,12 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                                 continue;
                             }
                         }
+                        else if(!P_LevelIsVanillaHexen() && !(line->flags & ML_BLOCKING) &&
+                                P_TryMove(mo, mo->x, mo->y, 1))
+                        {
+                            mo = next;
+                            continue;
+                        }
 
                         // ioanch 20160226: in case of portal lines, just make sure
                         // the mobj budges a bit just to detect the specline

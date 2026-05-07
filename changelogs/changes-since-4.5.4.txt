@@ -55,6 +55,7 @@ Features
 * Added support for wall texture scaling, which includes top, middle, and bottom X and Y scaling.
 * Added support for wrapping 2-sided middle textures.
 * 3DMidTex polyobjects can now work as transporters. Also, they no longer change their Y offsets when crossing elevations.
+* Passable 2-sided polyobject lines no longer push solid things.
 
 Improvements
 ------------
