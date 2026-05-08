@@ -143,3 +143,4 @@ Bug fixes
   simultaneously).
 * Fixed monster interpolation bug when going up slopes, especially on liquid ones.
 * ACS ReplaceTextures wasn't updating the sky status when switching a sky texture.
+* Fixed lock-up caused by polyobject mirror cycles and override specials.

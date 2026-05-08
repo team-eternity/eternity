@@ -113,9 +113,8 @@ struct intercept_t
 class VisitList
 {
 public:
-    //
-    // Must be explicitly initialized, because we don't always want to use it
-    //
+    VisitList() = default;
+    explicit VisitList(size_t size) { init(size); }
     void init(size_t size) { bitset.resize(size); }
 
     bool get(size_t index) const { return bitset[index]; }

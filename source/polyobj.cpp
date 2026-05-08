@@ -2279,6 +2279,18 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
         Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
+// Returns true if already visited
+static bool visited(const polyobj_t &po, VisitList &visit)
+{
+    if(visit.get(&po - PolyObjects))
+    {
+        doom_warningf("Mirror polyobject cycle at %d", po.id);
+        return true;
+    }
+    visit.put(&po - PolyObjects);
+    return false;
+}
+
 // Linedef Handlers
 
 int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
@@ -2331,6 +2343,8 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
     S_StartPolySequence(po);
 
     // apply action to mirroring polyobjects as well
+    VisitList visit(numPolyObjects);
+    visit.put(po - PolyObjects);
     while((po = Polyobj_GetMirror(po)))
     {
         if(po->flags & POF_ISBAD)
@@ -2338,6 +2352,9 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
 
         // check for override if this polyobj already has a thinker
         if(po->thinker && !prdata->overRide)
+            break;
+
+        if(visited(*po, visit))
             break;
 
         // create a new thinker
@@ -2420,6 +2437,8 @@ int EV_DoPolyObjMove(const polymovedata_t *pmdata)
     S_StartPolySequence(po);
 
     // apply action to mirroring polyobjects as well
+    VisitList visit(numPolyObjects);
+    visit.put(po - PolyObjects);
     while((po = Polyobj_GetMirror(po)))
     {
         if(po->flags & POF_ISBAD)
@@ -2427,6 +2446,9 @@ int EV_DoPolyObjMove(const polymovedata_t *pmdata)
 
         // check for override if this polyobject already has a thinker
         if(po->thinker && !pmdata->overRide)
+            break;
+
+        if(visited(*po, visit))
             break;
 
         // create a new thinker
@@ -2528,10 +2550,14 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
 
     S_StartPolySequence(po);
 
-    unsigned mirrorfineangle = P_PointToAngle(0, 0, -distance.x, -distance.y) >> ANGLETOFINESHIFT;
+    unsigned  mirrorfineangle = P_PointToAngle(0, 0, -distance.x, -distance.y) >> ANGLETOFINESHIFT;
+    VisitList visit(numPolyObjects);
+    visit.put(po - PolyObjects);
     while((po = Polyobj_GetMirror(po)))
     {
         if(po->flags & POF_ISBAD || (po->thinker && !pmdata.overRide))
+            break;
+        if(visited(*po, visit))
             break;
 
         th = new PolyMoveXYThinker;
@@ -2591,6 +2617,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, const polydoordata_t *doordata)
     S_StartPolySequence(po);
 
     // start action on mirroring polyobjects as well
+    // No need to check visit here, because each encountered po gets a thinker, breaking the loop eventually
     while((po = Polyobj_GetMirror(po)))
     {
         // don't allow line actions to affect bad polyobjects;
@@ -2664,6 +2691,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
     S_StartPolySequence(po);
 
     // start action on mirroring polyobjects as well
+    // as with swing-door, do not check visiting here, no override risk
     while((po = Polyobj_GetMirror(po)))
     {
         // don't allow line actions to affect bad polyobjects;
