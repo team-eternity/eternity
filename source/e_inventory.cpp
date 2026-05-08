@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Max Waine, et al.
 //
@@ -26,6 +26,8 @@
 
 #define NEED_EDF_DEFINITIONS
 
+#include <algorithm> // for std::find
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -50,6 +52,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -1587,6 +1590,84 @@ static void E_processPickupItems(cfg_t *cfg)
 }
 
 //
+// E_FindBestPickupFX
+//
+// Given an item name and/or an item effect, find the best matching pickupfx definition, if any.
+// The item name is used to look for a pickupfx definition with a matching name field;
+// the item effect is used to look for pickupfx definitions that list that effect in their effects list.
+// If multiple pickupfx definitions match, the best one is chosen according to some tie-breaking rules (see below).
+// If no pickupfx definition matches, nullptr is returned.
+//
+// The item name is optional and is only used to find a direct name match; the item effect is required
+// for matching against pickupfx definitions that don't have a name or don't match the given name.
+//
+const e_pickupfx_t *E_FindBestPickupFX(const char *itemname, const itemeffect_t *effect)
+{
+    // Try to find a pickupfx definition matching the item name first, if given.
+    if(const e_pickupfx_t *named = E_PickupFXForName(itemname))
+        return named;
+
+    if(!effect)
+        return nullptr;
+
+    const e_pickupfx_t *bestPickup = nullptr;
+
+    // If no name match, look for a pickupfx that lists the given effect in its effects list.
+    // If multiple pickupfx definitions match, use the following tie-breaking rules:
+    // 1) try to find the one with the fewest total effects, as that is likely to be more specific
+    //    and a better match for the item in question;
+    // 2) if there is still a tie, use the one wich comes first alphabetically by name, ignoring case;
+    // 3) if there is still a tie, use the one which comes first alphabetically by compatname, ignoring case;
+    // 4) if there is still a tie, use the one with the lowest sprite number (or no sprite, which counts as -1),
+    //    as that is likely to be more specific and a better match for the item in question.
+    auto isBetterPickup = [](const e_pickupfx_t *candidate, const e_pickupfx_t *best) {
+        if(!best)
+            return true;
+
+        if(candidate->numEffects != best->numEffects)
+            return candidate->numEffects < best->numEffects;
+
+        const char *candName = candidate->name ? candidate->name : "";
+        const char *bestName = best->name ? best->name : "";
+        int         cmp      = strcasecmp(candName, bestName);
+        if(cmp != 0)
+            return cmp < 0;
+
+        const char *candCName = candidate->compatname ? candidate->compatname : "";
+        const char *bestCName = best->compatname ? best->compatname : "";
+        cmp                   = strcasecmp(candCName, bestCName);
+        if(cmp != 0)
+            return cmp < 0;
+
+        return candidate->sprnum < best->sprnum;
+    };
+
+    // Helper lambda to consider a pickupfx candidate and update the best match if appropriate.
+    auto considerCandidate = [&](const e_pickupfx_t *pfx) {
+        if(!pfx || !pfx->effects || pfx->numEffects == 0)
+            return;
+
+        const auto end = pfx->effects + pfx->numEffects;
+        if(std::find(pfx->effects, end, effect) == end)
+            return;
+
+        if(isBetterPickup(pfx, bestPickup))
+            bestPickup = pfx;
+    };
+
+    // Scan all standalone pickupfx definitions
+    for(const e_pickupfx_t *pfx = nullptr; (pfx = e_PickupNameHash.tableIterator(const_cast<e_pickupfx_t *>(pfx)));)
+        considerCandidate(pfx);
+
+    // Also scan pickupfx definitions attached to sprites,
+    // as they may not be in the name hash if they don't have a name.
+    for(int i = 0; i < NUMMOBJTYPES; i++)
+        considerCandidate(mobjinfo[i]->pickupfx);
+
+    return bestPickup;
+}
+
+//
 // Parse the given string's pickup flags
 //
 pickupflags_e E_PickupFlagsForStr(const char *flagstr)
@@ -1874,6 +1955,7 @@ bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
     invbarstate_t &invbarstate = player.invbarstate;
     itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
+
     if(!artifact)
         return false;
     if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
@@ -2485,6 +2567,8 @@ void E_InventoryEndHub(const player_t *player)
 // E_ClearInventory
 //
 // Completely clear a player's inventory.
+// If undroppable is true, undroppable items will be kept.
+// If setemptyweapon is true, the player will be given an empty weapon when done.
 //
 void E_ClearInventory(player_t *player)
 {
