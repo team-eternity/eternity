@@ -68,25 +68,6 @@ void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, fixed_t slope
 // ioanch 20160131: use lines
 void CAM_UseLines(const player_t *player);
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// ioanch 20160106: CAM_PathTraverse
-//
-
-//
-// Flags for path-traverse
-//
-// Should allow any extension as needed
-//
-enum
-{
-    CAM_ADDLINES           = 1, // look for lines in blocks
-    CAM_ADDTHINGS          = 2, // look for things in blocks
-    CAM_REQUIRELINEPORTALS = 4, // skip blocks without line portals
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 #endif
 
 // EOF

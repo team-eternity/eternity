@@ -51,12 +51,11 @@ enum
 {
     PT_ADDLINES             = 1,
     PT_ADDTHINGS            = 2,
-    PT_EARLYOUT             = 4,
-    PT_COMPATIBILITY        = 8, // classic compatibility (globals, "anywhere moo", lower robustness)
-    PT_EARLY_OUT_OF_BOUNDS  = 0x10,
-    PT_EARLY_OUT_IN_SCAN    = 0x20, // don't early out asap, but during scanning
+    PT_COMPATIBILITY        = 4, // classic compatibility (globals, "anywhere moo", lower robustness)
+    PT_EARLY_OUT_OF_BOUNDS  = 8,
+    PT_EARLY_OUT_IN_SCAN    = 0x10, // don't early out asap, but during scanning
     PT_ANY_EARLY_OUT        = PT_EARLY_OUT_OF_BOUNDS | PT_EARLY_OUT_IN_SCAN,
-    PT_REQUIRE_LINE_PORTALS = 0x40,
+    PT_REQUIRE_LINE_PORTALS = 0x20,
 };
 
 struct divline_t
@@ -198,7 +197,8 @@ inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *)
 void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i1, v2fixed_t &i2);
 
 bool ThingIsOnLine(const Mobj *t, const line_t *l); // killough 3/15/98
-bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context = nullptr);
+bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context = nullptr,
+                    divline_t *outTrace = nullptr);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 angle_t P_DoubleToAngle(double a);

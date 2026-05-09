@@ -64,7 +64,7 @@ public:
 
 private:
     AimContext(const Mobj *t1, angle_t angle, fixed_t distance, bool mask, const State *state);
-    static bool aimTraverse(const intercept_t *in, void *data, const divline_t &trace);
+    static bool aimTraverse(intercept_t *in, void *data, const divline_t &trace);
     bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac, const divline_t &trace);
     void checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace, fixed_t frac, v2fixed_t edgepos);
     fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, Mobj **outTarget, fixed_t *outDist,
@@ -267,7 +267,7 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
 //
 // Called when hitting a line or object
 //
-bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t &trace)
+bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trace)
 {
     auto &context = *static_cast<AimContext *>(vdata);
 
@@ -364,19 +364,16 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distanc
 {
     AimContext context(t1, angle, distance, mask, state);
 
-    PTDef def;
-    def.flags    = CAM_ADDLINES | CAM_ADDTHINGS;
-    def.earlyOut = PTDef::eo_no;
-    def.trav     = aimTraverse;
-    PathTraverser traverser(def, &context);
-
     fixed_t tx = context.state.c.x + (distance >> FRACBITS) * finecosine[angle >> ANGLETOFINESHIFT];
     fixed_t ty = context.state.c.y + (distance >> FRACBITS) * finesine[angle >> ANGLETOFINESHIFT];
 
-    if(traverser.traverse(context.state.c.x, context.state.c.y, tx, ty))
+    divline_t outTrace = {};
+    if(P_PathTraverse({ context.state.c.x, context.state.c.y }, { tx, ty }, PT_ADDLINES | PT_ADDTHINGS, aimTraverse,
+                      &context, &outTrace))
     {
         const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
-        if(context.checkPortalSector(endsector, distance, FRACUNIT, traverser.trace))
+
+        if(context.checkPortalSector(endsector, distance, FRACUNIT, outTrace))
         {
             if(outTarget)
                 *outTarget = context.linetarget;

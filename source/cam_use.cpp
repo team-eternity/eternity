@@ -61,8 +61,8 @@ public:
 
 private:
     UseContext(const player_t *player, const State *state);
-    static bool useTraverse(const intercept_t *in, void *context, const divline_t &trace);
-    static bool noWayTraverse(const intercept_t *in, void *context, const divline_t &trace);
+    static bool useTraverse(intercept_t *in, void *context, const divline_t &trace);
+    static bool noWayTraverse(intercept_t *in, void *context, const divline_t &trace);
 
     State           state;
     const player_t *player;
@@ -84,22 +84,15 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y, const St
     fixed_t x2 = x + (context.state.attackrange >> FRACBITS) * finecosine[angle];
     fixed_t y2 = y + (context.state.attackrange >> FRACBITS) * finesine[angle];
 
-    PTDef def;
-    def.earlyOut = PTDef::eo_no;
-    def.flags    = CAM_ADDLINES;
-    def.trav     = useTraverse;
-    PathTraverser traverser(def, &context);
-    if(traverser.traverse(x, y, x2, y2))
+    if(P_PathTraverse({ x, y }, { x2, y2 }, PT_ADDLINES, useTraverse, &context))
     {
         if(!context.portalhit)
         {
-            PTDef def;
-            def.earlyOut = PTDef::eo_no;
-            def.flags    = CAM_ADDLINES;
-            def.trav     = noWayTraverse;
-            PathTraverser traverser(def, &context);
-            if(!traverser.traverse(x, y, x2, y2) && strcasecmp(player->skin->sounds[sk_noway], "none"))
+            if(!P_PathTraverse({ x, y }, { x2, y2 }, PT_ADDLINES, noWayTraverse, &context) &&
+               strcasecmp(player->skin->sounds[sk_noway], "none"))
+            {
                 S_StartSound(context.thing, GameModeInfo->playerSounds[sk_noway]);
+            }
         }
     }
 }
@@ -128,7 +121,7 @@ UseContext::UseContext(const player_t *inplayer, const State *instate)
 //
 // Use traverse. Based on PTR_UseTraverse.
 //
-bool UseContext::useTraverse(const intercept_t *in, void *vcontext, const divline_t &trace)
+bool UseContext::useTraverse(intercept_t *in, void *vcontext, const divline_t &trace)
 {
     auto    context = static_cast<UseContext *>(vcontext);
     line_t *li      = in->d.line;
@@ -200,7 +193,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext, const divlin
 //
 // Same as PTR_NoWayTraverse. Will NEVER be called if portals had been hit.
 //
-bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext, const divline_t &trace)
+bool UseContext::noWayTraverse(intercept_t *in, void *vcontext, const divline_t &trace)
 {
     const line_t *ld = in->d.line; // This linedef
     if(ld->special)                // Ignore specials

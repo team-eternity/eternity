@@ -17,7 +17,7 @@
 //
 //------------------------------------------------------------------------------
 //
-// Purpose: Reentrant path traversing, used by several new functions.
+// Purpose: Common data for traversing.
 // Authors: James Haley, Ioan Chera
 //
 
@@ -27,68 +27,6 @@
 #include "m_collection.h"
 #include "p_maputl.h"
 #include "r_defs.h"
-
-inline static void VALID_ALLOC(byte *&set, const int n)
-{
-    set = ecalloc(byte *, 1, ((n + 7) & ~7) / 8);
-}
-
-inline static void VALID_FREE(byte *const set)
-{
-    efree(set);
-}
-
-//
-// PathTraverser setup
-//
-struct PTDef
-{
-    enum earlyout_e
-    {
-        eo_no,
-        eo_always,
-        eo_noearlycheck,
-    };
-
-    bool       (*trav)(const intercept_t *in, void *context, const divline_t &trace);
-    earlyout_e earlyOut;
-    uint32_t   flags;
-};
-
-//
-// Reentrant path-traverse caller
-//
-class PathTraverser
-{
-public:
-    bool traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty);
-    bool traverse(v2fixed_t c, v2fixed_t t) { return traverse(c.x, c.y, t.x, t.y); }
-    PathTraverser(const PTDef &indef, void *incontext);
-    ~PathTraverser()
-    {
-        VALID_FREE(validlines);
-        VALID_FREE(validpolys);
-    }
-
-    divline_t trace;
-
-private:
-    bool checkLine(size_t linenum);
-    bool blockLinesIterator(int x, int y);
-    bool blockThingsIterator(int x, int y);
-    bool traverseIntercepts() const;
-
-    const PTDef def;
-    void *const context;
-    byte       *validlines;
-    byte       *validpolys;
-    struct
-    {
-        bool hitpblock;
-        bool addedportal;
-    } portalguard;
-    PODCollection<intercept_t> intercepts;
-};
 
 //
 // Holds opening data just for the routines here

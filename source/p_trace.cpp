@@ -1127,7 +1127,7 @@ static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *contex
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context)
+bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context, divline_t *outTrace)
 {
     fixed_t   xt1, yt1;
     fixed_t   xt2, yt2;
@@ -1169,6 +1169,11 @@ bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, voi
     {
         localTrace.v  = v1;
         localTrace.dv = v2 - v1;
+    }
+
+    if(outTrace)
+    {
+        *outTrace = info.trace;
     }
 
     // This fix is comperr_blockmap from PRBoom+.

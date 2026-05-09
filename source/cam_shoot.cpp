@@ -78,7 +78,7 @@ private:
     bool        checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
     bool        shoot2SLine(line_t *li, int lineside, fixed_t dist, const tracelineopening_t &lo) const;
     bool        shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos) const;
-    static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
+    static bool shootTraverse(intercept_t *in, void *data, const divline_t &trace);
     ShootContext(const params_t &params, const State *instate);
 
     const params_t params;
@@ -98,13 +98,7 @@ void ShootContext::lineAttack(const params_t &params, const State *state)
     v2fixed_t    v2 =
         v2fixed_t(context.state.v) + v2fixed_t(context.cos, context.sin).fixedMul(context.params.attackrange);
 
-    PTDef def;
-    def.flags    = CAM_ADDLINES | CAM_ADDTHINGS;
-    def.earlyOut = PTDef::eo_no;
-    def.trav     = shootTraverse;
-    PathTraverser traverser(def, &context);
-
-    if(traverser.traverse(v2fixed_t(context.state.v), v2))
+    if(P_PathTraverse(v2fixed_t(context.state.v), v2, PT_ADDLINES | PT_ADDTHINGS, shootTraverse, &context))
     {
         // if 100% passed, check if the final sector was crossed
         const sector_t *endsector = R_PointInSubsector(v2)->sector;
@@ -217,7 +211,7 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fix
 //
 // ShootContext::shootTraverse
 //
-bool ShootContext::shootTraverse(const intercept_t *in, void *data, const divline_t &trace)
+bool ShootContext::shootTraverse(intercept_t *in, void *data, const divline_t &trace)
 {
     auto &context = *static_cast<ShootContext *>(data);
     if(in->isaline)
