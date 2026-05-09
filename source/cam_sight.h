@@ -85,9 +85,6 @@ enum
     CAM_REQUIRELINEPORTALS = 4, // skip blocks without line portals
 };
 
-bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, uint32_t flags, void *data,
-                      bool (*trav)(const intercept_t *in, void *data, const divline_t &trace));
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

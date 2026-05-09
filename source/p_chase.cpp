@@ -179,7 +179,7 @@ static bool P_checkLinePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-static bool PTR_chaseTraverse(intercept_t *in, void *context)
+static bool PTR_chaseTraverse(intercept_t *in, void *context, const divline_t &tracedl)
 {
     if(in->isaline)
     {
@@ -195,8 +195,8 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
         // hit line
         // position a bit closer
 
-        fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-        fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+        fixed_t x = tracedl.x + FixedMul(tracedl.dx, frac);
+        fixed_t y = tracedl.y + FixedMul(tracedl.dy, frac);
 
         if(li->flags & ML_TWOSIDED)
         { // crosses a two sided line
@@ -287,8 +287,8 @@ static void P_GetChasecamTarget()
     do
     {
         traverse.link = nullptr;
-        bool clear =
-            P_PathTraverse(travstart, { pCamTarget.x, pCamTarget.y }, PT_ADDLINES, PTR_chaseTraverse, &traverse);
+        bool clear    = P_PathTraverse(travstart, { pCamTarget.x, pCamTarget.y }, PT_ADDLINES | PT_COMPATIBILITY,
+                                       PTR_chaseTraverse, &traverse);
         if(!traverse.link && clear)
         {
             const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);

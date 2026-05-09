@@ -2378,7 +2378,7 @@ static void P_HitSlideLine(line_t *ld)
 //
 // PTR_SlideTraverse
 //
-static bool PTR_SlideTraverse(intercept_t *in, void *context)
+static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
 {
     line_t *li;
 
@@ -2494,9 +2494,12 @@ void P_SlideMove(Mobj *mo)
 
         bestslidefrac = FRACUNIT + 1;
 
-        P_PathTraverse({ leadx, leady }, { leadx + mo->momx, leady + mo->momy }, PT_ADDLINES, PTR_SlideTraverse);
-        P_PathTraverse({ trailx, leady }, { trailx + mo->momx, leady + mo->momy }, PT_ADDLINES, PTR_SlideTraverse);
-        P_PathTraverse({ leadx, traily }, { leadx + mo->momx, traily + mo->momy }, PT_ADDLINES, PTR_SlideTraverse);
+        P_PathTraverse({ leadx, leady }, { leadx + mo->momx, leady + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
+        P_PathTraverse({ trailx, leady }, { trailx + mo->momx, leady + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
+        P_PathTraverse({ leadx, traily }, { leadx + mo->momx, traily + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
 
         // move up to the wall
 

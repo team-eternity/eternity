@@ -1127,17 +1127,18 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
 {
     if(oldcentre.x == po->centerPt.x && oldcentre.y == po->centerPt.y)
         return;
-    CAM_PathTraverse(oldcentre.x, oldcentre.y, po->centerPt.x, po->centerPt.y, CAM_ADDLINES, po,
-                     [](const intercept_t *in, void *data, const divline_t &trace) {
-                         auto *po = static_cast<polyobj_t *>(data);
-                         if(in->d.line->special)
-                         {
-                             P_CrossSpecialLine(in->d.line, P_PointOnLineSidePrecise(trace.x, trace.y, in->d.line),
-                                                nullptr, po);
-                         }
+    P_PathTraverse(
+        oldcentre, { po->centerPt.x, po->centerPt.y }, PT_ADDLINES,
+        [](intercept_t *in, void *data, const divline_t &trace) {
+            auto *po = static_cast<polyobj_t *>(data);
+            if(in->d.line->special)
+            {
+                P_CrossSpecialLine(in->d.line, P_PointOnLineSidePrecise(trace.x, trace.y, in->d.line), nullptr, po);
+            }
 
-                         return true;
-                     });
+            return true;
+        },
+        po);
 }
 
 static int polyvalidcount;

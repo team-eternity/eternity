@@ -49,9 +49,14 @@ static constexpr int     MAPBTOFRAC    = MAPBLOCKSHIFT - FRACBITS;
 
 enum
 {
-    PT_ADDLINES  = 1,
-    PT_ADDTHINGS = 2,
-    PT_EARLYOUT  = 4,
+    PT_ADDLINES             = 1,
+    PT_ADDTHINGS            = 2,
+    PT_EARLYOUT             = 4,
+    PT_COMPATIBILITY        = 8, // classic compatibility (globals, "anywhere moo", lower robustness)
+    PT_EARLY_OUT_OF_BOUNDS  = 0x10,
+    PT_EARLY_OUT_IN_SCAN    = 0x20, // don't early out asap, but during scanning
+    PT_ANY_EARLY_OUT        = PT_EARLY_OUT_OF_BOUNDS | PT_EARLY_OUT_IN_SCAN,
+    PT_REQUIRE_LINE_PORTALS = 0x40,
 };
 
 struct divline_t
@@ -135,7 +140,7 @@ public:
     VisitList polys;
 };
 
-using traverser_t = bool (*)(intercept_t *in, void *context);
+using traverser_t = bool (*)(intercept_t *in, void *context, const divline_t &);
 
 fixed_t               P_AproxDistance(fixed_t dx, fixed_t dy);
 inline static fixed_t P_AproxDistance(v2fixed_t dv)
