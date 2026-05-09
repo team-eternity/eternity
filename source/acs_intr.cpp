@@ -205,8 +205,8 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(247, {"",        0, addCallFunc(ACS_CF_PlayerNumber)});
     addCodeDataACS0(248, {"",        0, addCallFunc(ACS_CF_ActivatorTID)});
   //addCodeDataACS0(249, {"",        2, addCallFunc(ACS_CF_SetMarineSprite)});
-    addCodeDataACS0(250, {"",        0, addCallFunc(ACS_CF_GetScreenW)});
-    addCodeDataACS0(251, {"",        0, addCallFunc(ACS_CF_GetScreenH)});
+    // addCodeDataACS0(250, {"",        0, addCallFunc(ACS_CF_GetScreenW)});
+    // addCodeDataACS0(251, {"",        0, addCallFunc(ACS_CF_GetScreenH)});
     addCodeDataACS0(252, {"",        7, addCallFunc(ACS_CF_Thing_Projectile2)});
     // 253-253: ACSVM internal codes.
   //addCodeDataACS0(254, {"",        3, addCallFunc(ACS_CF_SetHudSize)});

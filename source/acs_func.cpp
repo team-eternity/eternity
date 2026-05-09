@@ -1200,23 +1200,24 @@ bool ACS_CF_SetPolyobjXY(ACS_CF_ARGS)
 // ACS_CF_GetScreenH
 //
 // int GetScreenHeight(void);
+// REMOVED BECAUSE IT CAN BE USED MALICIOUSLY
 //
-bool ACS_CF_GetScreenH(ACS_CF_ARGS)
-{
-    thread->dataStk.push(video.height);
-    return false;
-}
+// bool ACS_CF_GetScreenH(ACS_CF_ARGS)
+// {
+//     thread->dataStk.push(video.height);
+//     return false;
+// }
 
 //
 // ACS_CF_GetScreenW
 //
 // int GetScreenWidth(void);
 //
-bool ACS_CF_GetScreenW(ACS_CF_ARGS)
-{
-    thread->dataStk.push(video.width);
-    return false;
-}
+// bool ACS_CF_GetScreenW(ACS_CF_ARGS)
+// {
+//     thread->dataStk.push(video.width);
+//     return false;
+// }
 
 //
 // fixed GetSectorCeilingZ(int tag, int x, int y);
