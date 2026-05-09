@@ -65,9 +65,6 @@ fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, bool 
 // ioanch 20160101: bullet attack
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, fixed_t slope, int damage, size_t puffidx);
 
-// ioanch 20160131: use lines
-void CAM_UseLines(const player_t *player);
-
 #endif
 
 // EOF

@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 
+#include "cam_common.h"
 #include "cam_sight.h"
 #include "d_gi.h"
 #include "doomstat.h"
@@ -47,6 +48,8 @@
 #include "r_state.h"
 #include "r_pcheck.h"
 #include "s_sound.h"
+
+static constexpr int RECURSION_LIMIT = 64;
 
 // Globals
 linetracer_t trace;
@@ -751,34 +754,97 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, int 
 // Use Lines
 //
 
-static bool PTR_UseTraverse(intercept_t *in, void *context, const divline_t &)
+struct UseContext
 {
-    if(in->d.line->special)
+    Mobj     *thing;
+    v2fixed_t shiftedthingpos;
+    v2fixed_t portalpos;
+    fixed_t   attackrange;
+    bool      compat;
+    bool      portalhit;
+    int       groupid;
+};
+
+static bool PTR_UseTraverse(intercept_t *in, void *vcontext, const divline_t &tracedl)
+{
+    auto    context = static_cast<UseContext *>(vcontext);
+    line_t &li      = *in->d.line;
+
+    // IMPORTANT: keep reference to trace.thing, not copy of pointer
+    Mobj *&thing = context->compat ? trace.thing : context->thing;
+
+    // ioanch 20160131: don't treat passable lines as portals; another code path
+    // will use them.
+    if(li.special && (context->compat || !(li.pflags & PS_PASSABLE)))
     {
-        P_UseSpecialLine(trace.thing, in->d.line, P_PointOnLineSide(trace.thing->x, trace.thing->y, in->d.line) == 1);
+        v2fixed_t sidepos;
+        if(context->compat)
+        {
+            const linkoffset_t *link = P_GetLinkOffset(thing->groupid, li.frontsector->groupid);
+            sidepos.x                = thing->x + link->x;
+            sidepos.y                = thing->y + link->y;
+        }
+        else
+        {
+            sidepos = context->shiftedthingpos;
+        }
+        auto sidefunc = context->compat ? P_PointOnLineSide : P_PointOnLineSidePrecise;
+        P_UseSpecialLine(thing, &li, sidefunc(sidepos.x, sidepos.y, &li) == 1);
 
         // WAS can't use for than one special line in a row
         // jff 3/21/98 NOW multiple use allowed with enabling line flag
-        return (!demo_compatibility && in->d.line->flags & ML_PASSUSE);
+        return (!demo_compatibility && li.flags & ML_PASSUSE);
+    }
+
+    tracelineopening_t lo = {};
+    if(li.extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+    {
+        if(context->compat)
+            clip.open.range = 0;
+        else
+            lo.openrange = 0;
     }
     else
     {
-        if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
-            clip.open.range = 0;
-        else
+        if(context->compat)
             clip.open = P_LineOpening(in->d.line, nullptr);
-
-        if(clip.open.range <= 0)
-        {
-            // can't use through a wall
-            if(strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
-                S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
-            return false;
-        }
-
-        // not a special line, but keep checking
-        return true;
+        else
+            lo.calculate(&li);
     }
+
+    const fixed_t range = context->compat ? clip.open.range : lo.openrange;
+    if(range <= 0)
+    {
+        // can't use through a wall
+        if(strcasecmp(thing->player->skin->sounds[sk_noway], "none"))
+            S_StartSound(thing, GameModeInfo->playerSounds[sk_noway]);
+        return false;
+    }
+    if(context->compat)
+        return true;
+    // ioanch 20160131: opportunity to pass through portals
+    const portal_t *portal = nullptr;
+    if(li.pflags & PS_PASSABLE)
+        portal = li.portal;
+    else if(li.extflags & EX_ML_LOWERPORTAL && li.backsector && li.backsector->srf.floor.pflags & PS_PASSABLE)
+        portal = li.backsector->srf.floor.portal;
+    if(!portal || P_PointOnLineSidePrecise(tracedl.x, tracedl.y, &li) != 0 || in->frac <= 0)
+        return true; // not a special line, but keep checking
+
+    // got a portal
+    const int newfromid = portal->data.link.toid;
+    if(newfromid == context->groupid)
+        return true;
+
+    context->portalhit          = true;
+    context->attackrange       -= FixedMul(context->attackrange, in->frac);
+    context->groupid            = newfromid;
+    context->portalpos.x        = tracedl.x + FixedMul(tracedl.dx, in->frac) + portal->data.link.delta.x;
+    context->portalpos.y        = tracedl.y + FixedMul(tracedl.dy, in->frac) + portal->data.link.delta.y;
+    context->shiftedthingpos.x += portal->data.link.delta.x;
+    context->shiftedthingpos.y += portal->data.link.delta.y;
+
+    return false;
 }
 
 //
@@ -793,9 +859,10 @@ static bool PTR_UseTraverse(intercept_t *in, void *context, const divline_t &)
 //
 // by Lee Killough
 //
-static bool PTR_NoWayTraverse(intercept_t *in, void *context, const divline_t &)
+static bool PTR_NoWayTraverse(intercept_t *in, void *vcontext, const divline_t &)
 {
-    line_t *ld = in->d.line; // This linedef
+    auto    context = static_cast<const UseContext *>(vcontext);
+    line_t *ld      = in->d.line; // This linedef
 
     if(ld->special) // Ignore specials
         return true;
@@ -804,11 +871,26 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *context, const divline_t &)
         return false;
 
     // Find openings
-    clip.open = P_LineOpening(ld, nullptr);
+    tracelineopening_t lo = {};
+    if(context->compat)
+        clip.open = P_LineOpening(ld, nullptr);
+    else
+    {
+        lo.calculate(ld);
+    }
 
-    return !(clip.open.range <= 0 ||                                           // No opening
-             clip.open.height.floor > trace.thing->z + STEPSIZE ||             // Too high, it blocks
-             clip.open.height.ceiling < trace.thing->z + trace.thing->height); // Too low, it blocks
+    if(context->compat)
+    {
+        return !(clip.open.range <= 0 ||                                           // No opening
+                 clip.open.height.floor > trace.thing->z + STEPSIZE ||             // Too high, it blocks
+                 clip.open.height.ceiling < trace.thing->z + trace.thing->height); // Too low, it blocks
+    }
+    else
+    {
+        return !(lo.openrange <= 0 ||                            // No opening
+                 lo.open.floor > context->thing->z + STEPSIZE || // Too high, it blocks
+                 lo.open.ceiling < context->thing->z + context->thing->height);
+    }
 }
 
 //
@@ -818,27 +900,35 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *context, const divline_t &)
 //
 void P_UseLines(player_t *player)
 {
-    // ioanch 20160131: portal aware codepath
-    if(gMapHasLinePortals && full_demo_version >= make_full_version(340, 48))
-    {
-        trace.attackrange = USERANGE; // for compatibility with revenant mishaps
-        CAM_UseLines(player);
-        return;
-    }
+    UseContext context = {};
+    context.compat     = !gMapHasLinePortals || full_demo_version < make_full_version(340, 48);
 
     fixed_t x1, y1, x2, y2;
-    int     angle;
 
-    trace.thing = player->mo;
+    if(context.compat)
+        trace.thing = player->mo;
+    else
+        context.thing = player->mo;
+    context.groupid           = player->mo->groupid;
+    context.shiftedthingpos.x = player->mo->x;
+    context.shiftedthingpos.y = player->mo->y;
 
-    angle = player->mo->angle >> ANGLETOFINESHIFT;
+    const int angle = player->mo->angle >> ANGLETOFINESHIFT;
 
     x1 = player->mo->x;
     y1 = player->mo->y;
-    x2 = x1 + (USERANGE >> FRACBITS) * (trace.cos = finecosine[angle]);
-    y2 = y1 + (USERANGE >> FRACBITS) * (trace.sin = finesine[angle]);
+    if(context.compat)
+    {
+        trace.cos = finecosine[angle];
+        trace.sin = finesine[angle];
+    }
+    x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle];
+    y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle];
 
-    trace.attackrange = USERANGE;
+    trace.attackrange   = USERANGE; // change it always, for compatibility with revenant mishaps
+    context.attackrange = USERANGE;
+
+    const int ptflags = context.compat ? PT_ADDLINES | PT_COMPATIBILITY : PT_ADDLINES;
 
     // old code:
     //
@@ -846,12 +936,36 @@ void P_UseLines(player_t *player)
     //
     // This added test makes the "oof" sound work on 2s lines -- killough:
 
-    if(P_PathTraverse({ x1, y1 }, { x2, y2 }, PT_ADDLINES | PT_COMPATIBILITY, PTR_UseTraverse))
-        if(!P_PathTraverse({ x1, y1 }, { x2, y2 }, PT_ADDLINES | PT_COMPATIBILITY, PTR_NoWayTraverse) &&
-           strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
+    auto playNoWay = [](const Mobj *thing) {
+        if(strcasecmp(thing->player->skin->sounds[sk_noway], "none"))
         {
-            S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
+            S_StartSound(thing, GameModeInfo->playerSounds[sk_noway]);
         }
+    };
+
+    if(P_PathTraverse({ x1, y1 }, { x2, y2 }, ptflags, PTR_UseTraverse, &context))
+    {
+        const Mobj *thing = context.compat ? trace.thing : context.thing;
+        if(!P_PathTraverse({ x1, y1 }, { x2, y2 }, ptflags, PTR_NoWayTraverse, &context))
+            playNoWay(thing);
+    }
+    else
+    {
+        int reclevel = 0;
+        while(context.portalhit && reclevel < RECURSION_LIMIT)
+        {
+            ++reclevel;
+            context.portalhit = false;
+            v2fixed_t v2      = { context.portalpos.x + (context.attackrange >> FRACBITS) * finecosine[angle],
+                                  context.portalpos.y + (context.attackrange >> FRACBITS) * finesine[angle] };
+            if(P_PathTraverse(context.portalpos, v2, PT_ADDLINES, PTR_UseTraverse, &context))
+            {
+                if(!P_PathTraverse(context.portalpos, v2, PT_ADDLINES, PTR_NoWayTraverse, &context))
+                    playNoWay(context.thing);
+                break;
+            }
+        }
+    }
 }
 
 //=============================================================================

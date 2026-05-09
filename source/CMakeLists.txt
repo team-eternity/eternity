@@ -196,7 +196,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_shoot.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_sight.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_sight.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/cam_use.cpp"
       SOURCE_GROUP "Source Files\\\\Confuse"
       "${CMAKE_CURRENT_SOURCE_DIR}/Confuse/confuse.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/Confuse/confuse.h"
