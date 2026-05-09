@@ -287,8 +287,8 @@ static void P_GetChasecamTarget()
     do
     {
         traverse.link = nullptr;
-        bool clear    = P_PathTraverse(travstart.x, travstart.y, pCamTarget.x, pCamTarget.y, PT_ADDLINES,
-                                       PTR_chaseTraverse, &traverse);
+        bool clear =
+            P_PathTraverse(travstart, { pCamTarget.x, pCamTarget.y }, PT_ADDLINES, PTR_chaseTraverse, &traverse);
         if(!traverse.link && clear)
         {
             const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);

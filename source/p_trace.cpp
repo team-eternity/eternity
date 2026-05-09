@@ -234,7 +234,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
     // killough 8/2/98: prevent friends from aiming at friends
     trace.aimflagsmask = mask;
 
-    P_PathTraverse(coords.x, coords.y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, PTR_AimTraverse);
+    P_PathTraverse({ coords.x, coords.y }, { x2, y2 }, PT_ADDLINES | PT_ADDTHINGS, PTR_AimTraverse);
 
     return clip.linetarget ? trace.aimslope : lookslope;
 }
@@ -741,7 +741,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, int 
     context.prevfrac        = 0;
     context.prevedgepos     = { t1->x, t1->y };
 
-    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, trav, &context);
+    P_PathTraverse({ t1->x, t1->y }, { x2, y2 }, PT_ADDLINES | PT_ADDTHINGS, trav, &context);
 }
 
 //=============================================================================
@@ -844,8 +844,8 @@ void P_UseLines(player_t *player)
     //
     // This added test makes the "oof" sound work on 2s lines -- killough:
 
-    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
-        if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse) &&
+    if(P_PathTraverse({ x1, y1 }, { x2, y2 }, PT_ADDLINES, PTR_UseTraverse))
+        if(!P_PathTraverse({ x1, y1 }, { x2, y2 }, PT_ADDLINES, PTR_NoWayTraverse) &&
            strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
         {
             S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
@@ -1022,7 +1022,7 @@ static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *contex
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, traverser_t trav, void *context)
+bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context)
 {
     fixed_t xt1, yt1;
     fixed_t xt2, yt2;
@@ -1037,67 +1037,65 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, t
     validcount++;
     intercept_p = intercepts;
 
-    if(!((x1 - bmaporgx) & (MAPBLOCKSIZE - 1)))
-        x1 += FRACUNIT; // don't side exactly on a line
+    if(!((v1.x - bmaporgx) & (MAPBLOCKSIZE - 1)))
+        v1.x += FRACUNIT; // don't side exactly on a line
 
-    if(!((y1 - bmaporgy) & (MAPBLOCKSIZE - 1)))
-        y1 += FRACUNIT; // don't side exactly on a line
+    if(!((v1.y - bmaporgy) & (MAPBLOCKSIZE - 1)))
+        v1.y += FRACUNIT; // don't side exactly on a line
 
-    trace.dl.x  = x1;
-    trace.dl.y  = y1;
-    trace.dl.dx = x2 - x1;
-    trace.dl.dy = y2 - y1;
+    trace.dl.v  = v1;
+    trace.dl.dv = v2 - v1;
 
     // This fix is comperr_blockmap from PRBoom+.
     if(demo_version >= 406)
     {
         int64_t _x1, _x2, _y1, _y2;
 
-        _x1 = int64_t(x1) - bmaporgx;
-        _y1 = int64_t(y1) - bmaporgy;
+        _x1 = int64_t(v1.x) - bmaporgx;
+        _y1 = int64_t(v1.y) - bmaporgy;
         xt1 = int(_x1 >> MAPBLOCKSHIFT);
         yt1 = int(_y1 >> MAPBLOCKSHIFT);
 
         mapx1 = int(_x1 >> MAPBTOFRAC);
         mapy1 = int(_y1 >> MAPBTOFRAC);
 
-        _x2 = int64_t(x2) - bmaporgx;
-        _y2 = int64_t(y2) - bmaporgy;
+        _x2 = int64_t(v2.x) - bmaporgx;
+        _y2 = int64_t(v2.y) - bmaporgy;
         xt2 = int(_x2 >> MAPBLOCKSHIFT);
         yt2 = int(_y2 >> MAPBLOCKSHIFT);
 
-        x1 -= bmaporgx;
-        y1 -= bmaporgy;
-        x2 -= bmaporgx;
-        y2 -= bmaporgy;
+        v1.x -= bmaporgx;
+        v1.y -= bmaporgy;
+        v2.x -= bmaporgx;
+        v2.y -= bmaporgy;
     }
     else
     {
-        x1  -= bmaporgx;
-        y1  -= bmaporgy;
-        xt1  = x1 >> MAPBLOCKSHIFT;
-        yt1  = y1 >> MAPBLOCKSHIFT;
+        v1.x -= bmaporgx;
+        v1.y -= bmaporgy;
+        xt1   = v1.x >> MAPBLOCKSHIFT;
+        yt1   = v1.y >> MAPBLOCKSHIFT;
 
-        mapx1  = x1 >> MAPBTOFRAC;
-        mapy1  = y1 >> MAPBTOFRAC;
+        mapx1 = v1.x >> MAPBTOFRAC;
+        mapy1 = v1.y >> MAPBTOFRAC;
 
-        x2  -= bmaporgx;
-        y2  -= bmaporgy;
-        xt2  = x2 >> MAPBLOCKSHIFT;
-        yt2  = y2 >> MAPBLOCKSHIFT;
+        v2.x -= bmaporgx;
+        v2.y -= bmaporgy;
+        xt2   = v2.x >> MAPBLOCKSHIFT;
+        yt2   = v2.y >> MAPBLOCKSHIFT;
     }
 
     if(xt2 > xt1)
     {
         mapxstep = 1;
         partial  = FRACUNIT - (mapx1 & (FRACUNIT - 1));
-        ystep    = FixedDiv(y2 - y1, D_abs(x2 - x1));
+        ystep    = FixedDiv(v2.y - v1.y, D_abs(v2.x - v1.x));
     }
     else if(xt2 < xt1)
     {
         mapxstep = -1;
         partial  = mapx1 & (FRACUNIT - 1);
-        ystep    = FixedDiv(y2 - y1, D_abs(x2 - x1));
+        ystep    = FixedDiv(v2.y - v1.y, D_abs(v2.x - v1.x));
     }
     else
     {
@@ -1112,13 +1110,13 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, t
     {
         mapystep = 1;
         partial  = FRACUNIT - (mapy1 & (FRACUNIT - 1));
-        xstep    = FixedDiv(x2 - x1, D_abs(y2 - y1));
+        xstep    = FixedDiv(v2.x - v1.x, D_abs(v2.y - v1.y));
     }
     else if(yt2 < yt1)
     {
         mapystep = -1;
         partial  = mapy1 & (FRACUNIT - 1);
-        xstep    = FixedDiv(x2 - x1, D_abs(y2 - y1));
+        xstep    = FixedDiv(v2.x - v1.x, D_abs(v2.y - v1.y));
     }
     else
     {
