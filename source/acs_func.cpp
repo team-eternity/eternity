@@ -2415,6 +2415,17 @@ bool ACS_CF_SetThingSpecial(ACS_CF_ARGS)
     return false;
 }
 
+// Returns true if removed
+static bool removeLastStateNameDotComponent(qstring &stateName)
+{
+    const size_t colonPos = stateName.findLastOf(':');
+    const size_t dotPos   = stateName.findLastOf('.');
+    if(dotPos == qstring::npos || (colonPos != qstring::npos && dotPos < colonPos))
+        return false;
+    stateName.truncate(dotPos);
+    return true;
+}
+
 //
 // int SetActorState(int tid, str state, int exact);
 //
@@ -2427,11 +2438,25 @@ bool ACS_CF_SetActorState(ACS_CF_ARGS)
     const state_t *state;
     uint32_t       count = 0;
     Mobj          *mo    = nullptr;
+    const int      exact = argV[2];
+
+    if(!checkBoolean(exact, "exact", "SetActorState"))
+    {
+        thread->dataStk.push(0);
+        return false;
+    }
 
     while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
     {
         // Look for the named state for that type.
-        if((state = E_GetJumpInfo(mo->info, statename)))
+        state = E_GetJumpInfo(mo->info, statename);
+        if(!exact)
+        {
+            qstring stateNameQStr(statename);
+            while(!state && removeLastStateNameDotComponent(stateNameQStr))
+                state = E_GetJumpInfo(mo->info, stateNameQStr.constPtr());
+        }
+        if(state)
         {
             P_SetMobjState(mo, state->index);
             ++count;
