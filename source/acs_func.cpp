@@ -855,6 +855,13 @@ bool ACS_CF_GetCVar(ACS_CF_ARGS)
         return false;
     }
 
+    if(!(command->flags & cf_server))
+    {
+        doom_warningf("Invalid non-server variable in ACS GetCVar: %s", name);
+        thread->dataStk.push(0);
+        return false;
+    }
+
     switch(var->type)
     {
     case vt_int:       thread->dataStk.push(*(int *)var->variable); break;
@@ -880,6 +887,13 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
 
     if(!(command = C_GetCmdForName(name)) || !(var = command->variable))
     {
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!(command->flags & cf_server))
+    {
+        doom_warningf("Invalid non-server variable in ACS GetCVarString: %s", name);
         thread->dataStk.push(0);
         return false;
     }
@@ -3131,6 +3145,11 @@ bool ACS_CF_Thing_Projectile2(ACS_CF_ARGS)
     fixed_t momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
     fixed_t momy    = speed * finesine[angle >> ANGLETOFINESHIFT];
     fixed_t momz    = vspeed << FRACBITS;
+
+    if(!checkBoolean((int)argV[5], "gravity", "Thing_Projectile2"))
+    {
+        return false;
+    }
 
     if(type < 0 || type >= ACS_NUM_THINGTYPES)
         return false;
