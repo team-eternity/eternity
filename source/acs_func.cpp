@@ -2750,7 +2750,17 @@ bool ACS_CF_SpawnSpotFacingForced(ACS_CF_ARGS)
 //
 bool ACS_CF_Sqrt(ACS_CF_ARGS)
 {
-    thread->dataStk.push((uint32_t)sqrt((double)argV[0]));
+    double operand = static_cast<double>(static_cast<int>(argV[0]));
+    if(operand < 0)
+    {
+        // Complain about it like with division by 0.
+        doom_warningf("Invalid negative operand to square root");
+        // But don't crash.
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    thread->dataStk.push((uint32_t)floor(sqrt(operand)));
     return false;
 }
 
