@@ -84,7 +84,7 @@ enum buttoncode_t
     //  BT_SPECIALMASK  = 3,   killough 9/29/98: unused now
 
     // Flag, weapon change pending.
-    // If true, the next 4 bits hold weapon num.
+    // If true, the next 4 bits hold weapon num (only in demo_version < 401)
     BT_CHANGE         = 4,
 
     // The 4bit weapon mask and shift, convenience.
@@ -105,7 +105,7 @@ enum buttoncode_t
 
     // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
 
-    // Press "Alt-fire".
+    // Press "Alt-fire" (demo_version >= 401).
     BTN_ATTACK_ALT    = 4,
 
     // Next weapon button

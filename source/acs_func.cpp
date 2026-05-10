@@ -1119,11 +1119,30 @@ bool ACS_CF_GetPlayerInput(ACS_CF_ARGS)
             if(player->cmd.buttons & BT_ATTACK)
                 result |= BUTTON_ATTACK;
 
+            // On old demos it's BT_CHANGE and doesn't matter
+            if(player->cmd.buttons & BTN_ATTACK_ALT && demo_version >= 401)
+                result |= BUTTON_ALTATTACK;
+
             if(player->cmd.buttons & BT_USE)
                 result |= BUTTON_USE;
 
             if(player->cmd.actions & AC_JUMP)
                 result |= BUTTON_JUMP;
+
+            if(player->cmd.actions & AC_RELOAD)
+                result |= BUTTON_RELOAD;
+
+            if(player->cmd.actions & AC_ZOOM)
+                result |= BUTTON_ZOOM;
+
+            if(player->cmd.actions & AC_USER1)
+                result |= BUTTON_USER1;
+            if(player->cmd.actions & AC_USER2)
+                result |= BUTTON_USER2;
+            if(player->cmd.actions & AC_USER3)
+                result |= BUTTON_USER3;
+            if(player->cmd.actions & AC_USER4)
+                result |= BUTTON_USER4;
 
             break;
 
@@ -1145,6 +1164,11 @@ bool ACS_CF_GetPlayerInput(ACS_CF_ARGS)
         case MODINPUT_SIDEMOVE:
         case INPUT_SIDEMOVE: //
             result = player->cmd.sidemove * 2048;
+            break;
+
+        case MODINPUT_UPMOVE:
+        case INPUT_UPMOVE: //
+            result = player->cmd.fly;
             break;
 
         default: //
