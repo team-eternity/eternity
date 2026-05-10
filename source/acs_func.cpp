@@ -3248,16 +3248,21 @@ bool ACS_CF_UniqueTID(ACS_CF_ARGS)
     if(!tid || tid < 0)
         tid = P_RangeRandomEx(pr_script, 1, 0x7FFF);
 
+    int wraparound = 0;
     while(P_FindMobjFromTID(tid, nullptr, nullptr))
     {
         // Don't overflow the TID.
         if(tid == 0x7FFF)
+        {
             tid = 1;
+            ++wraparound;
+        }
         else
             ++tid;
 
-        // Avoid infinite loops.
-        if(!--max)
+        // Avoid infinite loops or give up if exhausted.
+        --max;
+        if(!max || wraparound >= 2)
         {
             tid = 0;
             break;
