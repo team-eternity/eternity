@@ -2754,7 +2754,7 @@ bool ACS_CF_Sqrt(ACS_CF_ARGS)
     if(operand < 0)
     {
         // Complain about it like with division by 0.
-        doom_warningf("Invalid negative operand to square root");
+        doom_warningf("Invalid negative operand %d to square root", (int)argV[0]);
         // But don't crash.
         thread->dataStk.push(0);
         return false;
@@ -2769,6 +2769,16 @@ bool ACS_CF_Sqrt(ACS_CF_ARGS)
 //
 bool ACS_CF_FixedSqrt(ACS_CF_ARGS)
 {
+    double operand = M_FixedToDouble(argV[0]);
+    if(operand < 0)
+    {
+        // Complain about it like with division by 0.
+        doom_warningf("Invalid negative operand %g to square root", operand);
+        // But don't crash.
+        thread->dataStk.push(0);
+        return false;
+    }
+
     thread->dataStk.push(M_DoubleToFixed(sqrt(M_FixedToDouble(argV[0]))));
     return false;
 }
