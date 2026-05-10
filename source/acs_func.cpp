@@ -68,6 +68,7 @@
 #include "doomstat.h"
 #include "metaapi.h"
 #include "e_lib.h"
+#include "wi_stuff.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -944,7 +945,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
     switch(var)
     {
     case ACS_LP_ParTime:        return LevelInfo.partime;
-    case ACS_LP_ClusterNumber:  return 0;
+    case ACS_LP_ClusterNumber:  return gameepisode;
     case ACS_LP_LevelNumber:    return gamemap;
     case ACS_LP_TotalSecrets:   return totalsecret;
     case ACS_LP_FoundSecrets:   return G_TotalFoundSecrets();
@@ -952,7 +953,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
     case ACS_LP_FoundItems:     return G_TotalFoundItems();
     case ACS_LP_TotalMonsters:  return totalmonsters;
     case ACS_LP_KilledMonsters: return G_TotalKilledMonsters();
-    case ACS_LP_SuckTime:       return 1;
+    case ACS_LP_SuckTime:       return SUCK_TIME;
 
     default: return 0;
     }

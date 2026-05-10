@@ -827,7 +827,7 @@ static void WI_drawTime(int x, int y, int t)
     if(t < 0)
         return;
 
-    if(t <= 61 * 59) // otherwise known as 60*60 -1 == 3599
+    if(t <= SUCK_TIME - 1)
     {
         div = 1;
 
