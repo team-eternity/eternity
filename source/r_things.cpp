@@ -1092,8 +1092,6 @@ inline static byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
             return VS_DRAWSTYLE_SUB;
         else if(uint16_t(thing->translucency - 1) < FRACUNIT - 1)
             return VS_DRAWSTYLE_ALPHA;
-        else if(thing->flags & MF_TRANSLUCENT)
-            return VS_DRAWSTYLE_TRANMAP;
         else if(thing->flags3 & MF3_GHOST)
         {
             if(rTintTableIndex != -1)
@@ -1105,6 +1103,8 @@ inline static byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
             else
                 return VS_DRAWSTYLE_ALPHA;
         }
+        else if(thing->flags & MF_TRANSLUCENT)
+            return VS_DRAWSTYLE_TRANMAP;
     }
 
     return VS_DRAWSTYLE_NORMAL;
