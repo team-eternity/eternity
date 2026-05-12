@@ -60,6 +60,7 @@
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "r_data.h"
+#include "r_draw.h"
 #include "r_main.h"
 #include "r_sky.h"
 #include "r_state.h"
@@ -572,6 +573,144 @@ bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS)
     return ACS_ChkThingProp(static_cast<ACSThread *>(thread), argV[0], ACS_TP_FloorTex, argV[1]);
 }
 
+enum class RenderStyle : int
+{
+    none   = 0, // invisible
+    normal = 1, // solid
+    fuzzy  = 2, // spectre
+    // soulTrans          = 3,
+    // optFuzzy           = 4,
+    // stencil            = 5,
+    // addStencil         = 6,
+    // addShaded          = 7,
+    translucent = 64, // default Boom or Heretic translucent, or custom alpha
+    add         = 65, // additive translucency
+    // shaded             = 66,
+    // translucentStencil = 67,
+    // shadow             = 68,
+    subtract        = 69, // subtractive translucency
+    translucencyMap = 70, // custom Boom translucency map
+};
+
+// Same algorithm as in R_getDrawStyle. Can't reuse that, because this has to be user setting independent, and that one
+// is time-critical
+static RenderStyle getRenderStyle(const Mobj &thing)
+{
+    if(thing.flags & MF_NOSECTOR || thing.flags2 & MF2_DONTDRAW || !thing.translucency)
+        return RenderStyle::none;
+    if(thing.flags & MF_SHADOW)
+        return RenderStyle::fuzzy;
+    if(thing.tranmap >= 0)
+        return RenderStyle::translucencyMap;
+    if(thing.flags3 & MF3_TLSTYLEADD)
+        return RenderStyle::add;
+    if(thing.flags4 & MF4_TLSTYLESUB)
+        return RenderStyle::subtract;
+    if(uint16_t(thing.translucency - 1) < FRACUNIT - 1)
+        return RenderStyle::translucent;
+    if(thing.flags3 & MF3_GHOST)
+        return rTintTableIndex == -1 ? RenderStyle::translucent : RenderStyle::translucencyMap;
+    if(thing.flags & MF_TRANSLUCENT)
+        return RenderStyle::translucencyMap;
+    return RenderStyle::normal;
+}
+
+static void setRenderStyle(Mobj &thing, RenderStyle style)
+{
+    // Check the property
+    switch(style)
+    {
+    case RenderStyle::none:
+    case RenderStyle::normal:
+    case RenderStyle::fuzzy:
+    case RenderStyle::translucent:
+    case RenderStyle::add:
+    case RenderStyle::subtract:
+    case RenderStyle::translucencyMap: break;
+    default:                           doom_warningf("Set APROP_RenderStyle: invalid property %d", (int)style); return;
+    }
+
+    // Clear existing properties
+    // NOTE: we can't disable MF_NOSECTOR, so if it was set, the render style stays "none".
+    thing.flags        &= ~(MF_SHADOW | MF_TRANSLUCENT);
+    thing.flags2       &= ~MF2_DONTDRAW;
+    thing.flags3       &= ~(MF3_TLSTYLEADD | MF3_GHOST);
+    thing.flags4       &= ~MF4_TLSTYLESUB;
+    thing.translucency  = FRACUNIT;
+    thing.tranmap       = -1;
+
+    constexpr fixed_t boomTranMapRatio = 43008; // 65.625% according to https://doomwiki.org/wiki/TRANMAP
+
+    switch(style)
+    {
+    case RenderStyle::none:
+        // Set the defining flag
+        thing.flags2 |= MF2_DONTDRAW;
+        // Reset the other properties
+        thing.flags        |= thing.info->flags & (MF_SHADOW | MF_TRANSLUCENT);
+        thing.flags3       |= thing.info->flags3 & (MF3_TLSTYLEADD | MF3_GHOST);
+        thing.flags4       |= thing.info->flags4 & MF4_TLSTYLESUB;
+        thing.translucency  = thing.info->translucency;
+        thing.tranmap       = thing.info->tranmap;
+        break;
+    case RenderStyle::normal: break;
+    case RenderStyle::fuzzy:
+        thing.flags        |= MF_SHADOW;
+        thing.flags        |= thing.info->flags & MF_TRANSLUCENT;
+        thing.flags3       |= thing.info->flags3 & (MF3_TLSTYLEADD | MF3_GHOST);
+        thing.flags4       |= thing.info->flags4 & MF4_TLSTYLESUB;
+        thing.translucency  = thing.info->translucency;
+        if(!thing.translucency)
+            thing.translucency = boomTranMapRatio;
+        thing.tranmap = thing.info->tranmap;
+        break;
+    case RenderStyle::translucent:
+        thing.translucency = thing.info->translucency;
+        if(!thing.translucency || thing.translucency >= FRACUNIT)
+            thing.translucency = boomTranMapRatio;
+        thing.flags  |= thing.info->flags & MF_TRANSLUCENT;
+        thing.flags3 |= thing.info->flags3 & MF3_GHOST;
+        break;
+    case RenderStyle::add:
+        thing.flags3       |= MF3_TLSTYLEADD;
+        thing.flags        |= thing.info->flags & MF_TRANSLUCENT;
+        thing.flags3       |= thing.info->flags3 & MF3_GHOST;
+        thing.flags4       |= thing.info->flags4 & MF4_TLSTYLESUB;
+        thing.translucency  = thing.info->translucency;
+        if(!thing.translucency)
+            thing.translucency = boomTranMapRatio;
+        break;
+    case RenderStyle::subtract:
+        thing.flags4       |= MF4_TLSTYLESUB;
+        thing.flags        |= thing.info->flags & MF_TRANSLUCENT;
+        thing.flags3       |= thing.info->flags3 & MF3_GHOST;
+        thing.translucency  = thing.info->translucency;
+        if(!thing.translucency)
+            thing.translucency = boomTranMapRatio;
+        break;
+    case RenderStyle::translucencyMap:
+        if(thing.info->tranmap >= 0)
+        {
+            thing.tranmap       = thing.info->tranmap;
+            thing.flags        |= thing.info->flags & MF_TRANSLUCENT;
+            thing.flags3       |= thing.info->flags3 & (MF3_TLSTYLEADD | MF3_GHOST);
+            thing.flags4       |= thing.info->flags4 & MF4_TLSTYLESUB;
+            thing.translucency  = thing.info->translucency;
+            if(!thing.translucency)
+                thing.translucency = boomTranMapRatio;
+        }
+        else if(thing.info->flags3 & MF3_GHOST && rTintTableIndex >= 0)
+        {
+            thing.flags3 |= MF3_GHOST;
+            thing.flags  |= thing.info->flags & MF_TRANSLUCENT;
+        }
+        else
+            thing.flags |= MF_TRANSLUCENT;
+        break;
+    default: break; // error already sent
+    }
+}
+
 //
 // ACS_ChkThingProp
 //
@@ -586,7 +725,7 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_Speed:        return static_cast<uint32_t>(mo->info->speed) == val;
     case ACS_TP_Damage:       return static_cast<uint32_t>(mo->damage) == val;
     case ACS_TP_Alpha:        return static_cast<uint32_t>(mo->translucency) == val;
-    case ACS_TP_RenderStyle:  return false;
+    case ACS_TP_RenderStyle:  return static_cast<uint32_t>(getRenderStyle(*mo)) == val;
     case ACS_TP_SeeSound:     return false;
     case ACS_TP_AttackSound:  return false;
     case ACS_TP_PainSound:    return false;
@@ -1363,7 +1502,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
     case ACS_TP_Speed:        return mo->info->speed;
     case ACS_TP_Damage:       return mo->damage;
     case ACS_TP_Alpha:        return mo->translucency;
-    case ACS_TP_RenderStyle:  return 0;
+    case ACS_TP_RenderStyle:  return static_cast<uint32_t>(getRenderStyle(*mo));
     case ACS_TP_SeeSound:     return 0;
     case ACS_TP_AttackSound:  return 0;
     case ACS_TP_PainSound:    return 0;
@@ -2350,7 +2489,7 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
     case ACS_TP_Speed:        break;
     case ACS_TP_Damage:       thing->damage = val; break;
     case ACS_TP_Alpha:        thing->translucency = val; break;
-    case ACS_TP_RenderStyle:  break;
+    case ACS_TP_RenderStyle:  setRenderStyle(*thing, static_cast<RenderStyle>(val)); break;
     case ACS_TP_SeeSound:     break;
     case ACS_TP_AttackSound:  break;
     case ACS_TP_PainSound:    break;
