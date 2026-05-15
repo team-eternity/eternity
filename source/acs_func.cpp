@@ -711,17 +711,14 @@ static void setRenderStyle(Mobj &thing, RenderStyle style)
     }
 }
 
-static ACSVM::Word getSoundStringID(int soundindex)
+static bool checkSoundStringID(const ACSThread *thread, int soundindex, uint32_t val)
 {
-    const sfxinfo_t *info = E_SoundForUnknownTypeDEHNum(soundindex);
+    const char *const      string = thread->scopeMap->getString(val)->str;
+    const sfxinfo_t *const info   = E_SoundForUnknownTypeDEHNum(soundindex);
     if(!info)
-        return ACSVM::Word(0);
-    if(estrnonempty(info->mnemonic))
-        return ~ACSenv.getString(info->mnemonic)->idx;
-    if(*info->name)
-        return ~ACSenv.getString(info->name)->idx;
-    return ACSVM::Word(0);
-};
+        return !strcasecmp(string, "none") || estrempty(string);
+    return (info->mnemonic && !strcasecmp(info->mnemonic, string)) || !strcasecmp(info->name, string);
+}
 
 //
 // ACS_ChkThingProp
@@ -738,11 +735,11 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_Damage:       return static_cast<uint32_t>(mo->damage) == val;
     case ACS_TP_Alpha:        return static_cast<uint32_t>(mo->translucency) == val;
     case ACS_TP_RenderStyle:  return static_cast<uint32_t>(getRenderStyle(*mo)) == val;
-    case ACS_TP_SeeSound:     return getSoundStringID(mo->info->seesound) == val;
-    case ACS_TP_AttackSound:  return getSoundStringID(mo->info->attacksound) == val;
-    case ACS_TP_PainSound:    return getSoundStringID(mo->info->painsound) == val;
-    case ACS_TP_DeathSound:   return getSoundStringID(mo->info->deathsound) == val;
-    case ACS_TP_ActiveSound:  return getSoundStringID(mo->info->activesound) == val;
+    case ACS_TP_SeeSound:     return checkSoundStringID(thread, mo->info->seesound, val);
+    case ACS_TP_AttackSound:  return checkSoundStringID(thread, mo->info->attacksound, val);
+    case ACS_TP_PainSound:    return checkSoundStringID(thread, mo->info->painsound, val);
+    case ACS_TP_DeathSound:   return checkSoundStringID(thread, mo->info->deathsound, val);
+    case ACS_TP_ActiveSound:  return checkSoundStringID(thread, mo->info->activesound, val);
     case ACS_TP_Ambush:       return !!(mo->flags & MF_AMBUSH) == !!val;
     case ACS_TP_Invulnerable: return !!(mo->flags2 & MF2_INVULNERABLE) == !!val;
     case ACS_TP_JumpZ:        return false;
@@ -1515,11 +1512,11 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
     case ACS_TP_Damage:       return mo->damage;
     case ACS_TP_Alpha:        return mo->translucency;
     case ACS_TP_RenderStyle:  return static_cast<uint32_t>(getRenderStyle(*mo));
-    case ACS_TP_SeeSound:     return getSoundStringID(mo->info->seesound);
-    case ACS_TP_AttackSound:  return getSoundStringID(mo->info->attacksound);
-    case ACS_TP_PainSound:    return getSoundStringID(mo->info->painsound);
-    case ACS_TP_DeathSound:   return getSoundStringID(mo->info->deathsound);
-    case ACS_TP_ActiveSound:  return getSoundStringID(mo->info->activesound);
+    case ACS_TP_SeeSound:     return 0;
+    case ACS_TP_AttackSound:  return 0;
+    case ACS_TP_PainSound:    return 0;
+    case ACS_TP_DeathSound:   return 0;
+    case ACS_TP_ActiveSound:  return 0;
     case ACS_TP_Ambush:       return !!(mo->flags & MF_AMBUSH);
     case ACS_TP_Invulnerable: return !!(mo->flags2 & MF2_INVULNERABLE);
     case ACS_TP_JumpZ:        return 0;
