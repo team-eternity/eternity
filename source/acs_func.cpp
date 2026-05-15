@@ -43,6 +43,7 @@
 #include "e_hash.h"
 #include "e_inventory.h"
 #include "e_mod.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_weapons.h"
@@ -742,7 +743,8 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_ActiveSound:  return checkSoundStringID(thread, mo->info->activesound, val);
     case ACS_TP_Ambush:       return !!(mo->flags & MF_AMBUSH) == !!val;
     case ACS_TP_Invulnerable: return !!(mo->flags2 & MF2_INVULNERABLE) == !!val;
-    case ACS_TP_JumpZ:        return false;
+    case ACS_TP_JumpZ:
+        return mo->player && mo->player->pclass ? mo->player->pclass->jumpspeed == static_cast<fixed_t>(val) : false;
     case ACS_TP_ChaseGoal:    return false;
     case ACS_TP_Frightened:   return false;
     case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND) == !!val;
@@ -1519,7 +1521,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
     case ACS_TP_ActiveSound:  return 0;
     case ACS_TP_Ambush:       return !!(mo->flags & MF_AMBUSH);
     case ACS_TP_Invulnerable: return !!(mo->flags2 & MF2_INVULNERABLE);
-    case ACS_TP_JumpZ:        return 0;
+    case ACS_TP_JumpZ:        return mo->player && mo->player->pclass ? mo->player->pclass->jumpspeed : 0;
     case ACS_TP_ChaseGoal:    return 0;
     case ACS_TP_Frightened:   return 0;
     case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND);
