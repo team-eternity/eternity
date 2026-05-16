@@ -248,7 +248,7 @@ void A_SargAttack12(actionargs_t *actionargs)
 
     A_FaceTarget(actionargs);
     damage = ((P_Random(pr_sargattack) % mod) + 1) * mul;
-    P_LineAttack(actor, actor->angle, MELEERANGE, 0, damage, pufftype);
+    P_LineAttack(actor, actor->angle, P_GetMeleeRange(*actor), 0, damage, pufftype);
 }
 
 //

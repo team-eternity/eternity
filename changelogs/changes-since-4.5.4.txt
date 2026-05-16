@@ -145,3 +145,5 @@ Bug fixes
 * Fixed monster interpolation bug when going up slopes, especially on liquid ones.
 * ACS ReplaceTextures wasn't updating the sky status when switching a sky texture.
 * Fixed lock-up caused by polyobject mirror cycles and override specials.
+* Fixed default melee range still being wrongly used despite possibility to customize it, for some
+  cases.

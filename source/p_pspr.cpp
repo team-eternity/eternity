@@ -1539,7 +1539,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
     berzerkmul           = E_ArgAsInt(args, 2, 0);
     deftype              = E_ArgAsKwd(args, 3, &cpmkwds, 0);
     sfx                  = E_ArgAsSound(args, 4);
-    range                = E_ArgAsFixed(args, 5, MELEERANGE);
+    range                = E_ArgAsFixed(args, 5, P_GetMeleeRange(*mo));
     const char *pufftype = E_ArgAsString(args, 6, nullptr);
 
     // adjust parameters
