@@ -4432,6 +4432,11 @@ void P_NeutralizeForRemoval(Mobj &mobj)
     mobj.health                        = -1000;
 }
 
+fixed_t P_GetMeleeRange(const Mobj &mobj)
+{
+    return mbf21_demo ? mobj.info->meleerange : MELEERANGE;
+}
+
 #if 0
 //
 // Small natives

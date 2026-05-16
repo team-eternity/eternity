@@ -617,9 +617,10 @@ inline static fixed_t getTargetZ(Mobj *mo)
     return getThingZ(mo, mo->target);
 }
 
-bool P_CheckFloorCeilingForSpawning(const Mobj &mobj);
-bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
-void P_NeutralizeForRemoval(Mobj &mobj);
+bool    P_CheckFloorCeilingForSpawning(const Mobj &mobj);
+bool    P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
+void    P_NeutralizeForRemoval(Mobj &mobj);
+fixed_t P_GetMeleeRange(const Mobj &mobj);
 
 //=============================================================================
 //
