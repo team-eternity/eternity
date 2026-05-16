@@ -770,7 +770,7 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_Radius:       return static_cast<uint32_t>(mo->radius) == val;
     case ACS_TP_ReactionTime: return static_cast<uint32_t>(mo->reactiontime) == val;
     case ACS_TP_MeleeRange:   return P_GetMeleeRange(*mo) == val;
-    case ACS_TP_ViewHeight:   return false;
+    case ACS_TP_ViewHeight:   return mo->player ? static_cast<uint32_t>(mo->player->viewheight) == val : false;
     case ACS_TP_AttackZOff:   return false;
     case ACS_TP_StencilColor: return false;
     case ACS_TP_Friction:     return false;
@@ -1547,7 +1547,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
     case ACS_TP_Radius:       return mo->radius;
     case ACS_TP_ReactionTime: return mo->reactiontime;
     case ACS_TP_MeleeRange:   return P_GetMeleeRange(*mo);
-    case ACS_TP_ViewHeight:   return 0;
+    case ACS_TP_ViewHeight:   return mo->player ? mo->player->viewheight : 0;
     case ACS_TP_AttackZOff:   return 0;
     case ACS_TP_StencilColor: return 0;
     case ACS_TP_Friction:     return 0;
