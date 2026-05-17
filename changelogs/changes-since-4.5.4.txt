@@ -89,6 +89,7 @@ Improvements
 * ACS CheckActorCeilingTexture and CheckActorFloorTexture are now portal-aware.
 * ACS SetLineBlocking now also supports BLOCK_PLAYERS.
 * Fixed so the Heretic ghost translucency takes precedence over the weaker (by TRANMAP) Boom default translucency.
+* Added some readily available APROP implementations to the GetActorProperty and CheckActorProperty ACS functions.
 
 Bug fixes
 ---------
