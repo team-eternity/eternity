@@ -955,7 +955,7 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                             }
                         }
                         else if(!P_LevelIsVanillaHexen() && !(line->flags & ML_BLOCKING) &&
-                                P_TryMove(mo, mo->x, mo->y, 1))
+                                (line->flags & ML_TWOSIDED) && line->backsector && P_TryMove(mo, mo->x, mo->y, 1))
                         {
                             mo = next;
                             continue;
