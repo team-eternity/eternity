@@ -32,10 +32,12 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "polyobj.h"
+#include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
 
@@ -58,9 +60,25 @@ void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
         return;
     }
 
-    const sector_t *front   = line.frontsector;
-    const sector_t *back    = line.backsector;
-    v2fixed_t       backpos = pos;
+    const bool isPolyObj2Sided =
+        !P_LevelIsVanillaHexen() && line.flags & ML_TWOSIDED && line.intflags & MLI_DYNASEGLINE;
+
+    const sector_t *front;
+    const sector_t *back;
+    if(isPolyObj2Sided)
+    {
+        // For a polyobject 2-sided line, we don't actually have a top and bottom limit -- that's established by other
+        // lines and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
+        // callback anyway, but it's not reliable in general.
+        front = back = R_PointInSubsector(pos)->sector;
+    }
+    else
+    {
+        front = line.frontsector;
+        back  = line.backsector;
+    }
+
+    v2fixed_t backpos = pos;
 
     const sector_t *beyond =
         line.intflags & MLI_1SPORTALLINE && line.beyondportalline ? line.beyondportalline->frontsector : nullptr;
