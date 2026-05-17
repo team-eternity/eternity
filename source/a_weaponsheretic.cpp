@@ -878,7 +878,7 @@ void A_HticArtiTele(actionargs_t *actionargs)
         destAngle = ANG45 * (playerstarts[0].angle / 45);
     }
 
-    P_HereticTeleport(mo, destX, destY, destAngle, false);
+    P_Teleport(mo, { destX, destY }, destAngle, false);
     S_StartSound(nullptr, sfx_hwpnup);
 }
 

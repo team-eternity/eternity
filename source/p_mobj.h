@@ -848,6 +848,11 @@ inline static void P_transferFriendship(Mobj &target, const Mobj &source)
     target.flags = (target.flags & ~MF_FRIEND) | (source.flags & MF_FRIEND);
 }
 
+inline static bool P_allowTeleport(const Mobj &thing)
+{
+    return !(thing.flags & MF_MISSILE) || thing.flags3 & MF3_TELESTOMP;
+}
+
 #endif
 
 //----------------------------------------------------------------------------
