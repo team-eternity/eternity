@@ -907,6 +907,7 @@ inline static bool lineCanCarry(const line_t &line)
 }
 
 // When passable polyobject with special lines passes through a still thing, activate them
+#if 0
 static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divline_t &oldLinePos)
 {
     if(!line.special)
@@ -920,6 +921,7 @@ static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divl
         P_CrossSpecialLine(&line, oldside, &mo, nullptr);
     }
 }
+#endif
 
 //
 // Polyobj_clipThings
@@ -965,14 +967,14 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &old
                     if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) ||
                        mo->z + mo->height <= texbot)
                     {
-                        Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
+                        // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
                         continue;
                     }
                 }
                 else if(!P_LevelIsVanillaHexen() && !(line->flags & ML_BLOCKING) && (line->flags & ML_TWOSIDED) &&
                         line->backsector && P_TryMove(mo, mo->x, mo->y, 1))
                 {
-                    Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
+                    // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
                     continue;
                 }
 
