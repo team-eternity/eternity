@@ -906,6 +906,21 @@ inline static bool lineCanCarry(const line_t &line)
            !(line.extflags & (EX_ML_WRAPMIDTEX | EX_ML_BLOCKALL));
 }
 
+// When passable polyobject with special lines passes through a still thing, activate them
+static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divline_t &oldLinePos)
+{
+    if(!line.special)
+        return;
+    const linkoffset_t *link = P_GetLinkOffset(mo.groupid, line.frontsector->groupid);
+    const v2fixed_t     pos  = { mo.x + link->x, mo.y + link->y };
+
+    int oldside = P_PointOnDivlineSide(pos.x, pos.y, &oldLinePos);
+    if(P_PointOnLineSide(pos.x, pos.y, &line) != oldside)
+    {
+        P_CrossSpecialLine(&line, oldside, &mo, nullptr);
+    }
+}
+
 //
 // Polyobj_clipThings
 //
@@ -914,7 +929,7 @@ inline static bool lineCanCarry(const line_t &line)
 // portal walls.
 // Returns true if something was hit.
 //
-static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t *vec = nullptr)
+static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &oldLinePos)
 {
     bool    hitthing = false;
     fixed_t linebox[4];
@@ -950,6 +965,7 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                             if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) ||
                                mo->z + mo->height <= texbot)
                             {
+                                Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
                                 mo = next;
                                 continue;
                             }
@@ -957,6 +973,7 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                         else if(!P_LevelIsVanillaHexen() && !(line->flags & ML_BLOCKING) &&
                                 (line->flags & ML_TWOSIDED) && line->backsector && P_TryMove(mo, mo->x, mo->y, 1))
                         {
+                            Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
                             mo = next;
                             continue;
                         }
@@ -966,12 +983,10 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line, const vertex_t
                         if(line->pflags & PS_PASSABLE)
                         {
                             // HACK
-                            v2fixed_t pos = { mo->x, mo->y };
-                            if(vec)
-                            {
-                                mo->x += FixedMul(vec->x, 72090); // FRACUNIT * 1.1
-                                mo->y += FixedMul(vec->y, 72090);
-                            }
+                            v2fixed_t       pos  = { mo->x, mo->y };
+                            const v2fixed_t vec  = { line->v1->x - oldLinePos.x, line->v1->y - oldLinePos.y };
+                            mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
+                            mo->y               += FixedMul(vec.y, 72090);
                             if(!P_TryMove(mo, pos.x, pos.y, true))
                             {
                                 mo->x = pos.x;
@@ -1276,7 +1291,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     // ioanch 20160302: do NOT collide and get back if onload = true.
     if(!onload)
         for(i = 0; i < po->numLines; ++i)
-            hitthing |= Polyobj_clipThings(po, po->lines[i], &vec);
+        {
+            divline_t oldLinePos = {};
+            P_MakeDivline(po->lines[i], &oldLinePos);
+            oldLinePos.x -= vec.x;
+            oldLinePos.y -= vec.y;
+            hitthing     |= Polyobj_clipThings(po, po->lines[i], oldLinePos);
+        }
 
     if(hitthing)
     {
@@ -1596,6 +1617,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     // save current positions and rotate all vertices
     PODCollection<vertex_t> restoreVertices;
     restoreVertices.resize(po->numVertices);
+    PODCollection<divline_t> linesBeforeMove;
+    linesBeforeMove.resize(po->numLines);
+    for(i = 0; i < po->numLines; ++i)
+        P_MakeDivline(po->lines[i], &linesBeforeMove[i]);
     for(i = 0; i < po->numVertices; ++i)
     {
         if(po->lastBackupTic != gametic || onload)
@@ -1620,7 +1645,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     // ioanch 20160302: do NOT collide if onload = true.
     if(!onload)
         for(i = 0; i < po->numLines; ++i)
-            hitthing |= Polyobj_clipThings(po, po->lines[i]);
+            hitthing |= Polyobj_clipThings(po, po->lines[i], linesBeforeMove[i]);
 
     if(hitthing)
     {
