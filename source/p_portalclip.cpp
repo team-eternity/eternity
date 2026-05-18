@@ -411,12 +411,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         clip.open = P_LineOpening(ld, clip.thing, nullptr, true, &lineclipflags);
 
     // now apply correction to openings in case thing is positioned differently
-    bool samegroupid = clip.thing->groupid == linegroupid;
+    const unsigned uoflags = (clip.thing->groupid == linegroupid) * UO_SAMEGROUPID |
+                             !!(lineclipflags & LINECLIP_ABOVEPORTAL) * UO_ABOVEPORTAL |
+                             !!(lineclipflags & LINECLIP_UNDERPORTAL) * UO_UNDERPORTAL;
 
-    bool aboveportal = !!(lineclipflags & LINECLIP_ABOVEPORTAL);
-    bool underportal = !!(lineclipflags & LINECLIP_UNDERPORTAL);
-
-    if(!samegroupid && !aboveportal && thingz < innerheights.bottomend &&
+    if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_ABOVEPORTAL) && thingz < innerheights.bottomend &&
        thingmid < (outerheights.bottomend + clip.open.height.floor) / 2)
     {
         clip.open.height.ceiling  = outerheights.bottomend;
@@ -426,7 +425,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         clip.open.sec.floor       = D_MININT;
         lineclipflags            &= ~LINECLIP_UNDERPORTAL;
     }
-    if(!samegroupid && !underportal && thingtopz > innerheights.topend &&
+    if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_UNDERPORTAL) && thingtopz > innerheights.topend &&
        thingmid >= (outerheights.topend + clip.open.height.ceiling) / 2)
     {
         // adjust the lowfloor to the real observed value, to prevent
@@ -463,14 +462,14 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
     }
 
     // update stuff
-    P_UpdateFromOpening(clip.open, ld, clip, underportal, aboveportal, lineclipflags, samegroupid, outerheights.topend);
+    P_UpdateFromOpening(clip.open, ld, clip, uoflags, lineclipflags, outerheights.topend);
 
     // ioanch: only allow spechits if on contact or simply same group.
     // Line portals however are ONLY collected if on the same group
 
     // if contacted a special line, add it to the list
 
-    if(samegroupid ||
+    if(uoflags & UO_SAMEGROUPID ||
        (outerheights.topend > thingz && outerheights.bottomend < thingtopz && !(ld->pflags & PS_PASSABLE)))
     {
         P_CollectSpechits(ld, pushhit);

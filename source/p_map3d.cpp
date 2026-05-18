@@ -630,7 +630,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
         open.intersect(P_SlopeOpeningPortalAware(corners[1]));
         open.intersect(P_SlopeOpeningPortalAware(corners[2]));
         open.intersect(P_SlopeOpeningPortalAware(corners[3]));
-        P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
+        P_UpdateFromOpening(open, nullptr, clip, UO_SAMEGROUPID, 0, 0);
     }
 
     if(clip.zref.ceiling - clip.zref.floor < thing->height)

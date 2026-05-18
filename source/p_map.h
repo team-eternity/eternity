@@ -334,8 +334,16 @@ void P_PopClipStack();
 void P_ClearGlobalLevelReferences();
 
 bool P_OnGroundOrThing(const Mobj &mobj);
-void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, bool underportal,
-                         bool aboveportal, uint32_t lineclipflags, bool samegroupid, fixed_t linetop);
+
+enum
+{
+    UO_UNDERPORTAL = 1,
+    UO_ABOVEPORTAL = 2,
+    UO_SAMEGROUPID = 4,
+};
+
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, unsigned flags,
+                         uint32_t lineclipflags, fixed_t linetop);
 
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
