@@ -683,141 +683,146 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     const bool isPolyObj2Sided =
         !P_LevelIsVanillaHexen() && linedef->flags & ML_TWOSIDED && linedef->intflags & MLI_DYNASEGLINE;
 
-    const sector_t *openfrontsector, *openbacksector;
-
+    const Surfaces<surface_t> *front;
+    const Surfaces<surface_t> *back;
     if(isPolyObj2Sided)
     {
-        // For a polyobject 2-sided line, we don't actually have a top and bottom limit -- that's established by other
-        // lines and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
-        // callback anyway, but it's not reliable in general.
-        openfrontsector = openbacksector = R_PointInSubsector(mo ? mo->x : point.x, mo ? mo->y : point.y)->sector;
+        const sector_t &sector = *R_PointInSubsector(point)->sector;
+        open.height.ceiling    = D_MAXINT;
+        open.ceilsector        = nullptr;
+        open.height.floor      = D_MININT;
+        open.bottomgroupid     = sector.groupid;
+        open.floorsector       = nullptr;
+        open.lowfloor          = D_MAXINT; // so it won't contribute dropoff
+        open.floorpic          = sector.srf.floor.pic;
+        front                  = &sector.srf;
+        back                   = &sector.srf;
     }
     else
     {
-        openfrontsector = linedef->frontsector;
-        openbacksector  = linedef->backsector;
-    }
-    sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
-                           linedef->beyondportalline->frontsector :
-                           nullptr;
-    if(beyond)
-    {
-        openbacksector = beyond;
-        if(linedef->portal && linedef->portal->type == R_LINKED)
-        {
-            backpoint.x += linedef->portal->data.link.delta.x;
-            backpoint.y += linedef->portal->data.link.delta.y;
-        }
-    }
+        const sector_t *openfrontsector, *openbacksector;
 
-    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
-    // z is if both sides of that line have the same portal.
-    const surface_t &frontceiling = openfrontsector->srf.ceiling;
-    const surface_t &backceiling  = openbacksector->srf.ceiling;
-    {
-        if(mo && demo_version >= 333 &&
-           ((frontceiling.pflags & PS_PASSABLE && backceiling.pflags & PS_PASSABLE &&
-             frontceiling.portal == backceiling.portal) ||
-            (frontceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-             frontceiling.portal->data.link.delta == linedef->portal->data.link.delta)))
+        openfrontsector  = linedef->frontsector;
+        openbacksector   = linedef->backsector;
+        sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
+                               linedef->beyondportalline->frontsector :
+                               nullptr;
+        if(beyond)
         {
-            // also handle line portal + ceiling portal, for edge portals
-            if(!portaldetect) // ioanch
-                frontceilz = backceilz = frontceiling.getZAt(point) + 1024 * FRACUNIT;
-            else
+            openbacksector = beyond;
+            if(linedef->portal && linedef->portal->type == R_LINKED)
             {
-                *lineclipflags |= LINECLIP_UNDERPORTAL;
-                frontceilz      = frontceiling.getZAt(point);
-                backceilz       = backceiling.getZAt(backpoint);
+                backpoint.x += linedef->portal->data.link.delta.x;
+                backpoint.y += linedef->portal->data.link.delta.y;
             }
         }
-        else
-        {
-            frontceilz = frontceiling.getZAt(point);
-            backceilz  = backceiling.getZAt(backpoint);
-        }
-    }
 
-    const surface_t &frontfloor = openfrontsector->srf.floor;
-    const surface_t &backfloor  = openbacksector->srf.floor;
-    {
-        if(mo && demo_version >= 333 &&
-           ((frontfloor.pflags & PS_PASSABLE && backfloor.pflags & PS_PASSABLE &&
-             frontfloor.portal == backfloor.portal) ||
-            (frontfloor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-             frontfloor.portal->data.link.delta == linedef->portal->data.link.delta)))
+        // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
+        // z is if both sides of that line have the same portal.
+        front = &openfrontsector->srf;
+        back  = &openbacksector->srf;
         {
-            if(!portaldetect) // ioanch
+            if(mo && demo_version >= 333 &&
+               ((front->ceiling.pflags & PS_PASSABLE && back->ceiling.pflags & PS_PASSABLE &&
+                 front->ceiling.portal == back->ceiling.portal) ||
+                (front->ceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+                 front->ceiling.portal->data.link.delta == linedef->portal->data.link.delta)))
             {
-                frontfloorz = backfloorz = frontfloor.getZAt(point) - 1024 * FRACUNIT; // mo->height;
-                // Not exactly "extreme"
-                frontfloorgroupid = backfloorgroupid = frontfloor.portal->data.link.toid;
+                // also handle line portal + ceiling portal, for edge portals
+                if(!portaldetect) // ioanch
+                    frontceilz = backceilz = front->ceiling.getZAt(point) + 1024 * FRACUNIT;
+                else
+                {
+                    *lineclipflags |= LINECLIP_UNDERPORTAL;
+                    frontceilz      = front->ceiling.getZAt(point);
+                    backceilz       = back->ceiling.getZAt(backpoint);
+                }
             }
             else
             {
-                *lineclipflags    |= LINECLIP_ABOVEPORTAL;
-                frontfloorz        = frontfloor.getZAt(point);
-                frontfloorgroupid  = openfrontsector->groupid;
-                backfloorz         = backfloor.getZAt(backpoint);
-                backfloorgroupid   = openbacksector->groupid;
+                frontceilz = front->ceiling.getZAt(point);
+                backceilz  = back->ceiling.getZAt(backpoint);
             }
+        }
+
+        {
+            if(mo && demo_version >= 333 &&
+               ((front->floor.pflags & PS_PASSABLE && back->floor.pflags & PS_PASSABLE &&
+                 front->floor.portal == back->floor.portal) ||
+                (front->floor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+                 front->floor.portal->data.link.delta == linedef->portal->data.link.delta)))
+            {
+                if(!portaldetect) // ioanch
+                {
+                    frontfloorz = backfloorz = front->floor.getZAt(point) - 1024 * FRACUNIT; // mo->height;
+                    // Not exactly "extreme"
+                    frontfloorgroupid = backfloorgroupid = front->floor.portal->data.link.toid;
+                }
+                else
+                {
+                    *lineclipflags    |= LINECLIP_ABOVEPORTAL;
+                    frontfloorz        = front->floor.getZAt(point);
+                    frontfloorgroupid  = openfrontsector->groupid;
+                    backfloorz         = back->floor.getZAt(backpoint);
+                    backfloorgroupid   = openbacksector->groupid;
+                }
+            }
+            else
+            {
+                frontfloorz       = front->floor.getZAt(point);
+                frontfloorgroupid = openfrontsector->groupid;
+                backfloorz        = back->floor.getZAt(backpoint);
+                backfloorgroupid  = openbacksector->groupid;
+            }
+        }
+
+        if(linedef->extflags & EX_ML_UPPERPORTAL && back->ceiling.pflags & PS_PASSABLE)
+        {
+            open.height.ceiling = frontceilz;
+            open.ceilsector     = openfrontsector;
+        }
+        else if(frontceilz < backceilz)
+        {
+            open.height.ceiling = frontceilz;
+            open.ceilsector     = openfrontsector;
         }
         else
         {
-            frontfloorz       = frontfloor.getZAt(point);
-            frontfloorgroupid = openfrontsector->groupid;
-            backfloorz        = backfloor.getZAt(backpoint);
-            backfloorgroupid  = openbacksector->groupid;
+            open.height.ceiling = backceilz;
+            open.ceilsector     = openbacksector;
+        }
+
+        // ioanch 20160114: don't change floorpic if portaldetect is on
+        if(linedef->extflags & EX_ML_LOWERPORTAL && back->floor.pflags & PS_PASSABLE)
+        {
+            open.height.floor  = frontfloorz;
+            open.bottomgroupid = frontfloorgroupid;
+            open.lowfloor      = frontfloorz;
+            open.floorsector   = openfrontsector;
+            if(!portaldetect || !(front->floor.pflags & PS_PASSABLE))
+                open.floorpic = front->floor.pic;
+        }
+        else if(frontfloorz > backfloorz)
+        {
+            open.height.floor  = frontfloorz;
+            open.bottomgroupid = frontfloorgroupid;
+            open.lowfloor      = backfloorz;
+            open.floorsector   = openfrontsector;
+            // haleyjd
+            if(!portaldetect || !(front->floor.pflags & PS_PASSABLE))
+                open.floorpic = front->floor.pic;
+        }
+        else
+        {
+            open.height.floor  = backfloorz;
+            open.bottomgroupid = backfloorgroupid;
+            open.lowfloor      = frontfloorz;
+            open.floorsector   = openbacksector;
+            // haleyjd
+            if(!portaldetect || !(back->floor.pflags & PS_PASSABLE))
+                open.floorpic = back->floor.pic;
         }
     }
-
-    if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
-    {
-        open.height.ceiling = frontceilz;
-        open.ceilsector     = openfrontsector;
-    }
-    else if(frontceilz < backceilz)
-    {
-        open.height.ceiling = frontceilz;
-        open.ceilsector     = openfrontsector;
-    }
-    else
-    {
-        open.height.ceiling = backceilz;
-        open.ceilsector     = openbacksector;
-    }
-
-    // ioanch 20160114: don't change floorpic if portaldetect is on
-    if(linedef->extflags & EX_ML_LOWERPORTAL && backfloor.pflags & PS_PASSABLE)
-    {
-        open.height.floor  = frontfloorz;
-        open.bottomgroupid = frontfloorgroupid;
-        open.lowfloor      = frontfloorz;
-        open.floorsector   = openfrontsector;
-        if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
-            open.floorpic = frontfloor.pic;
-    }
-    else if(frontfloorz > backfloorz)
-    {
-        open.height.floor  = frontfloorz;
-        open.bottomgroupid = frontfloorgroupid;
-        open.lowfloor      = backfloorz;
-        open.floorsector   = openfrontsector;
-        // haleyjd
-        if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
-            open.floorpic = frontfloor.pic;
-    }
-    else
-    {
-        open.height.floor  = backfloorz;
-        open.bottomgroupid = backfloorgroupid;
-        open.lowfloor      = frontfloorz;
-        open.floorsector   = openbacksector;
-        // haleyjd
-        if(!portaldetect || !(backfloor.pflags & PS_PASSABLE))
-            open.floorpic = backfloor.pic;
-    }
-
     open.sec = open.height;
 
     // SoM 9/02/02: Um... I know I told Quasar` I would do this after
@@ -856,7 +861,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling
-            if(portaldetect && (texbot < frontceiling.getZAt(point) || texbot < backceiling.getZAt(backpoint)))
+            if(portaldetect && (texbot < front->ceiling.getZAt(point) || texbot < back->ceiling.getZAt(backpoint)))
                 *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
         }
         else
@@ -871,7 +876,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling
-            if(portaldetect && (textop > frontfloor.getZAt(point) || textop > backfloor.getZAt(backpoint)))
+            if(portaldetect && (textop > front->floor.getZAt(point) || textop > back->floor.getZAt(backpoint)))
                 *lineclipflags |= LINECLIP_OVER3DMIDTEX;
 
             // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
@@ -886,7 +891,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 }
 
 //
-// Reduces this opening by the other, raising the floor and lowering the ceiling a necessary.
+// Reduces this opening by the other, raising the floor and lowering the ceiling as necessary.
 //
 void lineopening_t::intersect(const lineopening_t &other)
 {

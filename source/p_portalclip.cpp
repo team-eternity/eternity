@@ -218,23 +218,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
     bool          haveSlopes = P_AnySlope(*ld);
     v2fixed_t     i1{}, i2{};
     bool          calculatedSlopes = false;
-    if(po)
-    {
-        // NOTE: this may need to be better supported
 
-        v2fixed_t       center    = { po->centerPt.x, po->centerPt.y };
-        const sector_t *midsector = R_PointInSubsector(center)->sector;
-
-        outerheights.bottomend = innerheights.bottomend = midsector->srf.floor.getZAt(center);
-        outerheights.topend = innerheights.topend = midsector->srf.ceiling.getZAt(center);
-        outerheights.bottomedge = innerheights.bottomedge = D_MAXINT;
-        outerheights.topedge = innerheights.topedge = D_MININT;
-    }
-    else if(haveSlopes)
-    {
-        calculatedSlopes = true;
-        pcl->haveslopes  = true;
-        P_ExactBoxLinePoints(bbox, *ld, i1, i2);
+    auto getSlopedHeights = [ld, &i1, &i2, &outerheights, &innerheights]() {
         lineheights_t heights[2];
         heights[0] = P_getLineHeights(ld, i1);
         heights[1] = P_getLineHeights(ld, i2);
@@ -247,6 +232,21 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         innerheights.bottomedge = emax(heights[0].bottomedge, heights[1].bottomedge);
         innerheights.topedge    = emin(heights[0].topedge, heights[1].topedge);
         innerheights.topend     = emin(heights[0].topend, heights[1].topend);
+    };
+
+    if(po)
+    {
+        // NOTE: this may need to be better supported
+        calculatedSlopes = true;
+        P_ExactBoxLinePoints(bbox, *ld, i1, i2);
+        getSlopedHeights();
+    }
+    else if(haveSlopes)
+    {
+        calculatedSlopes = true;
+        pcl->haveslopes  = true;
+        P_ExactBoxLinePoints(bbox, *ld, i1, i2);
+        getSlopedHeights();
     }
     else
     {
@@ -301,8 +301,16 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         const sector_t *reachedsec;
         fixed_t         linemid = (innerheights.bottomend + innerheights.topend) / 2;
 
-        if(!(reachedsec = P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid, clip.thing->groupid,
-                                                        ld->frontsector, thingmid, &floorceiling)))
+        if(po)
+        {
+            sector_t *sourcesec = R_PointInSubsector(inters)->sector;
+            reachedsec = P_PointReachesGroupVertically(inters.x, inters.y, linemid, linegroupid, clip.thing->groupid,
+                                                       sourcesec, thingmid, &floorceiling);
+            if(!reachedsec)
+                postpone = true;
+        }
+        else if(!(reachedsec = P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid, clip.thing->groupid,
+                                                             ld->frontsector, thingmid, &floorceiling)))
         {
             if(ld->backsector)
             {
@@ -415,50 +423,55 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                              !!(lineclipflags & LINECLIP_ABOVEPORTAL) * UO_ABOVEPORTAL |
                              !!(lineclipflags & LINECLIP_UNDERPORTAL) * UO_UNDERPORTAL;
 
-    if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_ABOVEPORTAL) && thingz < innerheights.bottomend &&
-       thingmid < (outerheights.bottomend + clip.open.height.floor) / 2)
+    if(!po)
     {
-        clip.open.height.ceiling  = outerheights.bottomend;
-        clip.open.height.floor    = D_MININT;
-        clip.open.floorsector     = nullptr;
-        clip.open.sec.ceiling     = outerheights.bottomend;
-        clip.open.sec.floor       = D_MININT;
-        lineclipflags            &= ~LINECLIP_UNDERPORTAL;
-    }
-    if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_UNDERPORTAL) && thingtopz > innerheights.topend &&
-       thingmid >= (outerheights.topend + clip.open.height.ceiling) / 2)
-    {
-        // adjust the lowfloor to the real observed value, to prevent
-        // wrong dropoffz
-        if(ld->backsector)
+        if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_ABOVEPORTAL) && thingz < innerheights.bottomend &&
+           thingmid < (outerheights.bottomend + clip.open.height.floor) / 2)
         {
-            if(!haveSlopes)
-            {
-                if((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
-                    clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
-                   (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
-                    clip.open.sec.floor == ld->backsector->srf.floor.height))
-                {
-                    clip.open.lowfloor = clip.open.sec.floor;
-                }
-            }
-            else
-            {
-                // Different treatment due to complexity
-                if((innerheights.topedgesector == ld->backsector && innerheights.bottomedgesector == ld->frontsector) ||
-                   (innerheights.topedgesector == ld->frontsector && innerheights.bottomedgesector == ld->backsector))
-                {
-                    clip.open.lowfloor = outerheights.bottomedge;
-                }
-            }
+            clip.open.height.ceiling  = outerheights.bottomend;
+            clip.open.height.floor    = D_MININT;
+            clip.open.floorsector     = nullptr;
+            clip.open.sec.ceiling     = outerheights.bottomend;
+            clip.open.sec.floor       = D_MININT;
+            lineclipflags            &= ~LINECLIP_UNDERPORTAL;
         }
+        if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_UNDERPORTAL) && thingtopz > innerheights.topend &&
+           thingmid >= (outerheights.topend + clip.open.height.ceiling) / 2)
+        {
+            // adjust the lowfloor to the real observed value, to prevent
+            // wrong dropoffz
+            if(ld->backsector)
+            {
+                if(!haveSlopes)
+                {
+                    if((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
+                        clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
+                       (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
+                        clip.open.sec.floor == ld->backsector->srf.floor.height))
+                    {
+                        clip.open.lowfloor = clip.open.sec.floor;
+                    }
+                }
+                else
+                {
+                    // Different treatment due to complexity
+                    if((innerheights.topedgesector == ld->backsector &&
+                        innerheights.bottomedgesector == ld->frontsector) ||
+                       (innerheights.topedgesector == ld->frontsector &&
+                        innerheights.bottomedgesector == ld->backsector))
+                    {
+                        clip.open.lowfloor = outerheights.bottomedge;
+                    }
+                }
+            }
 
-        clip.open.height.floor    = outerheights.topend;
-        clip.open.height.ceiling  = D_MAXINT;
-        clip.open.ceilsector      = nullptr;
-        clip.open.sec.floor       = outerheights.topend;
-        clip.open.sec.ceiling     = D_MAXINT;
-        lineclipflags            &= ~LINECLIP_ABOVEPORTAL;
+            clip.open.height.floor    = outerheights.topend;
+            clip.open.height.ceiling  = D_MAXINT;
+            clip.open.ceilsector      = nullptr;
+            clip.open.sec.floor       = outerheights.topend;
+            clip.open.sec.ceiling     = D_MAXINT;
+            lineclipflags            &= ~LINECLIP_ABOVEPORTAL;
+        }
     }
 
     // update stuff
