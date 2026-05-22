@@ -881,15 +881,14 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *vcontext, const divline_t &
 
     if(context->compat)
     {
-        return !(clip.open.range <= 0 ||                                           // No opening
-                 clip.open.height.floor > trace.thing->z + STEPSIZE ||             // Too high, it blocks
-                 clip.open.height.ceiling < trace.thing->z + trace.thing->height); // Too low, it blocks
+        return clip.open.range > 0 &&                                            // Open
+               clip.open.height.floor <= trace.thing->z + STEPSIZE &&            // Can be stepped
+               clip.open.height.ceiling >= trace.thing->z + trace.thing->height; // Head can be entered
     }
     else
     {
-        return !(lo.openrange <= 0 ||                            // No opening
-                 lo.open.floor > context->thing->z + STEPSIZE || // Too high, it blocks
-                 lo.open.ceiling < context->thing->z + context->thing->height);
+        return lo.openrange > 0 && lo.open.floor <= context->thing->z + STEPSIZE &&
+               lo.open.ceiling >= context->thing->z + context->thing->height;
     }
 }
 
