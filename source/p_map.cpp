@@ -2409,13 +2409,14 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
     if(clip.open.range < slidemo->height)
         goto isblocking; // doesn't fit
 
-    if(clip.open.height.ceiling - slidemo->z < slidemo->height)
+    if(clip.open.height.ceiling < D_MAXINT && clip.open.height.ceiling - slidemo->z < slidemo->height)
         goto isblocking; // mobj is too high
 
-    if(clip.open.height.floor - slidemo->z > STEPSIZE)
+    if(clip.open.height.floor > D_MININT && clip.open.height.floor - slidemo->z > STEPSIZE)
         goto isblocking;                                              // too big a step up
     else if(P_Use3DClipping() && slidemo->z < clip.open.height.floor) // haleyjd: OVER_UNDER
     {
+        // NOTE: safe here, clip.open.height.floor will never be -infinite here.
         // [RH] Check to make sure there's nothing in the way for the step up
         bool    good;
         fixed_t savedz = slidemo->z;
