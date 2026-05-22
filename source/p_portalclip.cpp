@@ -423,8 +423,10 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                              !!(lineclipflags & LINECLIP_ABOVEPORTAL) * UO_ABOVEPORTAL |
                              !!(lineclipflags & LINECLIP_UNDERPORTAL) * UO_UNDERPORTAL;
 
-    if(!po)
+    if(!po) // polyobject lines do not define elevation boundaries
     {
+        // Line is beyond the ceiling portal, but on the boundary: it is solid on the non-portal side, which makes it
+        // block the head of the current thing. Do not allow it to block the floor as it would normally do.
         if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_ABOVEPORTAL) && thingz < innerheights.bottomend &&
            thingmid < (outerheights.bottomend + clip.open.height.floor) / 2)
         {
@@ -435,6 +437,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             clip.open.sec.floor       = D_MININT;
             lineclipflags            &= ~LINECLIP_UNDERPORTAL;
         }
+        // Like above, but under the floor portal.
         if(!(uoflags & UO_SAMEGROUPID) && !(uoflags & UO_UNDERPORTAL) && thingtopz > innerheights.topend &&
            thingmid >= (outerheights.topend + clip.open.height.ceiling) / 2)
         {

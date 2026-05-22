@@ -67,10 +67,12 @@ void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
     const sector_t *back;
     if(isPolyObj2Sided)
     {
-        // For a polyobject 2-sided line, we don't actually have a top and bottom limit -- that's established by other
-        // lines and by the mobj default, which is the center point -- which is what we default here. Use "point" as a
-        // callback anyway, but it's not reliable in general.
-        front = back = R_PointInSubsector(pos)->sector;
+        // For a polyobject 2-sided line, we don't actually have a top and bottom limit -- that's established by static
+        // lines
+        open.floor   = D_MININT;
+        open.ceiling = D_MAXINT;
+        openrange    = D_MAXINT;
+        return;
     }
     else
     {

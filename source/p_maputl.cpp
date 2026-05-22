@@ -908,7 +908,7 @@ void lineopening_t::intersect(const lineopening_t &other)
         height.ceiling = other.height.ceiling;
         ceilsector     = other.ceilsector;
     }
-    range = height.ceiling - height.floor;
+    range = height.ceiling == D_MAXINT && height.floor == D_MININT ? D_MAXINT : height.ceiling - height.floor;
 
     if(other.sec.floor > sec.floor)
         sec.floor = other.sec.floor;

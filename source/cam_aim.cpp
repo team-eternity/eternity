@@ -307,8 +307,9 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
             const surface_t &surface      = sector->srf[surf];
             const surface_t &otherSurface = osector->srf[surf];
 
-            if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
-               (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
+            if((surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
+                (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE)) &&
+               lo.openrange < D_MAXINT)
             {
                 slope = FixedDiv(lo.open[surf] - context.state.c.z, totaldist);
                 if(isInner(surf, slope, context.state.slope[surf]))

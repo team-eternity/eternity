@@ -139,14 +139,16 @@ static bool PTR_AimTraverse(intercept_t *in, void *context, const divline_t &tra
 
         dist = FixedMul(trace.attackrange, in->frac);
 
-        if(li->frontsector->srf.floor.getZAt(edgepos) != li->backsector->srf.floor.getZAt(edgepos))
+        if(li->frontsector->srf.floor.getZAt(edgepos) != li->backsector->srf.floor.getZAt(edgepos) &&
+           (demo_version < 406 || clip.open.height.floor != D_MININT))
         {
             slope = FixedDiv(clip.open.height.floor - trace.z, dist);
             if(slope > trace.bottomslope)
                 trace.bottomslope = slope;
         }
 
-        if(li->frontsector->srf.ceiling.getZAt(edgepos) != li->backsector->srf.ceiling.getZAt(edgepos))
+        if(li->frontsector->srf.ceiling.getZAt(edgepos) != li->backsector->srf.ceiling.getZAt(edgepos) &&
+           (demo_version < 406 || clip.open.height.ceiling != D_MAXINT))
         {
             slope = FixedDiv(clip.open.height.ceiling - trace.z, dist);
             if(slope < trace.topslope)
@@ -373,6 +375,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context, const divli
             fixed_t slope;
 
             // killough 11/98: simplify
+            // printz: don't worry about 3dmidtex polyobjects behind portals here, demo version is <406
             if((li->frontsector->srf.floor.height == li->backsector->srf.floor.height ||
                 (slope = FixedDiv(clip.open.height.floor - trace.z, dist)) <= trace.aimslope) &&
                (li->frontsector->srf.ceiling.height == li->backsector->srf.ceiling.height ||
@@ -454,8 +457,10 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
     else
         ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
 
-    if((floorsame || FixedDiv(clip.open.height.floor - trace.z, dist) <= trace.aimslope) &&
-       (ceilingsame || FixedDiv(clip.open.height.ceiling - trace.z, dist) >= trace.aimslope))
+    if((floorsame || (clip.open.height.floor == D_MININT && demo_version >= 406) ||
+        FixedDiv(clip.open.height.floor - trace.z, dist) <= trace.aimslope) &&
+       (ceilingsame || (clip.open.height.ceiling == D_MAXINT && demo_version >= 406) ||
+        FixedDiv(clip.open.height.ceiling - trace.z, dist) >= trace.aimslope))
     {
         if(li->special)
             P_ShootSpecialLine(trace.thing, li, side);
