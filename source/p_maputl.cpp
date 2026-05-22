@@ -886,7 +886,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         }
     }
 
-    open.range = open.height.ceiling - open.height.floor;
+    open.range = isPolyObj2Sided ? D_MAXINT : open.height.ceiling - open.height.floor;
     return open;
 }
 
