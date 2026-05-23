@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2026 James Haley et al.
 //
@@ -1155,10 +1155,10 @@ void MobjLookupCheat::showNext(type_e type)
     else
         start_th = th = &thinkercap;
 
-    th = th->next;
-
-    while(th != start_th)
+    do
     {
+        th = th->next;
+
         Mobj *mo = thinker_cast<Mobj *>(th);
 
         if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
@@ -1167,9 +1167,8 @@ void MobjLookupCheat::showNext(type_e type)
             P_SetTarget(&current, mo);
             break;
         }
-
-        th = th->next;
     }
+    while(th != start_th);
 }
 
 void SecretSectorLookupCheat::showNext()
