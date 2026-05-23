@@ -61,7 +61,7 @@ void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
     }
 
     const bool isPolyObj2Sided =
-        !P_LevelIsVanillaHexen() && line.flags & ML_TWOSIDED && line.intflags & MLI_DYNASEGLINE;
+        !P_LevelIsVanillaHexen() && demo_version >= 406 && line.flags & ML_TWOSIDED && line.intflags & MLI_DYNASEGLINE;
 
     const sector_t *front;
     const sector_t *back;

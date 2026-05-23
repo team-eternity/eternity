@@ -64,35 +64,46 @@ inline static fixed_t P_visibleHeight(const surface_t &surface, v2fixed_t pos)
 static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
 {
     lineheights_t result = {};
-    result.bottomend     = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor, pos);
-    result.topend        = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling, pos);
 
-    if(ld->backsector)
+    const sector_t *front, *back;
+    if(ld->intflags & MLI_DYNASEGLINE)
     {
-        fixed_t bottomback = P_visibleHeight<surf_floor>(ld->backsector->srf.floor, pos);
+        front = back = R_PointInSubsector(pos)->sector;
+    }
+    else
+    {
+        front = ld->frontsector;
+        back  = ld->backsector;
+    }
+    result.bottomend = P_visibleHeight<surf_floor>(front->srf.floor, pos);
+    result.topend    = P_visibleHeight<surf_ceil>(front->srf.ceiling, pos);
+
+    if(back)
+    {
+        fixed_t bottomback = P_visibleHeight<surf_floor>(back->srf.floor, pos);
         if(bottomback < result.bottomend)
         {
             result.bottomedge       = result.bottomend;
-            result.bottomedgesector = ld->frontsector;
+            result.bottomedgesector = front;
             result.bottomend        = bottomback;
         }
         else
         {
             result.bottomedge       = bottomback;
-            result.bottomedgesector = ld->backsector;
+            result.bottomedgesector = back;
         }
 
-        fixed_t topback = P_visibleHeight<surf_ceil>(ld->backsector->srf.ceiling, pos);
+        fixed_t topback = P_visibleHeight<surf_ceil>(back->srf.ceiling, pos);
         if(topback > result.topend)
         {
             result.topedge       = result.topend;
-            result.topedgesector = ld->frontsector;
+            result.topedgesector = front;
             result.topend        = topback;
         }
         else
         {
             result.topedge       = topback;
-            result.topedgesector = ld->backsector;
+            result.topedgesector = back;
         }
     }
     else

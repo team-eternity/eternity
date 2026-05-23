@@ -680,8 +680,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         *lineclipflags = 0;
     }
 
-    const bool isPolyObj2Sided =
-        !P_LevelIsVanillaHexen() && linedef->flags & ML_TWOSIDED && linedef->intflags & MLI_DYNASEGLINE;
+    const bool isPolyObj2Sided = !P_LevelIsVanillaHexen() && demo_version >= 406 && linedef->flags & ML_TWOSIDED &&
+                                 linedef->intflags & MLI_DYNASEGLINE;
 
     const Surfaces<surface_t> *front;
     const Surfaces<surface_t> *back;
@@ -845,6 +845,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         if((linedef->flags & ML_BLOCKMONSTERS) && !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
            D_abs(mo->z - textop) <= STEPSIZE)
         {
+            if(isPolyObj2Sided)
+                open.height.floor = textop;
             open.height.ceiling = open.height.floor;
             open.range          = 0;
             return open;
@@ -908,7 +910,7 @@ void lineopening_t::intersect(const lineopening_t &other)
         height.ceiling = other.height.ceiling;
         ceilsector     = other.ceilsector;
     }
-    range = height.ceiling == D_MAXINT && height.floor == D_MININT ? D_MAXINT : height.ceiling - height.floor;
+    range = height.ceiling == D_MAXINT || height.floor == D_MININT ? D_MAXINT : height.ceiling - height.floor;
 
     if(other.sec.floor > sec.floor)
         sec.floor = other.sec.floor;
