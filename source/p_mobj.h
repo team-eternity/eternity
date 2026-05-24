@@ -639,6 +639,14 @@ public:
 
     MobjReference &operator=(MobjReference &&other) noexcept
     {
+        if(this == &other)
+        {
+            return *this;
+        }
+        if(mobj)
+        {
+            P_ClearTarget(mobj);
+        }
         mobj       = other.mobj;
         other.mobj = nullptr;
         return *this;
