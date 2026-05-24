@@ -74,6 +74,13 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // Movement and Clipping
 //
 
+enum
+{
+    TMD_NO = 0,
+    TMD_DROP = 1,
+    TMD_DOG = 2,
+};
+
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 

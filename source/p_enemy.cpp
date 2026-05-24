@@ -667,7 +667,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 bool P_SmartMove(Mobj *actor)
 {
     Mobj *target = actor->target;
-    int   on_lift, dropoff = 0, under_damage;
+    int   on_lift, dropoff = TMD_NO, under_damage;
 
     // killough 9/12/98: Stay on a lift if target is on one
     on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
@@ -688,7 +688,7 @@ bool P_SmartMove(Mobj *actor)
        P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT * 144 &&
        P_Random(pr_dropoff) < 235)
     {
-        dropoff = 2;
+        dropoff = TMD_DOG;
     }
 
     if(!P_Move(actor, dropoff))

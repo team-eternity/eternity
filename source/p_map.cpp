@@ -1451,7 +1451,7 @@ static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
 {
     // killough 3/15/98: Allow certain objects to drop off
-    if(compatibility || !dropoff)
+    if(compatibility || !(dropoff & (TMD_DROP | TMD_DOG)))
     {
         if(!(thing->flags & (MF_DROPOFF | MF_FLOAT)) && clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -1478,14 +1478,15 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 
     if(!(thing->flags & (MF_DROPOFF | MF_FLOAT)))
     {
+        const int dropflags = dropoff & (TMD_DROP | TMD_DOG);
         if(getComp(comp_dropoff))
         {
             // haleyjd: note missing 202 compatibility... WOOPS!
-            if(!dropoff && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
+            if(!dropflags && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
                 return false;
         }
-        else if(!dropoff || (dropoff == 2 && (clip.zref.floor - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
-                                              thing->target->z > clip.zref.dropoff)))
+        else if(!dropflags || (dropflags == TMD_DOG && (clip.zref.floor - clip.zref.dropoff > 128 * FRACUNIT ||
+                                                        !thing->target || thing->target->z > clip.zref.dropoff)))
         {
             // haleyjd: I can't even mentally parse this statement with
             // any certainty.
@@ -1529,11 +1530,12 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
         // lines that pass over sector dropoffs, as long as the dropoff
         // between the 3DMidTex lines is <= 24 units.
 
+        const int dropflags = dropoff & (TMD_DROP | TMD_DOG);
         if(on3dmidtex)
         {
             // allow appropriate forced dropoff behavior
-            if(!dropoff || (dropoff == 2 && (thing->z - clip.zref.floor > 128 * FRACUNIT || !thing->target ||
-                                             thing->target->z > clip.zref.floor)))
+            if(!dropflags || (dropflags == TMD_DOG && (thing->z - clip.zref.floor > 128 * FRACUNIT || !thing->target ||
+                                                       thing->target->z > clip.zref.floor)))
             {
                 // deny any move resulting in a difference > 24
                 if(thing->z - clip.zref.floor > STEPSIZE)
@@ -1552,9 +1554,9 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
             if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
                 return false; // don't stand over a dropoff
         }
-        else if(!dropoff || (dropoff == 2 && // large jump down (e.g. dogs)
-                             (floorz - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
-                              thing->target->z > clip.zref.dropoff)))
+        else if(!dropflags || (dropflags == TMD_DOG && // large jump down (e.g. dogs)
+                               (floorz - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
+                                thing->target->z > clip.zref.dropoff)))
         {
             // haleyjd 04/14/10: This is so impossible to read that I have
             // had to restore it, because I cannot be confident that any of
@@ -2522,8 +2524,8 @@ void P_SlideMove(Mobj *mo)
             // haleyjd: yet another compatibility fix by cph -- the
             // fix is only necessary for boom v2.01
 
-            if(!P_TryMove(mo, mo->x, mo->y + mo->momy, true))
-                if(!P_TryMove(mo, mo->x + mo->momx, mo->y, true))
+            if(!P_TryMove(mo, mo->x, mo->y + mo->momy, TMD_DROP))
+                if(!P_TryMove(mo, mo->x + mo->momx, mo->y, TMD_DROP))
                     if(demo_version == 201)
                         mo->momx = mo->momy = 0;
 
@@ -2539,7 +2541,7 @@ void P_SlideMove(Mobj *mo)
 
             // killough 3/15/98: Allow objects to drop off ledges
 
-            if(!P_TryMove(mo, mo->x + newx, mo->y + newy, true))
+            if(!P_TryMove(mo, mo->x + newx, mo->y + newy, TMD_DROP))
                 goto stairstep;
         }
 
@@ -2571,7 +2573,7 @@ void P_SlideMove(Mobj *mo)
                 mo->player->momy = tmymove;
         }
     } // killough 3/15/98: Allow objects to drop off ledges:
-    while(!P_TryMove(mo, mo->x + tmxmove, mo->y + tmymove, true));
+    while(!P_TryMove(mo, mo->x + tmxmove, mo->y + tmymove, TMD_DROP));
 }
 
 //

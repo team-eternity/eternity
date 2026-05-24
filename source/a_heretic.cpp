@@ -599,7 +599,7 @@ void A_GenWizard(actionargs_t *actionargs)
     mo->updateThinker();
 
     // Check for movements.
-    if(!P_TryMove(mo, mo->x, mo->y, false))
+    if(!P_TryMove(mo, mo->x, mo->y, TMD_NO))
     {
         // can't move, remove it immediately
         mo->remove();

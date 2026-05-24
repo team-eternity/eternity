@@ -968,10 +968,11 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
             }
         }
         else if(!P_LevelIsVanillaHexen() && !(context->line.flags & ML_BLOCKING) &&
-                (context->line.flags & ML_TWOSIDED) && context->line.backsector && P_TryMove(mo, mo->x, mo->y, 1))
+                (context->line.flags & ML_TWOSIDED) && context->line.backsector &&
+                P_TryMove(mo, mo->x, mo->y, TMD_DROP))
         {
             // Prevent passable line from pushing (otherwise it would fall through below and push
-            
+
             // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
             continue;
         }
@@ -986,7 +987,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
                                      context->line.v1->y - context->oldLinePos.y };
             mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
             mo->y               += FixedMul(vec.y, 72090);
-            if(!P_TryMove(mo, pos.x, pos.y, true))
+            if(!P_TryMove(mo, pos.x, pos.y, TMD_DROP))
             {
                 mo->x = pos.x;
                 mo->y = pos.y;
@@ -1002,7 +1003,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
             if(mo->groupid != linesector.groupid || mo->subsector->sector->srf.ceiling.pflags & PS_PASSABLE ||
                mo->subsector->sector->srf.floor.pflags & PS_PASSABLE)
             {
-                context->hitthing = !P_TryMove(mo, mo->x, mo->y, 1);
+                context->hitthing = !P_TryMove(mo, mo->x, mo->y, TMD_DROP);
             }
 
             if(context->hitthing)
@@ -1152,7 +1153,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
 
         bool p = false;
         if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
-            p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
+            p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, TMD_DROP);
 
         if(!p)
         {
@@ -1240,7 +1241,7 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
 
                 mobj->validcount = polyvalidcount;
 
-                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, 1))
+                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, TMD_DROP))
                 {
                     P_CheckPosition(mobj, mobj->x, mobj->y);
                     mobj->zref = clip.zref;
@@ -1382,7 +1383,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 // We got one which we may want to move
                 if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
                 {
-                    if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+                    if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, TMD_DROP))
                     {
                         P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
                         pt.thing->zref = clip.zref; // If couldn't move, still adjust Z references
@@ -1701,7 +1702,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
         for(const mobjmove_t &move : thingsToCarry)
         {
-            if(!P_TryMove(move.mobj, move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, 1))
+            if(!P_TryMove(move.mobj, move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, TMD_DROP))
             {
                 P_CheckPosition(move.mobj, move.mobj->x, move.mobj->y);
                 move.mobj->zref = clip.zref;
