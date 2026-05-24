@@ -923,6 +923,76 @@ static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divl
 }
 #endif
 
+struct clipthings_t
+{
+    polyobj_t       &po;
+    const line_t    &line;
+    const divline_t &oldLinePos;
+    bool             hitthing;
+};
+
+static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
+{
+    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
+        return true;
+
+    auto context = static_cast<clipthings_t *>(data);
+
+    // haleyjd 08/14/10: use modification-safe traversal
+    Mobj *next = nullptr;
+    for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next)
+    {
+        next = mo->bnext;
+
+        // always push players even if not solid
+        if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&context->line, mo) || mo->groupid != groupid)
+            continue;
+        if(lineCanCarry(context->line))
+        {
+            fixed_t texbot, textop;
+            P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], texbot, textop, nullptr);
+            if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) || mo->z + mo->height <= texbot)
+            {
+                // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
+                continue;
+            }
+        }
+        else if(!P_LevelIsVanillaHexen() && !(context->line.flags & ML_BLOCKING) &&
+                (context->line.flags & ML_TWOSIDED) && context->line.backsector && P_TryMove(mo, mo->x, mo->y, 1))
+        {
+            // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
+            continue;
+        }
+
+        // ioanch 20160226: in case of portal lines, just make sure
+        // the mobj budges a bit just to detect the specline
+        if(context->line.pflags & PS_PASSABLE)
+        {
+            // HACK
+            v2fixed_t       pos  = { mo->x, mo->y };
+            const v2fixed_t vec  = { context->line.v1->x - context->oldLinePos.x,
+                                     context->line.v1->y - context->oldLinePos.y };
+            mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
+            mo->y               += FixedMul(vec.y, 72090);
+            if(!P_TryMove(mo, pos.x, pos.y, true))
+            {
+                mo->x = pos.x;
+                mo->y = pos.y;
+                // FIXME: this one needs checking after i figure out
+                // portalmap
+                Polyobj_pushThing(&context->po, &context->line, mo);
+                context->hitthing = true;
+            }
+        }
+        else
+        {
+            Polyobj_pushThing(&context->po, &context->line, mo);
+            context->hitthing = true;
+        }
+    }
+    return true;
+}
+
 //
 // Polyobj_clipThings
 //
@@ -933,80 +1003,24 @@ static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divl
 //
 static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &oldLinePos)
 {
-    bool    hitthing = false;
-    fixed_t linebox[4];
-    int     x, y;
+    clipthings_t context  = {
+         .po         = *po,
+         .line       = *line,
+         .oldLinePos = oldLinePos,
+         .hitthing   = false,
+    };
 
     // adjust linedef bounding box to blockmap, extend by MAXRADIUS
-    linebox[BOXLEFT]   = (line->bbox[BOXLEFT] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXRIGHT]  = (line->bbox[BOXRIGHT] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXBOTTOM] = (line->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXTOP]    = (line->bbox[BOXTOP] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+    fixed_t bbox[4];
+    bbox[BOXLEFT] = line->bbox[BOXLEFT] - MAXRADIUS;
+    bbox[BOXRIGHT] = line->bbox[BOXRIGHT] + MAXRADIUS;
+    bbox[BOXBOTTOM]  = line->bbox[BOXBOTTOM] - MAXRADIUS;
+    bbox[BOXTOP] = line->bbox[BOXTOP] + MAXRADIUS;
 
     // check all mobj blockmap cells the line contacts
-    for(y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
-    {
-        for(x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
-        {
-            if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
-                continue;
+    P_TransPortalBlockWalker(bbox, line->frontsector->groupid, false, &context, PolyobjIT_clipThings);
 
-            // haleyjd 08/14/10: use modification-safe traversal
-            Mobj *next = nullptr;
-            for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next)
-            {
-                next = mo->bnext;
-
-                // always push players even if not solid
-                if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(line, mo))
-                    continue;
-                if(lineCanCarry(*line))
-                {
-                    fixed_t texbot, textop;
-                    P_Get3DMidTexHeights(*line, sides[line->sidenum[0]], texbot, textop, nullptr);
-                    if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) ||
-                       mo->z + mo->height <= texbot)
-                    {
-                        // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
-                        continue;
-                    }
-                }
-                else if(!P_LevelIsVanillaHexen() && !(line->flags & ML_BLOCKING) && (line->flags & ML_TWOSIDED) &&
-                        line->backsector && P_TryMove(mo, mo->x, mo->y, 1))
-                {
-                    // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
-                    continue;
-                }
-
-                // ioanch 20160226: in case of portal lines, just make sure
-                // the mobj budges a bit just to detect the specline
-                if(line->pflags & PS_PASSABLE)
-                {
-                    // HACK
-                    v2fixed_t       pos  = { mo->x, mo->y };
-                    const v2fixed_t vec  = { line->v1->x - oldLinePos.x, line->v1->y - oldLinePos.y };
-                    mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
-                    mo->y               += FixedMul(vec.y, 72090);
-                    if(!P_TryMove(mo, pos.x, pos.y, true))
-                    {
-                        mo->x = pos.x;
-                        mo->y = pos.y;
-                        // FIXME: this one needs checking after i figure out
-                        // portalmap
-                        Polyobj_pushThing(po, line, mo);
-                        hitthing = true;
-                    }
-                }
-                else
-                {
-                    Polyobj_pushThing(po, line, mo);
-                    hitthing = true;
-                }
-            }
-        } // end for(x)
-    } // end for(y)
-
-    return hitthing;
+    return context.hitthing;
 }
 
 //
