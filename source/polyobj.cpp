@@ -937,6 +937,11 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         return true;
 
     auto context = static_cast<clipthings_t *>(data);
+    const v2fixed_t midpoint = {
+        context->line.v1->x + context->line.dx / 2,
+        context->line.v1->y + context->line.dy / 2,
+    };
+    const sector_t &linesector = *R_PointInSubsector(midpoint)->sector;
 
     // haleyjd 08/14/10: use modification-safe traversal
     Mobj *next = nullptr;
@@ -945,8 +950,13 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         next = mo->bnext;
 
         // always push players even if not solid
-        if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&context->line, mo) || mo->groupid != groupid)
+        if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&context->line, mo) || mo->groupid != groupid ||
+           !P_ThingReachesGroupVertically(mo, context->line.frontsector->groupid,
+                                          linesector.srf.floor.getZAt(mo->x, mo->y) / 2 +
+                                              linesector.srf.ceiling.getZAt(mo->x, mo->y) / 2))
+        {
             continue;
+        }
         if(lineCanCarry(context->line))
         {
             fixed_t texbot, textop;
@@ -960,6 +970,8 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         else if(!P_LevelIsVanillaHexen() && !(context->line.flags & ML_BLOCKING) &&
                 (context->line.flags & ML_TWOSIDED) && context->line.backsector && P_TryMove(mo, mo->x, mo->y, 1))
         {
+            // Prevent passable line from pushing (otherwise it would fall through below and push
+            
             // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
             continue;
         }
@@ -986,8 +998,17 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         }
         else
         {
-            Polyobj_pushThing(&context->po, &context->line, mo);
             context->hitthing = true;
+            if(mo->groupid != linesector.groupid || mo->subsector->sector->srf.ceiling.pflags & PS_PASSABLE ||
+               mo->subsector->sector->srf.floor.pflags & PS_PASSABLE)
+            {
+                context->hitthing = !P_TryMove(mo, mo->x, mo->y, 1);
+            }
+
+            if(context->hitthing)
+            {
+                Polyobj_pushThing(&context->po, &context->line, mo);
+            }
         }
     }
     return true;
