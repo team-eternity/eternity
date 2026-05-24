@@ -967,9 +967,8 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
                 continue;
             }
         }
-        else if(!P_LevelIsVanillaHexen() && !(context->line.flags & ML_BLOCKING) &&
-                (context->line.flags & ML_TWOSIDED) && context->line.backsector &&
-                P_TryMove(mo, mo->x, mo->y, TMD_DROP))
+        else if(!P_LevelIsVanillaHexen() && context->line.flags & ML_TWOSIDED && context->line.backsector &&
+                P_TryMove(mo, mo->x, mo->y, TMD_DROP | TMD_FLYSTEP) && !(context->line.pflags & PS_PASSABLE))
         {
             // Prevent passable line from pushing (otherwise it would fall through below and push
 
@@ -999,17 +998,8 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         }
         else
         {
+            Polyobj_pushThing(&context->po, &context->line, mo);
             context->hitthing = true;
-            if(mo->groupid != linesector.groupid || mo->subsector->sector->srf.ceiling.pflags & PS_PASSABLE ||
-               mo->subsector->sector->srf.floor.pflags & PS_PASSABLE)
-            {
-                context->hitthing = !P_TryMove(mo, mo->x, mo->y, TMD_DROP);
-            }
-
-            if(context->hitthing)
-            {
-                Polyobj_pushThing(&context->po, &context->line, mo);
-            }
         }
     }
     return true;
@@ -1127,6 +1117,12 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
     return true;
 }
 
+static void Polyobj_updateZRef(Mobj &mobj)
+{
+    P_CheckPosition(&mobj, mobj.x, mobj.y);
+    mobj.zref = clip.zref;
+}
+
 //
 // Moves all airborne objects inside the poly
 //
@@ -1158,8 +1154,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
         if(!p)
         {
             // Make sure to update zref anyway
-            P_CheckPosition(imm.mobj, imm.mobj->x, imm.mobj->y);
-            imm.mobj->zref = clip.zref;
+            Polyobj_updateZRef(*imm.mobj);
         }
         else
             imm.mobj->backupPosition(); // FIXME: do this until we can interpolate polys with portals
@@ -1198,7 +1193,17 @@ inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, f
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
 
-static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector)
+// O(n)
+static bool contains(const Collection<MobjReference> &visitedThings, const Mobj &mobj)
+{
+    for(const MobjReference &reference : visitedThings)
+        if(reference == mobj)
+            return true;
+    return false;
+}
+
+static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector,
+                                        Collection<MobjReference> &visitedThings)
 {
     // Subtract vector because line was already moved
     fixed_t linebox[4];
@@ -1208,49 +1213,49 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
     linebox[BOXTOP]    = line.bbox[BOXTOP] + MAXRADIUS - vector.y;
 
     // Make it portal aware because standing things may be from upper layers
-    P_TransPortalBlockWalker(linebox, line.frontsector->groupid, false, [&line, &vector](int x, int y, int groupid) {
-        struct context_t
-        {
-            const line_t   &line;
-            const v2fixed_t vector;
-            fixed_t         texbot, textop;
-        } context = {
-            .line = line, .vector = { vector.x, vector.y }
-        };
+    P_TransPortalBlockWalker(
+        linebox, line.frontsector->groupid, false, [&line, &vector, &visitedThings](int x, int y, int groupid) {
+            struct context_t
+            {
+                const line_t              &line;
+                const v2fixed_t            vector;
+                fixed_t                    texbot, textop;
+                Collection<MobjReference> &visitList;
+            } context = {
+                .line = line, .vector = { vector.x, vector.y },
+                     .visitList = visitedThings
+            };
 
-        P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
+            P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
 
-        return P_BlockThingsIterator(
-            x, y, groupid,
-            [](Mobj *mobj, void *vcontext) {
-                auto context = static_cast<context_t *>(vcontext);
-                // same flags as with P_CheckSector
-                if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+            return P_BlockThingsIterator(
+                x, y, groupid,
+                [](Mobj *mobj, void *vcontext) {
+                    auto context = static_cast<context_t *>(vcontext);
+                    // same flags as with P_CheckSector
+                    if(contains(context->visitList, *mobj) || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+                        return true;
+
+                    mobj->x     += context->vector.x;
+                    mobj->y     += context->vector.y;
+                    bool online  = !Polyobj_untouched(&context->line, mobj);
+                    mobj->x     -= context->vector.x;
+                    mobj->y     -= context->vector.y;
+                    if(!online)
+                        return true;
+
+                    if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
+                        return true;
+
+                    context->visitList.add(MobjReference(mobj));
+
+                    if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, TMD_DROP))
+                        Polyobj_updateZRef(*mobj);
+
                     return true;
-
-                mobj->x     += context->vector.x;
-                mobj->y     += context->vector.y;
-                bool online  = !Polyobj_untouched(&context->line, mobj);
-                mobj->x     -= context->vector.x;
-                mobj->y     -= context->vector.y;
-                if(!online)
-                    return true;
-
-                if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
-                    return true;
-
-                mobj->validcount = polyvalidcount;
-
-                if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, TMD_DROP))
-                {
-                    P_CheckPosition(mobj, mobj->x, mobj->y);
-                    mobj->zref = clip.zref;
-                }
-
-                return true;
-            },
-            &context);
-    });
+                },
+                &context);
+        });
 }
 
 enum class PolyMove
@@ -1358,7 +1363,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         po->spawnSpot.y += vec.y;
 
         // 04/19/09: translate sound origins
-        ++polyvalidcount;
+        Collection<MobjReference> visitedThings;
         for(i = 0; i < po->numLines; ++i)
         {
             po->lines[i]->soundorg.x += vec.x;
@@ -1369,7 +1374,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 continue;
             }
 
-            Polyobj_carry3DMidTexThings(*po->lines[i], vec);
+            Polyobj_carry3DMidTexThings(*po->lines[i], vec, visitedThings);
         }
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
@@ -1385,8 +1390,8 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 {
                     if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, TMD_DROP))
                     {
-                        P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
-                        pt.thing->zref = clip.zref; // If couldn't move, still adjust Z references
+                        // If couldn't move, still adjust Z references
+                        Polyobj_updateZRef(*pt.thing);
                     }
                     else
                         pt.thing->backupPosition(); // FIXME: temporary until we interpolate polyportals
@@ -1394,8 +1399,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 else
                 {
                     // Floating things still need zref updating
-                    P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
-                    pt.thing->zref = clip.zref;
+                    Polyobj_updateZRef(*pt.thing);
                 }
             }
         }
@@ -1588,8 +1592,13 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
                 x, y, groupid,
                 [](Mobj *mobj, void *vcontext) {
                     auto context = static_cast<context_t *>(vcontext);
+
+                    for(const mobjmove_t &move : context->collection)
+                        if(move.mobj == mobj)
+                            return true;
+
                     // same flags as with P_CheckSector
-                    if(mobj->validcount == polyvalidcount || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP) ||
+                    if(mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP) ||
                        Polyobj_untouched(&context->line, mobj))
                     {
                         return true;
@@ -1597,8 +1606,6 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
 
                     if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
                         return true;
-
-                    mobj->validcount = polyvalidcount;
 
                     mobjmove_t move = {};
                     P_SetTarget(&move.mobj, mobj);
@@ -1637,7 +1644,6 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     PODCollection<mobjmove_t> thingsToCarry;
     if(!onload)
     {
-        ++polyvalidcount;
         for(i = 0; i < po->numLines; ++i)
         {
             if(!lineCanCarry(*po->lines[i]))
@@ -1703,10 +1709,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
         for(const mobjmove_t &move : thingsToCarry)
         {
             if(!P_TryMove(move.mobj, move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, TMD_DROP))
-            {
-                P_CheckPosition(move.mobj, move.mobj->x, move.mobj->y);
-                move.mobj->zref = clip.zref;
-            }
+                Polyobj_updateZRef(*move.mobj);
             move.mobj->angle += delta;
         }
     }

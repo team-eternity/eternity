@@ -76,9 +76,16 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 
 enum
 {
-    TMD_NO = 0,
-    TMD_DROP = 1,
+    TMD_NO = 0, // used by monsters to prevent them from falling off in normal conditions. Dropping off needs the flag.
+    TMD_DROP = 1, // used most often, typically for involuntary movement. Unless vanilla, this overrides the flag.
+
+    // used mutually exclusive with TMD_DROP, by helper dogs when gameplay flag is enabled. According to official MBF
+    // documentation, dogs don't realistically always want to jump off high ledges towards the player.
     TMD_DOG = 2,
+
+    // allow flying players to go up STEPSIZE steps, always. Normal Heretic behaviour is to only allow that when the
+    // dropoff height is of STEPSIZE or less. Useful for polyobject clipping.
+    TMD_FLYSTEP = 4,
 };
 
 // killough 3/15/98: add fourth argument to P_TryMove

@@ -622,6 +622,43 @@ bool    P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
 void    P_NeutralizeForRemoval(Mobj &mobj);
 fixed_t P_GetMeleeRange(const Mobj &mobj);
 
+class MobjReference : public ZoneObject
+{
+public:
+    MobjReference() = default;
+    explicit MobjReference(Mobj *mobj) { P_SetTarget(&this->mobj, mobj); }
+    MobjReference(const MobjReference &other) { P_SetTarget(&mobj, other.mobj); }
+    MobjReference(MobjReference &&other) noexcept : mobj(other.mobj) { other.mobj = nullptr; }
+    ~MobjReference() { P_ClearTarget(mobj); }
+
+    MobjReference &operator=(const MobjReference &other)
+    {
+        P_SetTarget(&mobj, other.mobj);
+        return *this;
+    }
+
+    MobjReference &operator=(MobjReference &&other) noexcept
+    {
+        mobj       = other.mobj;
+        other.mobj = nullptr;
+        return *this;
+    }
+
+    MobjReference &operator=(Mobj *mobj)
+    {
+        P_SetTarget(&this->mobj, mobj);
+        return *this;
+    }
+
+    bool operator==(const Mobj *mobj) const { return this->mobj == mobj; }
+    bool operator==(const Mobj &mobj) const { return this->mobj == &mobj; }
+
+    Mobj *get() const { return mobj; }
+
+private:
+    Mobj *mobj = nullptr;
+};
+
 //=============================================================================
 //
 // Misc. mobj flags
