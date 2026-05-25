@@ -936,7 +936,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
     if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
         return true;
 
-    auto context = static_cast<clipthings_t *>(data);
+    auto            context  = static_cast<clipthings_t *>(data);
     const v2fixed_t midpoint = {
         context->line.v1->x + context->line.dx / 2,
         context->line.v1->y + context->line.dy / 2,
@@ -1015,19 +1015,19 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
 //
 static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &oldLinePos)
 {
-    clipthings_t context  = {
-         .po         = *po,
-         .line       = *line,
-         .oldLinePos = oldLinePos,
-         .hitthing   = false,
+    clipthings_t context = {
+        .po         = *po,
+        .line       = *line,
+        .oldLinePos = oldLinePos,
+        .hitthing   = false,
     };
 
     // adjust linedef bounding box to blockmap, extend by MAXRADIUS
     fixed_t bbox[4];
-    bbox[BOXLEFT] = line->bbox[BOXLEFT] - MAXRADIUS;
-    bbox[BOXRIGHT] = line->bbox[BOXRIGHT] + MAXRADIUS;
-    bbox[BOXBOTTOM]  = line->bbox[BOXBOTTOM] - MAXRADIUS;
-    bbox[BOXTOP] = line->bbox[BOXTOP] + MAXRADIUS;
+    bbox[BOXLEFT]   = line->bbox[BOXLEFT] - MAXRADIUS;
+    bbox[BOXRIGHT]  = line->bbox[BOXRIGHT] + MAXRADIUS;
+    bbox[BOXBOTTOM] = line->bbox[BOXBOTTOM] - MAXRADIUS;
+    bbox[BOXTOP]    = line->bbox[BOXTOP] + MAXRADIUS;
 
     // check all mobj blockmap cells the line contacts
     P_TransPortalBlockWalker(bbox, line->frontsector->groupid, false, &context, PolyobjIT_clipThings);
@@ -1193,15 +1193,6 @@ inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, f
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
 
-// O(n)
-static bool contains(const Collection<MobjReference> &visitedThings, const Mobj &mobj)
-{
-    for(const MobjReference &reference : visitedThings)
-        if(reference == mobj)
-            return true;
-    return false;
-}
-
 static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector,
                                         Collection<MobjReference> &visitedThings)
 {
@@ -1233,7 +1224,10 @@ static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vect
                 [](Mobj *mobj, void *vcontext) {
                     auto context = static_cast<context_t *>(vcontext);
                     // same flags as with P_CheckSector
-                    if(contains(context->visitList, *mobj) || mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+                    for(const MobjReference &reference : context->visitList)
+                        if(reference == mobj)
+                            return true;
+                    if(mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
                         return true;
 
                     mobj->x     += context->vector.x;
