@@ -1048,42 +1048,70 @@ public:
     int           interiorgroupid; // the groupid of the portal this mobj touches
 };
 
-//
-// If this is a portal polyobject, collect all things on the edge: they may be dropped after moving.
-// Must be called before moving, hence not at the same time as clipThings.
-// Line must be PS_PASSABLE.
-//
-static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line, Collection<PortalThing> &things)
+struct collectPortalThings_t
 {
-    I_Assert(line.pflags & PS_PASSABLE, "Expected linked portal\n"); // linked portal
-
-    fixed_t linebox[4];
-    // adjust linedef bounding box to blockmap, extend by MAXRADIUS
-    linebox[BOXLEFT]   = (line.bbox[BOXLEFT] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXRIGHT]  = (line.bbox[BOXRIGHT] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXBOTTOM] = (line.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-    linebox[BOXTOP]    = (line.bbox[BOXTOP] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
-
-    // check all mobj blockmap cells the line contacts
-    for(int y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
-        for(int x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
+    PODCollection<const line_t *> portalLines;
+    Collection<PortalThing>      &things;
+};
+static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
+{
+    MobjReference next;
+    auto          context = static_cast<collectPortalThings_t *>(data);
+    for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next.get())
+    {
+        next = mo->bnext;
+        if(mo->groupid != groupid || !Polyobj_canPushThing(*mo))
+            continue;
+        int interiorgroupid = R_NOGROUP;
+        for(const line_t *line : context->portalLines)
         {
-            if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
+            if(Polyobj_untouched(line, mo))
                 continue;
-
-            Mobj *next;
-            for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next)
-            {
-                next = mo->bnext;
-                if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
-                    continue;
-                PortalThing &pt    = things.addNew();
-                pt.thing           = mo;
-                pt.position        = { mo->x, mo->y };
-                pt.velocity        = { mo->momx, mo->momy };
-                pt.interiorgroupid = line.portal->data.link.toid;
-            }
+            interiorgroupid = line->portal->data.link.toid;
+            break;
         }
+        if(interiorgroupid == R_NOGROUP)
+            continue;
+        PortalThing &pt    = context->things.addNew();
+        pt.thing           = mo;
+        pt.position        = { mo->x, mo->y };
+        pt.velocity        = { mo->momx, mo->momy };
+        pt.interiorgroupid = interiorgroupid;
+    }
+    return true;
+}
+
+//
+// If this is a portal polyobject, collect all things on the edges: they may be dropped after moving.
+// Must be called before moving, hence not at the same time as clipThings.
+// Makes sense if it has PS_PASSABLE (linked portal) lines
+//
+static void Polyobj_collectPortalThings(const polyobj_t &po, Collection<PortalThing> &things)
+{
+    if(!po.numLines)
+        return;
+    fixed_t bbox[4];
+    M_ClearBox(bbox);
+
+    collectPortalThings_t context = {
+        .things = things,
+    };
+
+    for(int i = 0; i < po.numLines; ++i)
+    {
+        const line_t &line = *po.lines[i];
+        if(!(line.pflags & PS_PASSABLE))
+            continue;
+        context.portalLines.add(po.lines[i]);
+        M_AddToBox2(bbox, line.bbox[BOXLEFT], line.bbox[BOXBOTTOM]);
+        M_AddToBox2(bbox, line.bbox[BOXRIGHT], line.bbox[BOXTOP]);
+    }
+    bbox[BOXLEFT]   -= MAXRADIUS;
+    bbox[BOXBOTTOM] -= MAXRADIUS;
+    bbox[BOXRIGHT]  += MAXRADIUS;
+    bbox[BOXTOP]    += MAXRADIUS;
+
+    P_TransPortalBlockWalker(bbox, po.lines[0]->frontsector->groupid, false, &context, PolyobjIT_collectPortalThings);
 }
 
 //
@@ -1294,10 +1322,8 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         return false;
 
     Collection<PortalThing> pts;
-    if(po->numPortals)
-        for(i = 0; i < po->numLines; ++i)
-            if(po->lines[i]->pflags & PS_PASSABLE)
-                Polyobj_collectPortalThings(*po, *po->lines[i], pts);
+    if(po->hasLinkedPortals)
+        Polyobj_collectPortalThings(*po, pts);
 
     // ioanch 20160226: update portal position
     Polyobj_moveLinkedPortals(po, x, y, false);
