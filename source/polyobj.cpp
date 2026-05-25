@@ -1547,14 +1547,15 @@ static void Polyobj_rotateLine(line_t *ld)
         P_MakeLineNormal(ld);
 }
 
-struct mobjmove_t
+class MobjMove
 {
-    Mobj     *mobj;
-    v2fixed_t vector;
+public:
+    MobjReference mobj;
+    v2fixed_t     vector;
 };
 
 static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const line_t &line, const angle_t angle,
-                                                  PODCollection<mobjmove_t> &collection)
+                                                  Collection<MobjMove> &collection)
 {
     fixed_t linebox[4];
     linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS;
@@ -1567,11 +1568,11 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
         linebox, line.frontsector->groupid, false, [angle, &line, &po, &collection](int x, int y, int groupid) {
             struct context_t
             {
-                const angle_t              angle;
-                const v2fixed_t            center;
-                const line_t              &line;
-                PODCollection<mobjmove_t> &collection;
-                fixed_t                    texbot, textop;
+                const angle_t         angle;
+                const v2fixed_t       center;
+                const line_t         &line;
+                Collection<MobjMove> &collection;
+                fixed_t               texbot, textop;
             } context = {
                 .angle = angle, .center = { po.spawnSpot.x, po.spawnSpot.y },
                      .line = line, .collection = collection
@@ -1584,7 +1585,7 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
                 [](Mobj *mobj, void *vcontext) {
                     auto context = static_cast<context_t *>(vcontext);
 
-                    for(const mobjmove_t &move : context->collection)
+                    for(const MobjMove &move : context->collection)
                         if(move.mobj == mobj)
                             return true;
 
@@ -1598,13 +1599,13 @@ static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const lin
                     if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
                         return true;
 
-                    mobjmove_t move = {};
-                    P_SetTarget(&move.mobj, mobj);
+                    MobjMove move    = {};
+                    move.mobj        = mobj;
                     vertex_t rotinfo = { .x = mobj->x - context->center.x, .y = mobj->y - context->center.y };
                     Polyobj_rotatePoint(rotinfo, context->center, context->angle >> ANGLETOFINESHIFT);
                     move.vector.x = rotinfo.x - mobj->x;
                     move.vector.y = rotinfo.y - mobj->y;
-                    context->collection.add(move);
+                    context->collection.add(std::move(move));
                     return true;
                 },
                 &context);
@@ -1632,7 +1633,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     origin.x = po->spawnSpot.x;
     origin.y = po->spawnSpot.y;
 
-    PODCollection<mobjmove_t> thingsToCarry;
+    Collection<MobjMove> thingsToCarry;
     if(!onload)
     {
         for(i = 0; i < po->numLines; ++i)
@@ -1697,18 +1698,12 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
-        for(const mobjmove_t &move : thingsToCarry)
+        for(const MobjMove &move : thingsToCarry)
         {
-            if(!P_TryMove(move.mobj, move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, TMD_DROP))
-                Polyobj_updateZRef(*move.mobj);
+            if(!P_TryMove(move.mobj.get(), move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, TMD_DROP))
+                Polyobj_updateZRef(*move.mobj.get());
             move.mobj->angle += delta;
         }
-    }
-
-    // Remember to clear targets!
-    for(mobjmove_t &move : thingsToCarry)
-    {
-        P_ClearTarget(move.mobj);
     }
 
     return !hitthing;
