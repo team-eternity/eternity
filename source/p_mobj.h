@@ -658,6 +658,8 @@ public:
         return *this;
     }
 
+    Mobj *operator->() const { return mobj; }
+
     bool operator==(const Mobj *mobj) const { return this->mobj == mobj; }
     bool operator==(const Mobj &mobj) const { return this->mobj == &mobj; }
 

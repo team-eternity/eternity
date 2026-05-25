@@ -1039,12 +1039,13 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &old
 // Keeps track of portal-polyobject touched things. If position and velocity don't change, then it
 // means the thing may need to be dropped from a departing polyobject
 //
-struct portalthing_t
+class PortalThing
 {
-    Mobj     *thing;           // the touched thing
-    v2fixed_t position;        // the position when touched
-    v2fixed_t velocity;        // the velocity when touched
-    int       interiorgroupid; // the groupid of the portal this mobj touches
+public:
+    MobjReference thing;           // the touched thing
+    v2fixed_t     position;        // the position when touched
+    v2fixed_t     velocity;        // the velocity when touched
+    int           interiorgroupid; // the groupid of the portal this mobj touches
 };
 
 //
@@ -1052,7 +1053,7 @@ struct portalthing_t
 // Must be called before moving, hence not at the same time as clipThings.
 // Line must be PS_PASSABLE.
 //
-static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line, PODCollection<portalthing_t> &things)
+static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line, Collection<PortalThing> &things)
 {
     I_Assert(line.pflags & PS_PASSABLE, "Expected linked portal\n"); // linked portal
 
@@ -1076,8 +1077,8 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
                 next = mo->bnext;
                 if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
                     continue;
-                portalthing_t &pt = things.addNew();
-                P_SetTarget(&pt.thing, mo);
+                PortalThing &pt    = things.addNew();
+                pt.thing           = mo;
                 pt.position        = { mo->x, mo->y };
                 pt.velocity        = { mo->momx, mo->momy };
                 pt.interiorgroupid = line.portal->data.link.toid;
@@ -1292,7 +1293,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     if(po->flags & POF_ISBAD)
         return false;
 
-    PODCollection<portalthing_t> pts;
+    Collection<PortalThing> pts;
     if(po->numPortals)
         for(i = 0; i < po->numLines; ++i)
             if(po->lines[i]->pflags & PS_PASSABLE)
@@ -1373,19 +1374,19 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
-        for(const portalthing_t &pt : pts)
+        for(const PortalThing &pt : pts)
         {
             // Object was neither teleported by portal nor pushed by solid wall
             if(pt.thing->x == pt.position.x && pt.thing->y == pt.position.y && pt.thing->momx == pt.velocity.x &&
                pt.thing->momy == pt.velocity.y)
             {
                 // We got one which we may want to move
-                if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
+                if(P_mobjOnSurface(*pt.thing.get()) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
                 {
-                    if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, TMD_DROP))
+                    if(!P_TryMove(pt.thing.get(), pt.thing->x + x, pt.thing->y + y, TMD_DROP))
                     {
                         // If couldn't move, still adjust Z references
-                        Polyobj_updateZRef(*pt.thing);
+                        Polyobj_updateZRef(*pt.thing.get());
                     }
                     else
                         pt.thing->backupPosition(); // FIXME: temporary until we interpolate polyportals
@@ -1393,17 +1394,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 else
                 {
                     // Floating things still need zref updating
-                    Polyobj_updateZRef(*pt.thing);
+                    Polyobj_updateZRef(*pt.thing.get());
                 }
             }
         }
         // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
         Polyobj_moveObjectsInside(*po, -x, -y);
     }
-
-    // Remember to clear reference
-    for(portalthing_t &pt : pts)
-        P_ClearTarget(pt.thing);
 
     return !hitthing;
 }
