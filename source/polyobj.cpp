@@ -1229,18 +1229,15 @@ inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, f
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
 
-struct carry3DMidTexThings_t
+struct collect3DMidTexThings_t
 {
-    v2fixed_t vector;
-
-    const PODCollection<const line_t *> &carrierLines;
-
-    PODCollection<Mobj *> mobjsToMove;
+    PODCollection<const line_t *> carrierLines;
+    Collection<MobjReference>     things;
 };
 
-static bool PolyobjIT_carry3DMidTexThings(int x, int y, int groupid, void *data)
+static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *data)
 {
-    auto context = static_cast<carry3DMidTexThings_t *>(data);
+    auto context = static_cast<collect3DMidTexThings_t *>(data);
 
     MobjReference next;
     for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next.get())
@@ -1248,8 +1245,6 @@ static bool PolyobjIT_carry3DMidTexThings(int x, int y, int groupid, void *data)
         next = mo->bnext;
         if(mo->groupid != groupid || mo->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
             continue;
-        mo->x                += context->vector.x;
-        mo->y                += context->vector.y;
         const line_t *online  = nullptr;
         for(const line_t *line : context->carrierLines)
             if(!Polyobj_untouched(line, mo))
@@ -1257,16 +1252,8 @@ static bool PolyobjIT_carry3DMidTexThings(int x, int y, int groupid, void *data)
                 online = line;
                 break;
             }
-        mo->x -= context->vector.x;
-        mo->y -= context->vector.y;
         if(!online)
-        {
-            if(mo->player)
-                DebugLogger() << "Miss" << x << y << groupid;
             continue;
-        }
-        if(mo->player)
-            DebugLogger() << "Hit" << x << y << groupid;
         fixed_t texbot, textop;
 
         // No skewing or slopes possible for polyobjects, so no need to get point
@@ -1274,30 +1261,25 @@ static bool PolyobjIT_carry3DMidTexThings(int x, int y, int groupid, void *data)
         if(!Polyobj_canCarryThing(*online, *mo, texbot, textop))
             continue;
 
-        // Defer movement _after_ all blocks are visited, otherwise we risk visiting a mobj multiple times because it
-        // moved from block to block.
-        context->mobjsToMove.add(mo);
+        context->things.add(MobjReference(mo));
     }
     return true;
 }
 
-static void Polyobj_carry3DMidTexThings(const polyobj_t &po, const vertex_t &vector)
+static Collection<MobjReference> Polyobj_collect3DMidTexThings(const polyobj_t &po)
 {
     fixed_t bbox[4];
-    PODCollection<const line_t *> carrierLines = Polyobj_collectLinesBox(po, bbox, lineCanCarry);
-
-    if(carrierLines.isEmpty())
-        return;
-
-    carry3DMidTexThings_t context = {
-        .vector       = { vector.x, vector.y },
-        .carrierLines = carrierLines,
+    collect3DMidTexThings_t context = {
+        .carrierLines = Polyobj_collectLinesBox(po, bbox, lineCanCarry),
     };
-    P_TransPortalBlockWalker(bbox, carrierLines[0]->frontsector->groupid, false, &context,
-                             PolyobjIT_carry3DMidTexThings);
-    for(Mobj *mobj : context.mobjsToMove)
-        if(!P_TryMove(mobj, mobj->x + context.vector.x, mobj->y + context.vector.y, TMD_DROP))
-            Polyobj_updateZRef(*mobj);
+
+    if(context.carrierLines.isEmpty())
+        return {};
+
+    P_TransPortalBlockWalker(bbox, context.carrierLines[0]->frontsector->groupid, false, &context,
+                             PolyobjIT_collect3DMidTexThings);
+    Collection<MobjReference> result = std::move(context.things);
+    return result;
 }
 
 enum class PolyMove
@@ -1341,8 +1323,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         return false;
 
     Collection<PortalThing> pts;
-    if(po->hasLinkedPortals)
-        Polyobj_collectPortalThings(*po, pts);
+    Collection<MobjReference> thingsOn3DMidTex;
+    if(!onload)
+    {
+        if(po->hasLinkedPortals)
+            Polyobj_collectPortalThings(*po, pts);
+        thingsOn3DMidTex = Polyobj_collect3DMidTexThings(*po);
+    }
 
     // ioanch 20160226: update portal position
     Polyobj_moveLinkedPortals(po, x, y, false);
@@ -1408,8 +1395,6 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             po->lines[i]->soundorg.x += vec.x;
             po->lines[i]->soundorg.y += vec.y;
         }
-        if(!onload)
-            Polyobj_carry3DMidTexThings(*po, vec);
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
@@ -1437,8 +1422,12 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 }
             }
         }
+        for(MobjReference &mobj : thingsOn3DMidTex)
+            if(!P_TryMove(mobj.get(), mobj->x + vec.x, mobj->y + vec.y, TMD_DROP))
+                Polyobj_updateZRef(*mobj.get());
         // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
-        Polyobj_moveObjectsInside(*po, -x, -y);
+        if(!onload)
+            Polyobj_moveObjectsInside(*po, -x, -y);
     }
 
     return !hitthing;
@@ -1586,71 +1575,6 @@ static void Polyobj_rotateLine(line_t *ld)
         P_MakeLineNormal(ld);
 }
 
-class MobjMove
-{
-public:
-    MobjReference mobj;
-    v2fixed_t     vector;
-};
-
-static void Polyobj_collect3DMidTexThingsToRotate(const polyobj_t &po, const line_t &line, const angle_t angle,
-                                                  Collection<MobjMove> &collection)
-{
-    fixed_t linebox[4];
-    linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS;
-    linebox[BOXRIGHT]  = line.bbox[BOXRIGHT] + MAXRADIUS;
-    linebox[BOXBOTTOM] = line.bbox[BOXBOTTOM] - MAXRADIUS;
-    linebox[BOXTOP]    = line.bbox[BOXTOP] + MAXRADIUS;
-
-    // Make it portal aware because standing things may be from upper layers
-    P_TransPortalBlockWalker(
-        linebox, line.frontsector->groupid, false, [angle, &line, &po, &collection](int x, int y, int groupid) {
-            struct context_t
-            {
-                const angle_t         angle;
-                const v2fixed_t       center;
-                const line_t         &line;
-                Collection<MobjMove> &collection;
-                fixed_t               texbot, textop;
-            } context = {
-                .angle = angle, .center = { po.spawnSpot.x, po.spawnSpot.y },
-                     .line = line, .collection = collection
-            };
-
-            P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
-
-            return P_BlockThingsIterator(
-                x, y, groupid,
-                [](Mobj *mobj, void *vcontext) {
-                    auto context = static_cast<context_t *>(vcontext);
-
-                    for(const MobjMove &move : context->collection)
-                        if(move.mobj == mobj)
-                            return true;
-
-                    // same flags as with P_CheckSector
-                    if(mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP) ||
-                       Polyobj_untouched(&context->line, mobj))
-                    {
-                        return true;
-                    }
-
-                    if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
-                        return true;
-
-                    MobjMove move    = {};
-                    move.mobj        = mobj;
-                    vertex_t rotinfo = { .x = mobj->x - context->center.x, .y = mobj->y - context->center.y };
-                    Polyobj_rotatePoint(rotinfo, context->center, context->angle >> ANGLETOFINESHIFT);
-                    move.vector.x = rotinfo.x - mobj->x;
-                    move.vector.y = rotinfo.y - mobj->y;
-                    context->collection.add(std::move(move));
-                    return true;
-                },
-                &context);
-        });
-}
-
 //
 // Polyobj_rotate
 //
@@ -1672,17 +1596,9 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     origin.x = po->spawnSpot.x;
     origin.y = po->spawnSpot.y;
 
-    Collection<MobjMove> thingsToCarry;
+    Collection<MobjReference> thingsOn3DMidTex;
     if(!onload)
-    {
-        for(i = 0; i < po->numLines; ++i)
-        {
-            if(!lineCanCarry(*po->lines[i]))
-                continue;
-
-            Polyobj_collect3DMidTexThingsToRotate(*po, *po->lines[i], delta, thingsToCarry);
-        }
-    }
+        thingsOn3DMidTex = Polyobj_collect3DMidTexThings(*po);
 
     // save current positions and rotate all vertices
     PODCollection<vertex_t> restoreVertices;
@@ -1737,11 +1653,17 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
-        for(const MobjMove &move : thingsToCarry)
+        for(MobjReference &mobj : thingsOn3DMidTex)
         {
-            if(!P_TryMove(move.mobj.get(), move.mobj->x + move.vector.x, move.mobj->y + move.vector.y, TMD_DROP))
-                Polyobj_updateZRef(*move.mobj.get());
-            move.mobj->angle += delta;
+            const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, po->lines[0]->frontsector->groupid);
+
+            vertex_t rotinfo = { .x = mobj->x + link->x - origin.x, .y = mobj->y + link->y - origin.y };
+            Polyobj_rotatePoint(rotinfo, origin, delta >> ANGLETOFINESHIFT);
+            rotinfo.x -= link->x;
+            rotinfo.y -= link->y;
+            if(!P_TryMove(mobj.get(), rotinfo.x, rotinfo.y, TMD_DROP))
+                Polyobj_updateZRef(*mobj.get());
+            mobj->angle += delta;
         }
     }
 
