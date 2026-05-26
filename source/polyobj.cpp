@@ -1082,6 +1082,27 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
     return true;
 }
 
+static PODCollection<const line_t *> Polyobj_collectLinesBox(const polyobj_t &po, fixed_t bbox[4],
+                                                             bool (*linePredicate)(const line_t &))
+{
+    PODCollection<const line_t *> collection;
+    M_ClearBox(bbox);
+    for(int i = 0; i < po.numLines; ++i)
+    {
+        const line_t &line = *po.lines[i];
+        if(!linePredicate(line))
+            continue;
+        collection.add(po.lines[i]);
+        M_AddToBox2(bbox, line.bbox[BOXLEFT], line.bbox[BOXBOTTOM]);
+        M_AddToBox2(bbox, line.bbox[BOXRIGHT], line.bbox[BOXTOP]);
+    }
+    bbox[BOXLEFT]   -= MAXRADIUS;
+    bbox[BOXBOTTOM] -= MAXRADIUS;
+    bbox[BOXRIGHT]  += MAXRADIUS;
+    bbox[BOXTOP]    += MAXRADIUS;
+    return collection;
+}
+
 //
 // If this is a portal polyobject, collect all things on the edges: they may be dropped after moving.
 // Must be called before moving, hence not at the same time as clipThings.
@@ -1092,25 +1113,10 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, Collection<PortalTh
     if(!po.numLines)
         return;
     fixed_t bbox[4];
-    M_ClearBox(bbox);
 
-    collectPortalThings_t context = {
-        .things = things,
-    };
-
-    for(int i = 0; i < po.numLines; ++i)
-    {
-        const line_t &line = *po.lines[i];
-        if(!(line.pflags & PS_PASSABLE))
-            continue;
-        context.portalLines.add(po.lines[i]);
-        M_AddToBox2(bbox, line.bbox[BOXLEFT], line.bbox[BOXBOTTOM]);
-        M_AddToBox2(bbox, line.bbox[BOXRIGHT], line.bbox[BOXTOP]);
-    }
-    bbox[BOXLEFT]   -= MAXRADIUS;
-    bbox[BOXBOTTOM] -= MAXRADIUS;
-    bbox[BOXRIGHT]  += MAXRADIUS;
-    bbox[BOXTOP]    += MAXRADIUS;
+    collectPortalThings_t context = { .portalLines = Polyobj_collectLinesBox(
+                                          po, bbox, [](const line_t &line) { return !!(line.pflags & PS_PASSABLE); }),
+                                      .things = things };
 
     P_TransPortalBlockWalker(bbox, po.lines[0]->frontsector->groupid, false, &context, PolyobjIT_collectPortalThings);
 }
