@@ -970,7 +970,8 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         else if(!P_LevelIsVanillaHexen() && context->line.flags & ML_TWOSIDED && context->line.backsector &&
                 P_TryMove(mo, mo->x, mo->y, TMD_DROP | TMD_FLYSTEP) && !(context->line.pflags & PS_PASSABLE))
         {
-            // Prevent passable line from pushing (otherwise it would fall through below and push
+            // Need to check if it would really block, so that passable and portal-aware impassable 2-sided lines
+            // don't push if they otherwise may be passed
 
             // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
             continue;
