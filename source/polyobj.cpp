@@ -1229,63 +1229,75 @@ inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, f
            (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
 }
 
-static void Polyobj_carry3DMidTexThings(const line_t &line, const vertex_t &vector,
-                                        Collection<MobjReference> &visitedThings)
+struct carry3DMidTexThings_t
 {
-    // Subtract vector because line was already moved
-    fixed_t linebox[4];
-    linebox[BOXLEFT]   = line.bbox[BOXLEFT] - MAXRADIUS - vector.x;
-    linebox[BOXRIGHT]  = line.bbox[BOXRIGHT] + MAXRADIUS - vector.x;
-    linebox[BOXBOTTOM] = line.bbox[BOXBOTTOM] - MAXRADIUS - vector.y;
-    linebox[BOXTOP]    = line.bbox[BOXTOP] + MAXRADIUS - vector.y;
+    v2fixed_t vector;
 
-    // Make it portal aware because standing things may be from upper layers
-    P_TransPortalBlockWalker(
-        linebox, line.frontsector->groupid, false, [&line, &vector, &visitedThings](int x, int y, int groupid) {
-            struct context_t
+    const PODCollection<const line_t *> &carrierLines;
+
+    PODCollection<Mobj *> mobjsToMove;
+};
+
+static bool PolyobjIT_carry3DMidTexThings(int x, int y, int groupid, void *data)
+{
+    auto context = static_cast<carry3DMidTexThings_t *>(data);
+
+    MobjReference next;
+    for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next.get())
+    {
+        next = mo->bnext;
+        if(mo->groupid != groupid || mo->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+            continue;
+        mo->x                += context->vector.x;
+        mo->y                += context->vector.y;
+        const line_t *online  = nullptr;
+        for(const line_t *line : context->carrierLines)
+            if(!Polyobj_untouched(line, mo))
             {
-                const line_t              &line;
-                const v2fixed_t            vector;
-                fixed_t                    texbot, textop;
-                Collection<MobjReference> &visitList;
-            } context = {
-                .line = line, .vector = { vector.x, vector.y },
-                     .visitList = visitedThings
-            };
+                online = line;
+                break;
+            }
+        mo->x -= context->vector.x;
+        mo->y -= context->vector.y;
+        if(!online)
+        {
+            if(mo->player)
+                DebugLogger() << "Miss" << x << y << groupid;
+            continue;
+        }
+        if(mo->player)
+            DebugLogger() << "Hit" << x << y << groupid;
+        fixed_t texbot, textop;
 
-            P_Get3DMidTexHeights(line, sides[line.sidenum[0]], context.texbot, context.textop, nullptr);
+        // No skewing or slopes possible for polyobjects, so no need to get point
+        P_Get3DMidTexHeights(*online, sides[online->sidenum[0]], texbot, textop, nullptr);
+        if(!Polyobj_canCarryThing(*online, *mo, texbot, textop))
+            continue;
 
-            return P_BlockThingsIterator(
-                x, y, groupid,
-                [](Mobj *mobj, void *vcontext) {
-                    auto context = static_cast<context_t *>(vcontext);
-                    // same flags as with P_CheckSector
-                    for(const MobjReference &reference : context->visitList)
-                        if(reference == mobj)
-                            return true;
-                    if(mobj->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
-                        return true;
+        // Defer movement _after_ all blocks are visited, otherwise we risk visiting a mobj multiple times because it
+        // moved from block to block.
+        context->mobjsToMove.add(mo);
+    }
+    return true;
+}
 
-                    mobj->x     += context->vector.x;
-                    mobj->y     += context->vector.y;
-                    bool online  = !Polyobj_untouched(&context->line, mobj);
-                    mobj->x     -= context->vector.x;
-                    mobj->y     -= context->vector.y;
-                    if(!online)
-                        return true;
+static void Polyobj_carry3DMidTexThings(const polyobj_t &po, const vertex_t &vector)
+{
+    fixed_t bbox[4];
+    PODCollection<const line_t *> carrierLines = Polyobj_collectLinesBox(po, bbox, lineCanCarry);
 
-                    if(!Polyobj_canCarryThing(context->line, *mobj, context->texbot, context->textop))
-                        return true;
+    if(carrierLines.isEmpty())
+        return;
 
-                    context->visitList.add(MobjReference(mobj));
-
-                    if(!P_TryMove(mobj, mobj->x + context->vector.x, mobj->y + context->vector.y, TMD_DROP))
-                        Polyobj_updateZRef(*mobj);
-
-                    return true;
-                },
-                &context);
-        });
+    carry3DMidTexThings_t context = {
+        .vector       = { vector.x, vector.y },
+        .carrierLines = carrierLines,
+    };
+    P_TransPortalBlockWalker(bbox, carrierLines[0]->frontsector->groupid, false, &context,
+                             PolyobjIT_carry3DMidTexThings);
+    for(Mobj *mobj : context.mobjsToMove)
+        if(!P_TryMove(mobj, mobj->x + context.vector.x, mobj->y + context.vector.y, TMD_DROP))
+            Polyobj_updateZRef(*mobj);
 }
 
 enum class PolyMove
@@ -1391,19 +1403,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         po->spawnSpot.y += vec.y;
 
         // 04/19/09: translate sound origins
-        Collection<MobjReference> visitedThings;
         for(i = 0; i < po->numLines; ++i)
         {
             po->lines[i]->soundorg.x += vec.x;
             po->lines[i]->soundorg.y += vec.y;
-
-            if(onload || !lineCanCarry(*po->lines[i]))
-            {
-                continue;
-            }
-
-            Polyobj_carry3DMidTexThings(*po->lines[i], vec, visitedThings);
         }
+        if(!onload)
+            Polyobj_carry3DMidTexThings(*po, vec);
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
