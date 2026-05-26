@@ -707,7 +707,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
 
         if(ld)
         {
-            inter.floorline = ld; // killough 8/1/98: remember floor linedef
+            inter.zref.floorline = ld; // killough 8/1/98: remember floor linedef
             inter.blockline = ld;
         }
     }
@@ -1264,7 +1264,7 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
     inter.bbox[BOXRIGHT]  = x + thing.radius;
     inter.bbox[BOXLEFT]   = x - thing.radius;
 
-    inter.floorline = inter.blockline = inter.ceilingline = nullptr; // killough 8/1/98
+    inter.zref.floorline = inter.blockline = inter.ceilingline = nullptr; // killough 8/1/98
 
     // Whether object can get out of a sticky situation:
     inter.unstuck = thing.player &&               // only players
@@ -1816,7 +1816,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
     if(!(thing->flags & MF_NOCLIP))
     {
         bool ret = clip.unstuck && !(clip.ceilingline && untouched(clip.ceilingline)) &&
-                   !(clip.floorline && untouched(clip.floorline));
+                   !(clip.zref.floorline && untouched(clip.zref.floorline));
 
         // killough 7/26/98: reformatted slightly
         // killough 8/1/98: Possibly allow escape if otherwise stuck
@@ -3362,12 +3362,12 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
 void P_ClearGlobalLevelReferences()
 {
     clip.thing       = nullptr; // this isn't reference-counted
-    clip.ceilingline = clip.blockline = clip.floorline = nullptr;
-    clip.numspechit                                    = 0;
-    clip.BlockingMobj                                  = nullptr; // also not ref-counted
-    clip.numportalhit                                  = 0;
-    clip.zref.sector                                   = {};
-    clip.zref.slope                                    = {};
+    clip.ceilingline = clip.blockline = clip.zref.floorline = nullptr;
+    clip.numspechit                                         = 0;
+    clip.BlockingMobj                                       = nullptr; // also not ref-counted
+    clip.numportalhit                                       = 0;
+    clip.zref.sector                                        = {};
+    clip.zref.slope                                         = {};
     P_ClearTarget(clip.linetarget);
 }
 

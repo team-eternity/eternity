@@ -160,7 +160,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz, fixed_t thi
         clip.zref.sector.floor = nullptr;
         clip.zref.slope.floor  = nullptr;
 
-        clip.floorline = ld;
+        clip.zref.floorline = ld;
         clip.blockline = ld;
     }
 

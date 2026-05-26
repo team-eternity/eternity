@@ -251,6 +251,9 @@ struct zrefs_t
     // clipping pass (map architecture + 3d sides).
     fixed_t passfloor;
     fixed_t passceil;
+
+    // killough 8/1/98: Highest touched floor
+    const line_t *floorline;
 };
 
 //
@@ -307,7 +310,7 @@ struct doom_mapinter_t
     // so missiles don't explode against sky hack walls
     const line_t *ceilingline;
     const line_t *blockline; // killough 8/11/98: blocking linedef
-    const line_t *floorline; // killough 8/1/98: Highest touched floor
+    // printz: floorline moved to zref
 
     // TODO: equivalent blocking slopes maybe!
 
