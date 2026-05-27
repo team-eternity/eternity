@@ -902,7 +902,16 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
 
 inline static bool lineCanCarry(const line_t &line)
 {
-    return line.flags & ML_3DMIDTEX && line.flags & ML_TWOSIDED && line.backsector && !(line.flags & ML_BLOCKING) &&
+    if(!(line.flags & ML_TWOSIDED) || !line.backsector)
+        return false;
+    int16_t lineflags = line.flags;
+    if(lineflags & ML_RESERVED)
+        lineflags &= ~ML_BLOCKPLAYERS;
+    if(useportalgroups && (line.extflags & EX_ML_BLOCKALL ||
+                           lineflags & (ML_BLOCKING | ML_BLOCKMONSTERS | ML_BLOCKLANDMONSTERS | ML_BLOCKPLAYERS) ||
+                           (lineflags & ML_3DMIDTEX && line.extflags & EX_ML_WRAPMIDTEX)))
+        return true;
+    return lineflags & ML_3DMIDTEX && !(lineflags & ML_BLOCKING) &&
            !(line.extflags & (EX_ML_WRAPMIDTEX | EX_ML_BLOCKALL));
 }
 
@@ -957,21 +966,12 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         {
             continue;
         }
-        if(lineCanCarry(context->line))
+
+        if(!P_LevelIsVanillaHexen() && context->line.flags & ML_TWOSIDED && context->line.backsector &&
+           P_TryMove(mo, mo->x, mo->y, TMD_DROP | TMD_FLYSTEP) && !(context->line.pflags & PS_PASSABLE))
         {
-            fixed_t texbot, textop;
-            P_Get3DMidTexHeights(context->line, sides[context->line.sidenum[0]], texbot, textop, nullptr);
-            if((mo->z >= textop - STEPSIZE && mo->zref.ceiling - textop >= mo->height) || mo->z + mo->height <= texbot)
-            {
-                // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
-                continue;
-            }
-        }
-        else if(!P_LevelIsVanillaHexen() && context->line.flags & ML_TWOSIDED && context->line.backsector &&
-                P_TryMove(mo, mo->x, mo->y, TMD_DROP | TMD_FLYSTEP) && !(context->line.pflags & PS_PASSABLE))
-        {
-            // Need to check if it would really block, so that passable and portal-aware impassable 2-sided lines
-            // don't push if they otherwise may be passed
+            // Need to check if it would really block, so that passable, 3dmidtex and portal-aware impassable 2-sided
+            // lines don't push if they otherwise may be passed
 
             // Polyobj_makeThingCrossSpecialLine(*mo, *line, oldLinePos);
             continue;
@@ -1224,9 +1224,35 @@ static int polyvalidcount;
 
 inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, fixed_t texbot, fixed_t textop)
 {
+    // TODO: check that texbot and textop are safe if this is not 3dmidtex
+    if(useportalgroups)
+    {
+        if(line.extflags & EX_ML_BLOCKALL)
+            return mobj.zref.floorline == &line;
+        if(!(mobj.flags & (MF_MISSILE | MF_BOUNCES)))
+        {
+            if(line.flags & ML_BLOCKING ||
+               (mbf21_demo && !(line.flags & ML_RESERVED) && mobj.player && line.flags & ML_BLOCKPLAYERS))
+            {
+                return mobj.zref.floorline == &line;
+            }
+            if(!(line.flags & ML_3DMIDTEX) && P_BlockedAsMonster(mobj) &&
+               (line.flags & ML_BLOCKMONSTERS ||
+                (mbf21_demo && line.flags & ML_BLOCKLANDMONSTERS && !(mobj.flags & MF_FLOAT))))
+            {
+                return mobj.zref.floorline == &line;
+            }
+        }
+    }
 
-    return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
-           (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) && mobj.zref.ceiling - textop >= mobj.height;
+    if(line.flags & ML_3DMIDTEX)
+    {
+        // TODO: also handle blockmonsters and wrapmidtex
+        return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
+               (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) &&
+               mobj.zref.ceiling - textop >= mobj.height;
+    }
+    return false;
 }
 
 struct collect3DMidTexThings_t
@@ -1245,7 +1271,7 @@ static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *dat
         next = mo->bnext;
         if(mo->groupid != groupid || mo->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
             continue;
-        const line_t *online  = nullptr;
+        const line_t *online = nullptr;
         for(const line_t *line : context->carrierLines)
             if(!Polyobj_untouched(line, mo))
             {
@@ -1268,7 +1294,7 @@ static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *dat
 
 static Collection<MobjReference> Polyobj_collect3DMidTexThings(const polyobj_t &po)
 {
-    fixed_t bbox[4];
+    fixed_t                 bbox[4];
     collect3DMidTexThings_t context = {
         .carrierLines = Polyobj_collectLinesBox(po, bbox, lineCanCarry),
     };
@@ -1322,7 +1348,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     if(po->flags & POF_ISBAD)
         return false;
 
-    Collection<PortalThing> pts;
+    Collection<PortalThing>   pts;
     Collection<MobjReference> thingsOn3DMidTex;
     if(!onload)
     {
