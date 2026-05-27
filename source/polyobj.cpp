@@ -1220,9 +1220,7 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
         po);
 }
 
-static int polyvalidcount;
-
-inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, fixed_t texbot, fixed_t textop)
+static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
 {
     // TODO: check that texbot and textop are safe if this is not 3dmidtex
     if(useportalgroups)
@@ -1247,7 +1245,9 @@ inline static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj, f
 
     if(line.flags & ML_3DMIDTEX)
     {
-        // TODO: also handle blockmonsters and wrapmidtex
+        fixed_t texbot, textop;
+        P_Get3DMidTexHeights(line, sides[line.sidenum[0]], texbot, textop, nullptr);
+
         return mobj.z <= textop && mobj.z >= textop - STEPSIZE &&
                (mobj.z != textop || mobj.zref.passfloor != mobj.zref.secfloor) &&
                mobj.zref.ceiling - textop >= mobj.height;
@@ -1283,8 +1283,8 @@ static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *dat
         fixed_t texbot, textop;
 
         // No skewing or slopes possible for polyobjects, so no need to get point
-        P_Get3DMidTexHeights(*online, sides[online->sidenum[0]], texbot, textop, nullptr);
-        if(!Polyobj_canCarryThing(*online, *mo, texbot, textop))
+
+        if(!Polyobj_canCarryThing(*online, *mo))
             continue;
 
         context->things.add(MobjReference(mo));
