@@ -82,10 +82,6 @@ enum
     // used mutually exclusive with TMD_DROP, by helper dogs when gameplay flag is enabled. According to official MBF
     // documentation, dogs don't realistically always want to jump off high ledges towards the player.
     TMD_DOG = 2,
-
-    // allow flying players to go up STEPSIZE steps, always. Normal Heretic behaviour is to only allow that when the
-    // dropoff height is of STEPSIZE or less. Useful for polyobject clipping.
-    TMD_FLYSTEP = 4,
 };
 
 bool P_CheckSpaceToStepUp(Mobj &thing);

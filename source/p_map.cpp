@@ -1874,7 +1874,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             }
             else if(thing->z < clip.zref.floor && clip.zref.floor - clip.zref.dropoff > STEPSIZE) // TODO: dropoff max
             {
-                if(clip.zref.floor - thing->z > STEPSIZE || !(dropoff & TMD_FLYSTEP))
+                if(clip.zref.floor - thing->z > STEPSIZE)
                 {
                     thing->momz      = 8 * FRACUNIT;
                     thing->intflags |= MIF_CLEARMOMZ;
