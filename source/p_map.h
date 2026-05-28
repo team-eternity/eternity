@@ -88,13 +88,23 @@ enum
     TMD_FLYSTEP = 4,
 };
 
+bool P_CheckSpaceToStepUp(Mobj &thing);
+bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ);
+
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
-void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
-                     const sector_t *&topsector);
+enum class UnstuckCheck
+{
+    escape,
+    verify,
+};
 
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
+                     const sector_t *&topsector, UnstuckCheck unstuckCheck);
+
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr,
+                     UnstuckCheck unstuckCheck = UnstuckCheck::escape);
 bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<line_t *> *pushhit, bool &output);
 
 //

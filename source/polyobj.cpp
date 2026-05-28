@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "d_mod.h"
 #include "e_exdata.h"
+#include "e_states.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
@@ -43,6 +44,7 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -940,6 +942,33 @@ struct clipthings_t
     bool             hitthing;
 };
 
+static bool Polyobj_checkThingFits(Mobj &thing)
+{
+    if(thing.flags & MF_NOCLIP)
+        return true;
+    if(!P_CheckPosition(&thing, thing.x, thing.y, nullptr, UnstuckCheck::verify))
+        return false;
+    if(clip.zref.ceiling - clip.zref.floor < thing.height)
+        return false;
+    // Don't use the flight move-up/down logic — here we have involuntary blocking
+    if(!(thing.flags & MF_TELEPORT) && clip.zref.ceiling - thing.z < thing.height)
+        return false;
+    if(!(thing.flags & MF_TELEPORT) && !(thing.flags3 & MF3_FLOORMISSILE))
+    {
+        if(clip.zref.floor - thing.z > STEPSIZE)
+            return false;
+        else if(P_Use3DClipping() && thing.z < clip.zref.floor && !P_CheckSpaceToStepUp(thing))
+            return false;
+    }
+
+    if(!P_BouncerCanStepUp(thing, clip.zref.floor))
+        return false;
+
+    // printz: do not reproduce torque step-up limit or CANTLEAVEFLOORPIC (both would happen due to thing's velocity or
+    // will)
+    return true;
+}
+
 static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
 {
     if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
@@ -968,7 +997,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         }
 
         if(!P_LevelIsVanillaHexen() && context->line.flags & ML_TWOSIDED && context->line.backsector &&
-           P_TryMove(mo, mo->x, mo->y, TMD_DROP | TMD_FLYSTEP) && !(context->line.pflags & PS_PASSABLE))
+           Polyobj_checkThingFits(*mo) && !(context->line.pflags & PS_PASSABLE))
         {
             // Need to check if it would really block, so that passable, 3dmidtex and portal-aware impassable 2-sided
             // lines don't push if they otherwise may be passed
@@ -1073,11 +1102,12 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
         }
         if(interiorgroupid == R_NOGROUP)
             continue;
-        PortalThing &pt    = context->things.addNew();
+        PortalThing pt     = {};
         pt.thing           = mo;
         pt.position        = { mo->x, mo->y };
         pt.velocity        = { mo->momx, mo->momy };
         pt.interiorgroupid = interiorgroupid;
+        context->things.add(std::move(pt));
     }
     return true;
 }

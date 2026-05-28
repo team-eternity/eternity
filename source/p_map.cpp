@@ -708,7 +708,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         if(ld)
         {
             inter.zref.floorline = ld; // killough 8/1/98: remember floor linedef
-            inter.blockline = ld;
+            inter.blockline      = ld;
         }
     }
 
@@ -1252,7 +1252,7 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 // P_CheckPosition basics. Returns the sector in the designated area.
 //
 void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
-                     const sector_t *&topsector)
+                     const sector_t *&topsector, UnstuckCheck unstuckCheck)
 {
     inter.thing = &thing;
 
@@ -1266,10 +1266,15 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
 
     inter.zref.floorline = inter.blockline = inter.ceilingline = nullptr; // killough 8/1/98
 
-    // Whether object can get out of a sticky situation:
-    inter.unstuck = thing.player &&               // only players
-                    thing.player->mo == &thing && // not voodoo dolls
-                    demo_version >= 203;          // not under old demos
+    if(unstuckCheck == UnstuckCheck::escape)
+    {
+        // Whether object can get out of a sticky situation:
+        inter.unstuck = thing.player &&               // only players
+                        thing.player->mo == &thing && // not voodoo dolls
+                        demo_version >= 203;          // not under old demos
+    }
+    else
+        clip.unstuck = false;
 
     sector_t &sector = *R_PointInSubsector(x, y)->sector;
 
@@ -1349,16 +1354,16 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
 //  speciallines[]
 //  numspeciallines
 //
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit)
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit, UnstuckCheck unstuckCheck)
 {
     int xl, xh, yl, yh, bx, by;
 
     // haleyjd: OVER_UNDER
     if(P_Use3DClipping())
-        return P_CheckPosition3D(thing, x, y, pushhit);
+        return P_CheckPosition3D(thing, x, y, pushhit, unstuckCheck);
 
     const sector_t *sector;
-    P_GetClipBasics(*thing, x, y, clip, sector, sector);
+    P_GetClipBasics(*thing, x, y, clip, sector, sector, unstuckCheck);
 
     if(clip.thing->flags & MF_NOCLIP)
         return true;
@@ -1660,6 +1665,24 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
     return true;
 }
 
+bool P_CheckSpaceToStepUp(Mobj &thing)
+{
+    // haleyjd: OVER_UNDER:
+    // [RH] Check to make sure there's nothing in the way for the step up
+    fixed_t savedz = thing.z;
+    thing.z        = clip.zref.floor;
+    bool good      = vanilla_heretic || P_TestMobjZ(&thing, clip);
+    thing.z        = savedz;
+    return good || P_checkCarryUp(thing, clip.zref.floor);
+}
+
+bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ)
+{
+    // killough 8/13/98
+    return !(thing.flags & MF_BOUNCES) || thing.flags & (MF_MISSILE | MF_NOGRAVITY) || sentient(&thing) ||
+           candidateFloorZ - thing.z <= 16 * FRACUNIT;
+}
+
 //
 // P_TryMove
 //
@@ -1873,14 +1896,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             else if(P_Use3DClipping() && thing->z < clip.zref.floor)
             {
                 // TODO: make sure to add projectile impact checking if MISSILE
-                // haleyjd: OVER_UNDER:
-                // [RH] Check to make sure there's nothing in the way for the step up
-                fixed_t savedz = thing->z;
-                bool    good;
-                thing->z = clip.zref.floor;
-                good     = vanilla_heretic || P_TestMobjZ(thing, clip);
-                thing->z = savedz;
-                if(!good && !P_checkCarryUp(*thing, clip.zref.floor))
+                if(!P_CheckSpaceToStepUp(*thing))
                 {
                     P_RunPushSpechits(*thing, pushhit);
                     return false;
@@ -1903,9 +1919,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
         if(!dropofffunc(thing, dropoff))
             return false; // don't stand over a dropoff
 
-        if(thing->flags & MF_BOUNCES && // killough 8/13/98
-           !(thing->flags & (MF_MISSILE | MF_NOGRAVITY)) && !sentient(thing) &&
-           clip.zref.floor - thing->z > 16 * FRACUNIT)
+        if(!P_BouncerCanStepUp(*thing, clip.zref.floor))
         {
             P_RunPushSpechits(*thing, pushhit);
             return false; // too big a step up for bouncers under gravity

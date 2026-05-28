@@ -25,6 +25,7 @@
 #define P_MAP3D_H__
 
 #include "m_collection.h"
+#include "p_map.h"
 
 enum class CheckSectorPlane;
 class Mobj;
@@ -34,7 +35,8 @@ struct sector_t;
 
 bool  P_Use3DClipping();
 bool  P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj = nullptr);
-bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
+bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr,
+                        UnstuckCheck unstuckCheck = UnstuckCheck::escape);
 bool  P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z);
 bool  P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane plane);
 Mobj *P_GetThingUnder(Mobj *mo);

@@ -466,7 +466,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 // A 3D version of P_CheckPosition.
 //
-bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit)
+bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit, UnstuckCheck unstuckCheck)
 {
     const fixed_t realheight = thing->height;
 
@@ -477,7 +477,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
     const sector_t *bottomsector;
     const sector_t *topsector;
-    P_GetClipBasics(*thing, x, y, clip, bottomsector, topsector);
+    P_GetClipBasics(*thing, x, y, clip, bottomsector, topsector, unstuckCheck);
 
     // haleyjd 06/28/06: skullfly check from zdoom
     if(clip.thing->flags & MF_NOCLIP && !(clip.thing->flags & MF_SKULLFLY))

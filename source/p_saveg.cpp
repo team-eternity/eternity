@@ -661,6 +661,15 @@ SaveArchive &SaveArchive::operator<<(zrefs_t &zref)
             zref.slope.ceiling = getSlopeIdentifier(ref);
         }
     }
+    if(saveVersion() >= 26)
+    {
+        int32_t index;
+        if(isSaving())
+            index = zref.floorline ? eindex(zref.floorline - lines) : -1;
+        *this << index;
+        if(isLoading())
+            zref.floorline = index == -1 ? nullptr : &lines[index];
+    }
     return *this;
 }
 
