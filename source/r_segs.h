@@ -69,6 +69,11 @@ struct drawseg_t
     float       *maskedtexturecol;
     float       *maskedtextureskew;
 
+    // Midtex caps necessary if we don't have adequate sprtopclip/sprbottomclip
+    // Needed when viewing a wrapped/clipped one through sector portal
+    // NAN by default
+    float capTop, capTopStep, capBottom, capBottomStep;
+
     byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
 };
 
