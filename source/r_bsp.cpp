@@ -100,7 +100,7 @@ struct cliprange_t
 // have anything to do with visplanes, but it had everything to do with these
 // clip posts.
 
-#define MAXSEGS (w/2+r_numcontexts)   /* killough 1/11/98, 2/8/98 */
+#define MAXSEGS (w/2+r_numcontexts) /* killough 1/11/98, 2/8/98 */
 
 static cliprange_t *g_solidsegs = nullptr;
 
@@ -1690,8 +1690,10 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
     else
         seg.bottomtex = 0;
 
-    seg.midtex      = 0;
-    seg.maskedtex   = !!seg.side->midtexture;
+    seg.midtex    = 0;
+    seg.maskedtex = !!seg.side->midtexture;
+
+    // seg.b_window not initialized yet; will update seg.segtextured later accordingly.
     seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex || seg.t_window);
 
     if(line->linedef->portal && // line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
@@ -1991,8 +1993,10 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
     else
         seg.bottomtex = 0;
 
-    seg.midtex      = 0;
-    seg.maskedtex   = !!seg.side->midtexture;
+    seg.midtex    = 0;
+    seg.maskedtex = !!seg.side->midtexture;
+
+    // seg.b_window not initialized yet; will update seg.segtextured later accordingly.
     seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex || seg.t_window);
 
     if(line->linedef->portal && // line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
