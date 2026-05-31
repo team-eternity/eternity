@@ -74,16 +74,6 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // Movement and Clipping
 //
 
-enum
-{
-    TMD_NO = 0, // used by monsters to prevent them from falling off in normal conditions. Dropping off needs the flag.
-    TMD_DROP = 1, // used most often, typically for involuntary movement. Unless vanilla, this overrides the flag.
-
-    // used mutually exclusive with TMD_DROP, by helper dogs when gameplay flag is enabled. According to official MBF
-    // documentation, dogs don't realistically always want to jump off high ledges towards the player.
-    TMD_DOG = 2,
-};
-
 bool P_CheckSpaceToStepUp(Mobj &thing);
 bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ);
 

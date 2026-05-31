@@ -1182,7 +1182,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType, co
     // Check for movements.
     // killough 3/15/98: don't jump over dropoffs:
 
-    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, TMD_NO))
+    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
     {
         // kill it immediately
         P_DamageMobj(newmobj, actor, actor, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
@@ -1629,4 +1629,3 @@ void A_SpawnFly(actionargs_t *actionargs)
 }
 
 // EOF
-

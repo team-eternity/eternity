@@ -1016,7 +1016,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
                                      context->line.v1->y - context->oldLinePos.y };
             mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
             mo->y               += FixedMul(vec.y, 72090);
-            if(!P_TryMove(mo, pos.x, pos.y, TMD_DROP))
+            if(!P_TryMove(mo, pos.x, pos.y, 1))
             {
                 mo->x = pos.x;
                 mo->y = pos.y;
@@ -1215,7 +1215,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
 
         bool p = false;
         if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
-            p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, TMD_DROP);
+            p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
 
         if(!p)
         {
@@ -1461,7 +1461,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 // We got one which we may want to move
                 if(P_mobjOnSurface(*pt.thing.get()) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
                 {
-                    if(!P_TryMove(pt.thing.get(), pt.thing->x + x, pt.thing->y + y, TMD_DROP))
+                    if(!P_TryMove(pt.thing.get(), pt.thing->x + x, pt.thing->y + y, 1))
                     {
                         // If couldn't move, still adjust Z references
                         Polyobj_updateZRef(*pt.thing.get());
@@ -1477,7 +1477,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             }
         }
         for(MobjReference &mobj : thingsOn3DMidTex)
-            if(!P_TryMove(mobj.get(), mobj->x + vec.x, mobj->y + vec.y, TMD_DROP))
+            if(!P_TryMove(mobj.get(), mobj->x + vec.x, mobj->y + vec.y, 1))
                 Polyobj_updateZRef(*mobj.get());
         // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
         if(!onload)
@@ -1715,7 +1715,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
             Polyobj_rotatePoint(rotinfo, origin, delta >> ANGLETOFINESHIFT);
             rotinfo.x -= link->x;
             rotinfo.y -= link->y;
-            if(!P_TryMove(mobj.get(), rotinfo.x, rotinfo.y, TMD_DROP))
+            if(!P_TryMove(mobj.get(), rotinfo.x, rotinfo.y, 1))
                 Polyobj_updateZRef(*mobj.get());
             mobj->angle += delta;
         }

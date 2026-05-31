@@ -430,7 +430,7 @@ void A_RandomWalk(actionargs_t *actionargs)
     }
 
     // time to move?
-    if(--actor->movecount < 0 || !P_Move(actor, TMD_NO))
+    if(--actor->movecount < 0 || !P_Move(actor, 0))
     {
         dirtype_t tdir;
         dirtype_t turnaround = actor->movedir;
@@ -447,7 +447,7 @@ void A_RandomWalk(actionargs_t *actionargs)
 
         // try a completely random direction
         tdir = P_Random(pr_rndwnewdir) & 7;
-        if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, TMD_NO)))
+        if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
         {
             checkdirs[tdir] = 1;
             dirfound        = true;
@@ -464,7 +464,7 @@ void A_RandomWalk(actionargs_t *actionargs)
                     if(checkdirs[tdir])
                         continue;
 
-                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, TMD_NO)))
+                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
                     {
                         dirfound = true;
                         break;
@@ -479,7 +479,7 @@ void A_RandomWalk(actionargs_t *actionargs)
                     if(checkdirs[tdir])
                         continue;
 
-                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, TMD_NO)))
+                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
                     {
                         dirfound = true;
                         break;
@@ -491,7 +491,7 @@ void A_RandomWalk(actionargs_t *actionargs)
         // if didn't find a direction, try the opposite direction
         if(!dirfound)
         {
-            if((actor->movedir = turnaround) != DI_NODIR && !P_Move(actor, TMD_NO))
+            if((actor->movedir = turnaround) != DI_NODIR && !P_Move(actor, 0))
                 actor->movedir = DI_NODIR;
             else
                 dirfound = true;
@@ -833,4 +833,3 @@ void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
 }
 
 // EOF
-

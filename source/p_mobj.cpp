@@ -796,7 +796,7 @@ void P_XYMovement(Mobj *mo)
 
         // killough 3/15/98: Allow objects to drop off
 
-        if(!P_TryMove(mo, ptryx, ptryy, TMD_DROP))
+        if(!P_TryMove(mo, ptryx, ptryy, true))
         {
             // blocked move
 
@@ -1594,7 +1594,7 @@ static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
         box[BOXTOP]    = displace.y + AVOID_EDGE_PORTAL_RANGE;
     }
     if(displace.x != mobj.x || displace.y != mobj.y)
-        P_TryMove(&mobj, displace.x, displace.y, TMD_DROP);
+        P_TryMove(&mobj, displace.x, displace.y, 1);
 
     return crossedge;
 }
@@ -2069,7 +2069,7 @@ void Mobj::ThinkRavenFast()
         {
             if(changexy)
             {
-                if(!P_TryMove(this, this->x + xfrac, this->y + yfrac, TMD_NO))
+                if(!P_TryMove(this, this->x + xfrac, this->y + yfrac, false))
                 {
                     // Blocked move
                     P_ExplodeMissile(this, nullptr);
@@ -3560,7 +3560,7 @@ bool P_CheckMissileSpawn(Mobj *th)
         return ok;
 
     // killough 3/15/98: no dropoff (really = don't care for missiles)
-    if(!P_TryMove(th, th->x, th->y, TMD_NO))
+    if(!P_TryMove(th, th->x, th->y, false))
     {
         P_ExplodeMissile(th, nullptr);
         ok = false;
