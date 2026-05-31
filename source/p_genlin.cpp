@@ -267,6 +267,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
                 {
                     if(fd->changeOnStart)
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                         switch(fd->change_type)
@@ -287,6 +288,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
                     }
                     else
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         floor->texture = line->frontsector->srf.floor.pic;
                         switch(fd->change_type)
                         {
@@ -572,6 +574,7 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
                 {
                     if(cd->flags & CDF_CHANGEONSTART)
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         P_SetSectorCeilingPic(sec, line->frontsector->srf.ceiling.pic);
                         switch(cd->change_type)
                         {
