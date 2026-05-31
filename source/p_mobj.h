@@ -633,6 +633,10 @@ public:
 
     MobjReference &operator=(const MobjReference &other)
     {
+        if(this == &other)
+        {
+            return *this;
+        }
         P_SetTarget(&mobj, other.mobj);
         return *this;
     }

@@ -34,7 +34,6 @@
 #include "doomstat.h"
 #include "d_mod.h"
 #include "e_exdata.h"
-#include "e_states.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
@@ -1304,15 +1303,12 @@ static bool PolyobjIT_collectThingsToCarry(int x, int y, int groupid, void *data
             continue;
         const line_t *online = nullptr;
         for(const line_t *line : context->carrierLines)
-            if(!Polyobj_untouched(line, mo))
+            if(!Polyobj_untouched(line, mo) && Polyobj_canCarryThing(*line, *mo))
             {
                 online = line;
                 break;
             }
         if(!online)
-            continue;
-
-        if(!Polyobj_canCarryThing(*online, *mo))
             continue;
 
         context->things.add(MobjReference(mo));
