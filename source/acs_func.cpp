@@ -2021,8 +2021,15 @@ bool ACS_CF_SectorSound(ACS_CF_ARGS)
     PointThinker *src;
 
     // if script started from a line, use the frontsector's sound origin
-    if(info->line)
-        src = &(info->line->frontsector->soundorg);
+    const line_t *const line = info->line;
+    if(line)
+    {
+        sector_t *const sector = !P_LevelIsVanillaHexen() && line->intflags & MLI_DYNASEGLINE ?
+                                     R_PointInSubsector(line->soundorg.x, line->soundorg.y)->sector :
+                                     line->frontsector;
+
+        src = &(sector->soundorg);
+    }
     else
         src = nullptr;
 
