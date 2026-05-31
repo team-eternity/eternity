@@ -1548,6 +1548,11 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
     Polyobj_applyMovement(po, PolyMove::teleport);
 }
 
+bool Polyobj_IsLine(const line_t &line)
+{
+    return !P_LevelIsVanillaHexen() && line.intflags & MLI_DYNASEGLINE;
+}
+
 //
 // Polyobj_rotatePoint
 //

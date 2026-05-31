@@ -296,6 +296,8 @@ void       Polyobj_InitLevel(void);
 void       Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 void       Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y);
 
+bool Polyobj_IsLine(const line_t &line);
+
 int EV_DoPolyDoor(const polydoordata_t *);
 int EV_DoPolyObjMove(const polymovedata_t *);
 int EV_DoPolyObjRotate(const polyrotdata_t *);

@@ -31,8 +31,10 @@
 #include "d_player.h"
 #include "e_exdata.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_mobj.h"
 #include "p_portal.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -275,8 +277,16 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
     const sector_t *sector;
     const line_t   *li = in->d.line;
     Mobj           *th = in->d.thing;
+
+    v2fixed_t edgepos;
     if(in->isaline)
-        sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    {
+        edgepos = trace.v + trace.dv.fixedMul(in->frac);
+        if(Polyobj_IsLine(*li))
+            sector = R_PointInSubsector(edgepos)->sector;
+        else
+            sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    }
     else
         sector = th->subsector->sector;
     if(sector && totaldist > 0)
@@ -292,15 +302,18 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
         if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
             return false;
 
-        v2fixed_t          edgepos = trace.v + trace.dv.fixedMul(in->frac);
-        tracelineopening_t lo      = { 0 };
+        tracelineopening_t lo = { 0 };
         lo.calculateAtPoint(*li, edgepos);
 
         if(lo.openrange <= 0)
             return false;
 
-        const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
-        fixed_t         slope;
+        const sector_t *osector;
+        if(Polyobj_IsLine(*li))
+            osector = sector;
+        else
+            osector = sector == li->frontsector ? li->backsector : li->frontsector;
+        fixed_t slope;
 
         for(surf_e surf : SURFS)
         {

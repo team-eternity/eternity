@@ -2011,9 +2011,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
 // Gets line frontsector, or polyobject sector otherwise
 inline static sector_t &ACS_getLineSector(const line_t &line)
 {
-    return !P_LevelIsVanillaHexen() && line.intflags & MLI_DYNASEGLINE ?
-               *R_PointInSubsector(line.soundorg.x, line.soundorg.y)->sector :
-               *line.frontsector;
+    return Polyobj_IsLine(line) ? *R_PointInSubsector(line.soundorg.x, line.soundorg.y)->sector : *line.frontsector;
 }
 
 //
