@@ -226,7 +226,12 @@ bool CamContext::sightTraverse(intercept_t *in, void *vcontext, const divline_t 
     fixed_t         totalfrac = context.state.originfrac ?
                                     context.state.originfrac + FixedMul(in->frac, FRACUNIT - context.state.originfrac) :
                                     in->frac;
-    const sector_t *sector    = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    const sector_t *sector;
+    const bool      polyline = Polyobj_IsLine(*li);
+    if(polyline)
+        sector = R_PointInSubsector(edgepos)->sector;
+    else
+        sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
     if(sector && totalfrac > 0)
     {
         if(context.checkPortalSector(sector, totalfrac, in->frac, trace))
@@ -247,8 +252,12 @@ bool CamContext::sightTraverse(intercept_t *in, void *vcontext, const divline_t 
     if(lo.openrange <= 0 || li->extflags & EX_ML_BLOCKALL)
         return false;
 
-    const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
-    fixed_t         slope;
+    const sector_t *osector;
+    if(polyline)
+        osector = sector;
+    else
+        osector = sector == li->frontsector ? li->backsector : li->frontsector;
+    fixed_t slope;
 
     for(surf_e surf : SURFS)
     {

@@ -278,11 +278,13 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
     const line_t   *li = in->d.line;
     Mobj           *th = in->d.thing;
 
-    v2fixed_t edgepos;
+    v2fixed_t edgepos{};
+    bool      polyline = false; // silence stupid warnings
     if(in->isaline)
     {
-        edgepos = trace.v + trace.dv.fixedMul(in->frac);
-        if(Polyobj_IsLine(*li))
+        edgepos  = trace.v + trace.dv.fixedMul(in->frac);
+        polyline = Polyobj_IsLine(*li);
+        if(polyline)
             sector = R_PointInSubsector(edgepos)->sector;
         else
             sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
@@ -309,7 +311,7 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
             return false;
 
         const sector_t *osector;
-        if(Polyobj_IsLine(*li))
+        if(polyline)
             osector = sector;
         else
             osector = sector == li->frontsector ? li->backsector : li->frontsector;
