@@ -311,7 +311,17 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
             return false;
 
         const sector_t *osector;
-        if(polyline)
+        v2fixed_t       edgepos2 = edgepos;
+        if(li->intflags & MLI_1SPORTALLINE && li->beyondportalline)
+        {
+            osector = li->beyondportalline->frontsector;
+            if(li->portal && li->portal->type == R_LINKED)
+            {
+                edgepos2.x += li->portal->data.link.delta.x;
+                edgepos2.y += li->portal->data.link.delta.y;
+            }
+        }
+        else if(polyline)
             osector = sector;
         else
             osector = sector == li->frontsector ? li->backsector : li->frontsector;
@@ -322,7 +332,7 @@ bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trac
             const surface_t &surface      = sector->srf[surf];
             const surface_t &otherSurface = osector->srf[surf];
 
-            if((surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
+            if((surface.getZAt(edgepos) != otherSurface.getZAt(edgepos2) ||
                 (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE)) &&
                lo.openrange < D_MAXINT)
             {
@@ -419,4 +429,3 @@ fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, bool 
 }
 
 // EOF
-
