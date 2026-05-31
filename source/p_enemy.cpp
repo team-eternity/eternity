@@ -52,6 +52,7 @@
 #include "p_setup.h"
 #include "p_slopes.h"
 #include "p_spec.h"
+#include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -115,6 +116,7 @@ static void P_recursiveSound(sector_t *sec, const int soundblocks, Mobj *soundta
         // NOTE: edge portals don't need any handling, because the sound propagates through the
         // expanded line opening naturally to the sector behind, after which it can propagate through
         // the sector portal.
+        // FIXME: polyobject portal lines won't be found here unless the control sector is connected.
         if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
         {
             v2fixed_t mid   = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2 };
@@ -192,6 +194,7 @@ static void P_iterativeSound(sector_t *sec, const int soundblocks, Mobj *soundta
             // NOTE: edge portals don't need any handling, because the sound propagates through the
             // expanded line opening naturally to the sector behind, after which it can propagate through
             // the sector portal.
+            // FIXME: polyobject portal lines won't be found here unless the control sector is connected.
             if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
             {
                 v2fixed_t mid   = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2 };
@@ -814,6 +817,8 @@ static avoiddropoff_t avoiddropoff; // currently we change global state
 
 static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
+    if(Polyobj_IsLine(*line))
+        return true;       // ignore polyobject lines
     if(line->backsector && // Ignore one-sided linedefs
        clip.bbox[BOXRIGHT] > line->bbox[BOXLEFT] && clip.bbox[BOXLEFT] < line->bbox[BOXRIGHT] &&
        clip.bbox[BOXTOP] > line->bbox[BOXBOTTOM] && // Linedef must be contacted
