@@ -440,22 +440,26 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
     // haleyjd: when allowing planes to be shot, we do not care if
     // the sector heights are the same; we must check against the
     // line opening, otherwise lines behind the plane will be activated.
-    sector_t *fs = li->frontsector;
-    sector_t *bs = li->backsector;
-
-    bool becomp = (demo_version < 333 || getComp(comp_planeshoot));
-
-    bool floorsame;
-    if(fs->srf.floor.slope || bs->srf.floor.slope) // don't support this in case of slopes
-        floorsame = false;
+    bool floorsame, ceilingsame;
+    if(Polyobj_IsLine(*li))
+        floorsame = ceilingsame = true;
     else
-        floorsame = becomp && P_SlopesEqual(fs, bs, surf_floor);
+    {
+        sector_t *fs = li->frontsector;
+        sector_t *bs = li->backsector;
 
-    bool ceilingsame;
-    if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
-        ceilingsame = false;
-    else
-        ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
+        bool becomp = (demo_version < 333 || getComp(comp_planeshoot));
+
+        if(fs->srf.floor.slope || bs->srf.floor.slope) // don't support this in case of slopes
+            floorsame = false;
+        else
+            floorsame = becomp && P_SlopesEqual(fs, bs, surf_floor);
+
+        if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
+            ceilingsame = false;
+        else
+            ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
+    }
 
     if((floorsame || (clip.open.height.floor == D_MININT && demo_version >= 406) ||
         FixedDiv(clip.open.height.floor - trace.z, dist) <= trace.aimslope) &&
