@@ -685,7 +685,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 
     const Surfaces<surface_t> *front;
     const Surfaces<surface_t> *back;
-    if(isPolyObj2Sided)
+    if(isPolyObj2Sided && !(linedef->intflags & MLI_1SPORTALLINE))
     {
         const sector_t &sector = *R_PointInSubsector(point)->sector;
         open.height.ceiling    = D_MAXINT;
@@ -702,7 +702,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     {
         const sector_t *openfrontsector, *openbacksector;
 
-        openfrontsector  = linedef->frontsector;
+        openfrontsector  = isPolyObj2Sided ? R_PointInSubsector(point)->sector : linedef->frontsector;
         openbacksector   = linedef->backsector;
         sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
                                linedef->beyondportalline->frontsector :
