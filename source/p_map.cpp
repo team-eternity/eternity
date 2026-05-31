@@ -3149,6 +3149,10 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
     bbox[BOXTOP]             = pClip->bbox[BOXTOP] + link->y;
     bbox[BOXBOTTOM]          = pClip->bbox[BOXBOTTOM] + link->y;
 
+    // Polyobject lines don't contribute with sector information (even with portals)
+    if(demo_version >= 406 && Polyobj_IsLine(*ld))
+        return true;
+
     if(bbox[BOXRIGHT] <= ld->bbox[BOXLEFT] || bbox[BOXLEFT] >= ld->bbox[BOXRIGHT] ||
        bbox[BOXTOP] <= ld->bbox[BOXBOTTOM] || bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
         return true;
