@@ -2056,6 +2056,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 //
 static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 {
+    if(Polyobj_IsLine(*ld))
+        return true; // ignore polyobject lines (1-sided already ignored, 2-sided also to ignore)
     // ioanch 20160116: portal aware
     const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, ld->frontsector->groupid);
     fixed_t             bbox[4];
