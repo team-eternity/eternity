@@ -92,6 +92,8 @@ Improvements
 * Added some readily available APROP implementations to the GetActorProperty and CheckActorProperty ACS functions.
 * Fixed so Doom teleportation also works fine with Heretic-like flying players or telestomp projectiles.
 * Added missing "3DMTPASSPROJ" extflag to ExtraData linedef entries.
+* WRAPMIDTEX applied over 3DMIDTEX now modifies the behavior so the line blocks the entire space.
+* Polyobjects with impassable 2-sided lines (of any flavour) can now carry and properly push (or not push) things.
 
 Bug fixes
 ---------
