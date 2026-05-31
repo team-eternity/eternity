@@ -101,6 +101,7 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr,
                      UnstuckCheck unstuckCheck = UnstuckCheck::escape);
+bool P_CheckWrap3DMidTexBlock(const line_t &line, const Mobj &mobj);
 bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<line_t *> *pushhit, bool &output);
 
 //
@@ -374,4 +375,3 @@ extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 #endif
 
 // EOF
-

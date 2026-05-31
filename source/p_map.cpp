@@ -537,7 +537,8 @@ static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
     // SoM 9/7/02: wow a killoughism... * SoM is scared
     int flags = ML_TWOSIDED | ML_BLOCKING | (mobjinfo[*type]->flags4 & MF4_MONSTERPASS ? 0 : ML_BLOCKMONSTERS);
 
-    if(ld->flags & ML_3DMIDTEX)
+    // printz: if wrap-midtex is also in, then 3dmidtex is effectively like an impassable line for the monster
+    if(ld->flags & ML_3DMIDTEX && !(ld->extflags & EX_ML_WRAPMIDTEX))
         flags &= ~ML_BLOCKMONSTERS;
 
     return !((ld->flags ^ ML_TWOSIDED) & flags) || clip.bbox[BOXLEFT] > ld->bbox[BOXRIGHT] ||
@@ -751,6 +752,13 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         inter.zref.passceil = inter.zref.ceiling;
 }
 
+bool P_CheckWrap3DMidTexBlock(const line_t &line, const Mobj &mobj)
+{
+    return demo_version >= 406 && line.flags & ML_3DMIDTEX && line.extflags & EX_ML_WRAPMIDTEX &&
+           sides[line.sidenum[0]].midtexture &&
+           (!(line.extflags & EX_ML_3DMTPASSPROJ) || !(mobj.flags & (MF_MISSILE | MF_BOUNCES)));
+}
+
 //
 // Handle mid-texture solid line interaction with clip.thing.
 // Returns true if PIT_CheckLine[3D] should return "output".
@@ -775,28 +783,32 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
         return true;
     }
 
+    auto handleImpassable = [ld, link, &output, pushhit]() {
+        bool result = clip.unstuck && !untouched(ld, link);
+        if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
+        {
+            pushhit->add(ld);
+        }
+        output = result;
+        return true;
+    };
+
     // killough 8/10/98: allow bouncing objects to pass through as missiles
     if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
     {
+        // explicitly blocking everything
+        // or blocking player
         if((ld->flags & ML_BLOCKING) ||
            (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
         {
-            // explicitly blocking everything
-            // or blocking player
-            bool result = clip.unstuck && !untouched(ld, link);
-            if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
-            {
-                pushhit->add(ld);
-            }
-            output = result;
-            return true;
+            return handleImpassable();
         }
         // killough 8/1/98: allow escape
 
         // killough 8/9/98: monster-blockers don't affect friends
         // SoM 9/7/02: block monsters standing on 3dmidtex only
         // MaxW: Land-monster blockers gotta be factored in, too
-        if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+        if((!(ld->flags & ML_3DMIDTEX) || ld->extflags & EX_ML_WRAPMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
            (ld->flags & ML_BLOCKMONSTERS ||
             (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))))
         {
@@ -804,6 +816,12 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
             return true; // block monsters only
         }
     }
+
+    // Also handle 3dmidtex+wrapmidtex properly here, before we go into line-opening, as the behavior is closer to that
+    // of classic impassable, only that it may also block projectiles.
+    if(P_CheckWrap3DMidTexBlock(*ld, *clip.thing))
+        return handleImpassable();
+
     return false; // not returning
 }
 

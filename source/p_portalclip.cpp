@@ -402,13 +402,18 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                 P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights, outerheights, pushhit);
                 return true;
             }
-            if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            if((!(ld->flags & ML_3DMIDTEX) || ld->extflags & EX_ML_WRAPMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
                (ld->flags & ML_BLOCKMONSTERS ||
                 (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))))
             {
                 P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights, outerheights, pushhit);
                 return true;
             }
+        }
+        if(P_CheckWrap3DMidTexBlock(*ld, *clip.thing))
+        {
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights, outerheights, pushhit);
+            return true;
         }
     }
 
@@ -506,4 +511,3 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 }
 
 // EOF
-

@@ -1252,7 +1252,6 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
 
 static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
 {
-    // TODO: check that texbot and textop are safe if this is not 3dmidtex
     if(useportalgroups)
     {
         if(line.extflags & EX_ML_BLOCKALL)
@@ -1264,13 +1263,15 @@ static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
             {
                 return mobj.zref.floorline == &line;
             }
-            if(!(line.flags & ML_3DMIDTEX) && P_BlockedAsMonster(mobj) &&
+            if((!(line.flags & ML_3DMIDTEX) || line.extflags & EX_ML_WRAPMIDTEX) && P_BlockedAsMonster(mobj) &&
                (line.flags & ML_BLOCKMONSTERS ||
                 (mbf21_demo && line.flags & ML_BLOCKLANDMONSTERS && !(mobj.flags & MF_FLOAT))))
             {
                 return mobj.zref.floorline == &line;
             }
         }
+        if(P_CheckWrap3DMidTexBlock(line, mobj))
+            return mobj.zref.floorline == &line;
     }
 
     if(line.flags & ML_3DMIDTEX)
@@ -1291,7 +1292,7 @@ struct collect3DMidTexThings_t
     Collection<MobjReference>     things;
 };
 
-static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *data)
+static bool PolyobjIT_collectThingsToCarry(int x, int y, int groupid, void *data)
 {
     auto context = static_cast<collect3DMidTexThings_t *>(data);
 
@@ -1310,9 +1311,6 @@ static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *dat
             }
         if(!online)
             continue;
-        fixed_t texbot, textop;
-
-        // No skewing or slopes possible for polyobjects, so no need to get point
 
         if(!Polyobj_canCarryThing(*online, *mo))
             continue;
@@ -1322,7 +1320,7 @@ static bool PolyobjIT_collect3DMidTexThings(int x, int y, int groupid, void *dat
     return true;
 }
 
-static Collection<MobjReference> Polyobj_collect3DMidTexThings(const polyobj_t &po)
+static Collection<MobjReference> Polyobj_collectThingsToCarry(const polyobj_t &po)
 {
     fixed_t                 bbox[4];
     collect3DMidTexThings_t context = {
@@ -1333,7 +1331,7 @@ static Collection<MobjReference> Polyobj_collect3DMidTexThings(const polyobj_t &
         return {};
 
     P_TransPortalBlockWalker(bbox, context.carrierLines[0]->frontsector->groupid, false, &context,
-                             PolyobjIT_collect3DMidTexThings);
+                             PolyobjIT_collectThingsToCarry);
     Collection<MobjReference> result = std::move(context.things);
     return result;
 }
@@ -1384,7 +1382,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     {
         if(po->hasLinkedPortals)
             Polyobj_collectPortalThings(*po, pts);
-        thingsOn3DMidTex = Polyobj_collect3DMidTexThings(*po);
+        thingsOn3DMidTex = Polyobj_collectThingsToCarry(*po);
     }
 
     // ioanch 20160226: update portal position
@@ -1654,7 +1652,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
     Collection<MobjReference> thingsOn3DMidTex;
     if(!onload)
-        thingsOn3DMidTex = Polyobj_collect3DMidTexThings(*po);
+        thingsOn3DMidTex = Polyobj_collectThingsToCarry(*po);
 
     // save current positions and rotate all vertices
     PODCollection<vertex_t> restoreVertices;

@@ -601,7 +601,7 @@ void P_Get3DMidTexHeights(const line_t &line, const side_t &side, fixed_t &texbo
     const Surfaces<fixed_t> *polyref = P_GetMidTexPolyobjectReference(line);
     Surfaces<fixed_t>        frontReferenceHeights;
     Surfaces<fixed_t>        backReferenceHeights;
-    if(polyref && line.intflags & MLI_DYNASEGLINE && !(line.extflags & EX_ML_WRAPMIDTEX))
+    if(polyref && line.intflags & MLI_DYNASEGLINE)
         frontReferenceHeights = backReferenceHeights = *polyref;
     else
     {

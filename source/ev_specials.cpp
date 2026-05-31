@@ -91,7 +91,9 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
     // SoM: only allow switch specials on 3d sides to be triggered if
     // the mobj is within range of the side.
     // haleyjd 05/02/06: ONLY on two-sided lines.
-    if((line->flags & ML_3DMIDTEX) && line->backsector && sidedef && sidedef->midtexture)
+    // printz: don't apply this treatment for wrapmidtex, which is effectively like any tiling texture.
+    if(line->flags & ML_3DMIDTEX && !(line->extflags & EX_ML_WRAPMIDTEX) && line->backsector && sidedef &&
+       sidedef->midtexture)
     {
         const linkoffset_t *link     = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
         const v2fixed_t     thingpos = { thing->x + link->x, thing->y + link->y };
