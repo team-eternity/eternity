@@ -36,6 +36,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -442,7 +443,9 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
             player_t *player = thing->player && thing->player->mo == thing ? thing->player : nullptr;
 
             // Whether walking towards first side of exit linedef steps down
-            int stepdown = l->frontsector->srf.floor.getZAt(x, y) < l->backsector->srf.floor.getZAt(x, y);
+            int stepdown = Polyobj_IsLine(*l) ?
+                               false :
+                               l->frontsector->srf.floor.getZAt(x, y) < l->backsector->srf.floor.getZAt(x, y);
 
             // Height of thing above ground
             fixed_t z = thing->z - thing->zref.floor;
@@ -573,4 +576,3 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

@@ -235,7 +235,7 @@ static button_t *P_FindFreeButton()
 //
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
-static void P_StartButton(int sidenum, line_t *line, sector_t *sector, bwhere_e w, int texture, int time, bool dopopout,
+static void P_StartButton(int sidenum, line_t *line, bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound, int swindex)
 {
     int       i;
@@ -361,12 +361,6 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
     if(sidenum == -1)
         return;
 
-    // haleyjd 04/16/08: get proper sector pointer
-    sector = side ? line->backsector : line->frontsector;
-
-    if(!sector) // ???; really should not happen.
-        return;
-
     texTop = sides[sidenum].toptexture;
     texMid = sides[sidenum].midtexture;
     texBot = sides[sidenum].bottomtexture;
@@ -396,7 +390,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
             R_CacheTexture(switchlist[i ^ 1]);
             R_CacheIfSkyTexture(switchlist[i], switchlist[i ^ 1]); // Sky transfers are only off of top textures
 
-            P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME, !!useAgain, sound, i); // start timer
+            P_StartButton(sidenum, line, top, switchlist[i], BUTTONTIME, !!useAgain, sound, i); // start timer
 
             return;
         }
@@ -405,7 +399,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
             sides[sidenum].midtexture = switchlist[i ^ 1]; // chg texture
             R_CacheTexture(switchlist[i ^ 1]);
 
-            P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME, !!useAgain, sound,
+            P_StartButton(sidenum, line, middle, switchlist[i], BUTTONTIME, !!useAgain, sound,
                           i); // start timer
 
             return;
@@ -415,7 +409,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
             sides[sidenum].bottomtexture = switchlist[i ^ 1]; // chg texture
             R_CacheTexture(switchlist[i ^ 1]);
 
-            P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME, !!useAgain, sound,
+            P_StartButton(sidenum, line, bottom, switchlist[i], BUTTONTIME, !!useAgain, sound,
                           i); // start timer
 
             return;
@@ -506,4 +500,3 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 //
 //
 //----------------------------------------------------------------------------
-
