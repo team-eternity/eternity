@@ -235,6 +235,7 @@ static dehflags_t extlineflags[] = {
     { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
     { "POLYOBJECT",   EX_ML_POLYOBJECT   },
     { "WRAPMIDTEX",   EX_ML_WRAPMIDTEX   },
+    { "3DMTPASSPROJ", EX_ML_3DMTPASSPROJ },
     { nullptr,        0                  }
 };
 
