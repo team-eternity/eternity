@@ -421,9 +421,10 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
     // better detection of in-portal lines
     uint32_t lineclipflags = 0;
 
-    if(haveSlopes)
+    if(haveSlopes || ld->intflags & MLI_DYNASEGLINE)
     {
-        pcl->haveslopes = true;
+        if(haveSlopes)
+            pcl->haveslopes = true;
         if(!calculatedSlopes) // may have already calculated them when checking cross-portal heights
             P_ExactBoxLinePoints(bbox, *ld, i1, i2);
 

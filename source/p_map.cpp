@@ -861,7 +861,9 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
     // At this point we have backsector
 
-    if(P_AnySlope(*ld))
+    bool anyslope = P_AnySlope(*ld);
+
+    if(anyslope || ld->intflags & MLI_DYNASEGLINE)
     {
         // Find the two intersections with the bounding box
         v2fixed_t i1, i2;
@@ -873,7 +875,8 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
         P_UpdateFromOpening(lo, ld, clip, UO_SAMEGROUPID, 0, 0);
 
-        pcl->haveslopes = true;
+        if(anyslope)
+            pcl->haveslopes = true;
     }
     else
     {
@@ -2442,6 +2445,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
 
     li = in->d.line;
 
+    v2fixed_t edgepos; 
     if(!(li->flags & ML_TWOSIDED))
     {
         if(P_PointOnLineSide(slidemo->x, slidemo->y, li))
@@ -2456,15 +2460,16 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
     // set openrange, opentop, openbottom.
     // These define a 'window' from one sector to another across a line
 
-    clip.open = P_LineOpening(li, slidemo);
+    edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+    clip.open = P_LineOpening(li, slidemo, &edgepos);
 
     if(clip.open.range < slidemo->height)
         goto isblocking; // doesn't fit
 
-    if(clip.open.height.ceiling < D_MAXINT && clip.open.height.ceiling - slidemo->z < slidemo->height)
+    if(clip.open.height.ceiling - slidemo->z < slidemo->height)
         goto isblocking; // mobj is too high
 
-    if(clip.open.height.floor > D_MININT && clip.open.height.floor - slidemo->z > STEPSIZE)
+    if(clip.open.height.floor - slidemo->z > STEPSIZE)
         goto isblocking;                                              // too big a step up
     else if(P_Use3DClipping() && slidemo->z < clip.open.height.floor) // haleyjd: OVER_UNDER
     {

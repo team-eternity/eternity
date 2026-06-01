@@ -139,16 +139,14 @@ static bool PTR_AimTraverse(intercept_t *in, void *context, const divline_t &tra
 
         dist = FixedMul(trace.attackrange, in->frac);
 
-        if(li->frontsector->srf.floor.getZAt(edgepos) != li->backsector->srf.floor.getZAt(edgepos) &&
-           (demo_version < 406 || clip.open.height.floor != D_MININT))
+        if(li->frontsector->srf.floor.getZAt(edgepos) != li->backsector->srf.floor.getZAt(edgepos))
         {
             slope = FixedDiv(clip.open.height.floor - trace.z, dist);
             if(slope > trace.bottomslope)
                 trace.bottomslope = slope;
         }
 
-        if(li->frontsector->srf.ceiling.getZAt(edgepos) != li->backsector->srf.ceiling.getZAt(edgepos) &&
-           (demo_version < 406 || clip.open.height.ceiling != D_MAXINT))
+        if(li->frontsector->srf.ceiling.getZAt(edgepos) != li->backsector->srf.ceiling.getZAt(edgepos))
         {
             slope = FixedDiv(clip.open.height.ceiling - trace.z, dist);
             if(slope < trace.topslope)
