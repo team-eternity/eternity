@@ -2098,11 +2098,8 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
         fixed_t mocheckz;
         if(!frontsector) // if the line is a polyobject portal, the frontsector will need to be local to the actor
         {
-            v2fixed_t i1, i2;
-            P_ExactBoxLinePoints(bbox, *ld, i1, i2);
-            i1 = i1 / 2 + i2 / 2;
-
-            frontsector = R_PointInSubsector(i1)->sector;
+            const v2fixed_t point = P_BoxLinePoint(bbox, ld);
+            frontsector           = R_PointInSubsector(point)->sector;
         }
         if(frontsector->srf.floor.slope || backsector->srf.floor.slope)
         {
