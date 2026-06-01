@@ -443,6 +443,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
             player_t *player = thing->player && thing->player->mo == thing ? thing->player : nullptr;
 
             // Whether walking towards first side of exit linedef steps down
+            // NOTE: if portal, then there's not going to also be teleport_line
             int stepdown = Polyobj_IsLine(*l) ?
                                false :
                                l->frontsector->srf.floor.getZAt(x, y) < l->backsector->srf.floor.getZAt(x, y);

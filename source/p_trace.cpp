@@ -441,6 +441,8 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
     // the sector heights are the same; we must check against the
     // line opening, otherwise lines behind the plane will be activated.
     bool floorsame, ceilingsame;
+
+    // NOTE: MLI_1SPORTALLINE won't be reached here, this is not portal-aware code
     if(Polyobj_IsLine(*li))
         floorsame = ceilingsame = true;
     else
@@ -590,17 +592,28 @@ bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
 {
     // don't shoot the sky
     // don't shoot ceiling portals either
-    if(R_IsSkyFlat(li.frontsector->srf.ceiling.pic) || li.frontsector->srf.ceiling.portal)
+    const sector_t *frontsector = Polyobj_IsLine(li) ? R_PointInSubsector(x, y)->sector : li.frontsector;
+    if(R_IsSkyFlat(frontsector->srf.ceiling.pic) || frontsector->srf.ceiling.portal)
     {
         // don't shoot the sky!
-        if(z > li.frontsector->srf.ceiling.getZAt(x, y))
+        if(z > frontsector->srf.ceiling.getZAt(x, y))
             return false;
 
         // it's a sky hack wall
         // fix bullet eaters -- killough
-        if(li.backsector && R_IsSkyFlat(li.backsector->srf.ceiling.pic))
+        const sector_t *backsector;
+        if(Polyobj_IsLine(li))
         {
-            if(li.backsector->srf.ceiling.getZAt(x, y) < z)
+            if(li.intflags & MLI_1SPORTALLINE && li.beyondportalline)
+                backsector = li.beyondportalline->frontsector;
+            else
+                backsector = frontsector;
+        }
+        else
+            backsector = li.backsector;
+        if(backsector && R_IsSkyFlat(backsector->srf.ceiling.pic))
+        {
+            if(backsector->srf.ceiling.getZAt(x, y) < z)
                 return false;
         }
     }
