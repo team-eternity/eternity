@@ -2056,17 +2056,30 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 //
 static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 {
+    const sector_t *frontsector, *backsector;
+    int             linegroupid = ld->frontsector->groupid;
     if(Polyobj_IsLine(*ld))
-        return true; // ignore polyobject lines (1-sided already ignored, 2-sided also to ignore)
+    {
+        if(ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline)
+            frontsector = nullptr; // determine it later by exact box line points
+        else
+            return true; // ignore polyobject lines (1-sided already ignored, 2-sided also to ignore)
+    }
+    else
+        frontsector = ld->frontsector;
+    if(ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline)
+        backsector = ld->beyondportalline->frontsector;
+    else
+        backsector = ld->backsector;
     // ioanch 20160116: portal aware
-    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, ld->frontsector->groupid);
+    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, linegroupid);
     fixed_t             bbox[4];
     bbox[BOXRIGHT]  = clip.bbox[BOXRIGHT] + link->x;
     bbox[BOXLEFT]   = clip.bbox[BOXLEFT] + link->x;
     bbox[BOXTOP]    = clip.bbox[BOXTOP] + link->y;
     bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
 
-    if(ld->backsector && // If thing touches two-sided pivot linedef
+    if(backsector && // If thing touches two-sided pivot linedef
        bbox[BOXRIGHT] > ld->bbox[BOXLEFT] && bbox[BOXLEFT] < ld->bbox[BOXRIGHT] && bbox[BOXTOP] > ld->bbox[BOXBOTTOM] &&
        bbox[BOXBOTTOM] < ld->bbox[BOXTOP] && P_BoxOnLineSide(bbox, ld) == -1)
     {
@@ -2083,21 +2096,29 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
         bool    cond;
         fixed_t frontfloor, backfloor;
         fixed_t mocheckz;
-        if(ld->frontsector->srf.floor.slope || ld->backsector->srf.floor.slope)
+        if(!frontsector) // if the line is a polyobject portal, the frontsector will need to be local to the actor
         {
-            if(ld->frontsector->srf.floor.slope && ld->backsector->srf.floor.slope &&
-               P_SlopesEqual(*ld->frontsector->srf.floor.slope, *ld->backsector->srf.floor.slope))
+            v2fixed_t i1, i2;
+            P_ExactBoxLinePoints(bbox, *ld, i1, i2);
+            i1 = i1 / 2 + i2 / 2;
+
+            frontsector = R_PointInSubsector(i1)->sector;
+        }
+        if(frontsector->srf.floor.slope || backsector->srf.floor.slope)
+        {
+            if(frontsector->srf.floor.slope && backsector->srf.floor.slope &&
+               P_SlopesEqual(*frontsector->srf.floor.slope, *backsector->srf.floor.slope))
             {
                 return true;
             }
-            if(mo->zref.slope.floor == ld->frontsector->srf.floor.slope)
+            if(mo->zref.slope.floor == frontsector->srf.floor.slope)
             {
                 frontfloor = mocheckz = mo->zref.floor;
-                backfloor             = ld->backsector->srf.floor.getZAt(mox, moy);
+                backfloor             = backsector->srf.floor.getZAt(mox, moy);
             }
-            else if(mo->zref.slope.floor == ld->backsector->srf.floor.slope)
+            else if(mo->zref.slope.floor == backsector->srf.floor.slope)
             {
-                frontfloor = ld->frontsector->srf.floor.getZAt(mox, moy);
+                frontfloor = frontsector->srf.floor.getZAt(mox, moy);
                 backfloor = mocheckz = mo->zref.floor;
             }
             else
@@ -2105,8 +2126,8 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
         }
         else
         {
-            frontfloor = ld->frontsector->srf.floor.height;
-            backfloor  = ld->backsector->srf.floor.height;
+            frontfloor = frontsector->srf.floor.height;
+            backfloor  = backsector->srf.floor.height;
             mocheckz   = mo->z;
         }
 
@@ -2122,10 +2143,10 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
             // if one side has portals. Require equal floor height though
             // dropoff direction
             cond = dist < 0 ? (frontfloor < mocheckz ||
-                               (frontfloor == mocheckz && ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
+                               (frontfloor == mocheckz && frontsector->srf.floor.pflags & PS_PASSABLE)) &&
                                   backfloor == mocheckz :
                               (backfloor < mocheckz ||
-                               (backfloor == mocheckz && ld->backsector->srf.floor.pflags & PS_PASSABLE)) &&
+                               (backfloor == mocheckz && backsector->srf.floor.pflags & PS_PASSABLE)) &&
                                   frontfloor == mocheckz;
         }
 
