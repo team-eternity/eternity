@@ -274,9 +274,8 @@ bool CamContext::sightTraverse(intercept_t *in, void *vcontext, const divline_t 
         const surface_t &surface      = sector->srf[surf];
         const surface_t &otherSurface = osector->srf[surf];
 
-        if((surface.getZAt(edgepos) != otherSurface.getZAt(edgepos2) ||
-            (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE)) &&
-           lo.openrange < D_MAXINT)
+        if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos2) ||
+           (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
         {
             slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
             if(isInner(surf, slope, context.state.slope[surf]))

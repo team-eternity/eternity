@@ -180,8 +180,8 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
 bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist, const tracelineopening_t &lo) const
 {
     // ioanch: no more need for demo version < 333 check. Also don't allow comp.
-    if(lo.openrange == D_MAXINT || (FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
-                                    FixedDiv(lo.open.ceiling - state.v.z, dist) >= params.aimslope))
+    if(FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
+       FixedDiv(lo.open.ceiling - state.v.z, dist) >= params.aimslope)
     {
         if(li->special)
             P_ShootSpecialLine(params.thing, li, lineside);
