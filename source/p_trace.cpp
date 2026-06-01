@@ -1121,7 +1121,17 @@ static bool PIT_AddLineIntercepts(line_t *ld, polyobj_t *po, void *context)
 
         // if this is a passable portal line, remember we just added it
         // ioanch 20151229: also check sectors
-        const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
+        const sector_t *fsec, *bsec;
+        if(Polyobj_IsLine(*ld))
+        {
+            v2fixed_t point = info->trace.v + info->trace.dv.fixedMul(frac);
+            fsec = bsec = R_PointInSubsector(point)->sector;
+        }
+        else
+        {
+            fsec = ld->frontsector;
+            bsec = ld->backsector;
+        }
         if(ld->pflags & PS_PASSABLE ||
            (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE)) ||
            (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
