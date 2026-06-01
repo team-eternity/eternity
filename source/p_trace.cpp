@@ -624,6 +624,9 @@ bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
 //
 bool P_CheckShootSkyLikeEdgePortal(const line_t &li, v2fixed_t edgepos, fixed_t z)
 {
+    // Applicable neither to two-sided polyobject lines, nor to portal lines (no backsector to give edge portal)
+    if(Polyobj_IsLine(li))
+        return true;
     fixed_t frontceilingz = li.frontsector->srf.ceiling.getZAt(edgepos);
     fixed_t frontfloorz   = li.frontsector->srf.floor.getZAt(edgepos);
     fixed_t backceilingz  = li.backsector ? li.backsector->srf.ceiling.getZAt(edgepos) : 0;
@@ -680,9 +683,13 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext, const divline_t &
         fixed_t z    = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
 
         // SoM: Check for collision with a plane.
-        sector_t *sidesector = lineside ? li->backsector : li->frontsector;
-        bool      hitplane   = false;
-        int       updown     = 2;
+        sector_t *sidesector;
+        if(Polyobj_IsLine(*li))
+            sidesector = R_PointInSubsector(edgepos)->sector;
+        else
+            sidesector = lineside ? li->backsector : li->frontsector;
+        bool hitplane = false;
+        int  updown   = 2;
 
         // SoM: If we are in no-clip and are shooting on the backside of a
         // 1s line, don't crash!
