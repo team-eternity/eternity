@@ -688,15 +688,50 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     if(isPolyObj2Sided && !(linedef->intflags & MLI_1SPORTALLINE))
     {
         const sector_t &sector = *R_PointInSubsector(point)->sector;
-        open.height.ceiling    = D_MAXINT;
-        open.ceilsector        = nullptr;
-        open.height.floor      = D_MININT;
-        open.bottomgroupid     = sector.groupid;
-        open.floorsector       = nullptr;
-        open.lowfloor          = D_MAXINT; // so it won't contribute dropoff
-        open.floorpic          = sector.srf.floor.pic;
-        front                  = &sector.srf;
-        back                   = &sector.srf;
+        if(ppoint) // if we have a specific point, provide accurate info about it
+        {
+            open.height.ceiling = sector.srf.ceiling.getZAt(point);
+            if(sector.srf.ceiling.pflags & PS_PASSABLE)
+            {
+                if(portaldetect)
+                    *lineclipflags |= LINECLIP_UNDERPORTAL;
+                else
+                    open.height.ceiling += 1024 * FRACUNIT;
+            }
+            open.ceilsector   = &sector;
+            open.height.floor = sector.srf.floor.getZAt(point);
+            if(sector.srf.floor.pflags & PS_PASSABLE)
+            {
+                if(portaldetect)
+                {
+                    *lineclipflags     |= LINECLIP_ABOVEPORTAL;
+                    open.bottomgroupid  = sector.groupid;
+                }
+                else
+                {
+                    open.height.floor  -= 1024 * FRACUNIT;
+                    open.bottomgroupid  = sector.srf.floor.portal->data.link.toid;
+                }
+            }
+            open.floorsector = &sector;
+            open.lowfloor    = open.height.floor;
+            if(!portaldetect || !(sector.srf.floor.pflags & PS_PASSABLE))
+                open.floorpic = sector.srf.floor.pic;
+        }
+        else
+        {
+            // If we need to assume polyobject point to the center of the line, be vague about details, let other nearby
+            // lines dictate the opening.
+            open.height.ceiling = D_MAXINT;
+            open.ceilsector     = nullptr;
+            open.height.floor   = D_MININT;
+            open.bottomgroupid  = sector.groupid;
+            open.floorsector    = nullptr;
+            open.lowfloor       = D_MAXINT; // so it won't contribute dropoff
+            open.floorpic       = sector.srf.floor.pic;
+        }
+        front = &sector.srf;
+        back  = &sector.srf;
     }
     else
     {
@@ -888,7 +923,9 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         }
     }
 
-    open.range = isPolyObj2Sided ? D_MAXINT : open.height.ceiling - open.height.floor;
+    open.range = open.height.ceiling == D_MAXINT || open.height.floor == D_MININT ?
+                     D_MAXINT :
+                     open.height.ceiling - open.height.floor;
     return open;
 }
 

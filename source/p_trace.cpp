@@ -443,14 +443,13 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
     bool floorsame, ceilingsame;
 
     // NOTE: MLI_1SPORTALLINE won't be reached here, this is not portal-aware code
+    bool becomp = (demo_version < 333 || getComp(comp_planeshoot));
     if(Polyobj_IsLine(*li))
-        floorsame = ceilingsame = true;
+        floorsame = ceilingsame = becomp;
     else
     {
         sector_t *fs = li->frontsector;
         sector_t *bs = li->backsector;
-
-        bool becomp = (demo_version < 333 || getComp(comp_planeshoot));
 
         if(fs->srf.floor.slope || bs->srf.floor.slope) // don't support this in case of slopes
             floorsame = false;
