@@ -3143,9 +3143,22 @@ void P_DelSeclist(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 //
 // Context for the like-named function
 //
+struct transPortalGetSectors_t
+{
+    int              curgroupid;
+    doom_mapinter_t *clip;
+    msecnode_t *sector_t::*which_thinglist;
+    LineIteratorVisiting  *visit;
+    bool                  *linegroups;
+};
+
+//
+// Context for the like-named function
+//
 struct getSectors_t
 {
-    msecnode_t *sector_t::*which_thinglist;
+    msecnode_t *sector_t::  *which_thinglist;
+    transPortalGetSectors_t *master;
 };
 
 //
@@ -3168,7 +3181,8 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
     bbox[BOXBOTTOM]          = pClip->bbox[BOXBOTTOM] + link->y;
 
     // Polyobject lines don't contribute with sector information (even with portals)
-    if(demo_version >= 406 && Polyobj_IsLine(*ld))
+    bool polyline = demo_version >= 406 && Polyobj_IsLine(*ld);
+    if(polyline && !(ld->intflags & MLI_1SPORTALLINE))
         return true;
 
     if(bbox[BOXRIGHT] <= ld->bbox[BOXLEFT] || bbox[BOXLEFT] >= ld->bbox[BOXRIGHT] ||
@@ -3199,14 +3213,17 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
         i2.x          += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
         i2.y          += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-        if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.getZAt(i2), ld->frontsector->groupid,
-                                         pClip->thing->groupid, ld->frontsector, pClip->thing->z))
+        sector_t *const frontsector =
+            polyline && ld->intflags & MLI_1SPORTALLINE ? R_PointInSubsector(inters)->sector : ld->frontsector;
+
+        if(P_PointReachesGroupVertically(i2.x, i2.y, frontsector->srf.floor.getZAt(i2), ld->frontsector->groupid,
+                                         pClip->thing->groupid, frontsector, pClip->thing->z) ||
+           (context->master->linegroups && context->master->linegroups[ld->frontsector->groupid]))
         {
-            pClip->sector_list =
-                P_AddSecnode(ld->frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+            pClip->sector_list = P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
         }
 
-        if(ld->backsector && ld->backsector != ld->frontsector)
+        if(!(ld->pflags & PS_PASSABLE) && ld->backsector && ld->backsector != frontsector)
         {
             angle += ANG180;
             i2     = inters;
@@ -3222,7 +3239,22 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
     }
     else
     {
-        pClip->sector_list = P_AddSecnode(ld->frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+        sector_t *frontsector;
+        if(polyline && ld->intflags & MLI_1SPORTALLINE)
+        {
+            const v2fixed_t inters = P_BoxLinePoint(bbox, ld);
+            frontsector            = R_PointInSubsector(inters)->sector;
+        }
+        else
+            frontsector = ld->frontsector;
+        pClip->sector_list = P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+
+        if(ld->pflags & PS_PASSABLE && context->master)
+        {
+            if(!context->master->linegroups)
+                context->master->linegroups = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
+            context->master->linegroups[ld->portal->data.link.toid] = true;
+        }
 
         // Don't assume all lines are 2-sided, since some Things
         // like teleport fog are allowed regardless of whether their
@@ -3232,24 +3264,13 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
         // Use sidedefs instead of 2s flag to determine two-sidedness.
         // killough 8/1/98: avoid duplicate if same sector on both sides
 
-        if(ld->backsector && ld->backsector != ld->frontsector)
+        if(!(ld->pflags & PS_PASSABLE) && ld->backsector && ld->backsector != frontsector)
             pClip->sector_list =
                 P_AddSecnode(ld->backsector, context->which_thinglist, pClip->thing, pClip->sector_list);
     }
 
     return true;
 }
-
-//
-// State for the function below
-//
-struct transPortalGetSectors_t
-{
-    int              curgroupid;
-    doom_mapinter_t *clip;
-    msecnode_t *sector_t::*which_thinglist;
-    LineIteratorVisiting  *visit;
-};
 
 //
 // Trans-portal support for the usual msecnode PIT_GetSector gatherer
@@ -3283,6 +3304,7 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
     }
     getSectors_t getSectorsContext    = {};
     getSectorsContext.which_thinglist = context->which_thinglist;
+    getSectorsContext.master          = context;
     P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext, context->visit);
     return true;
 }
@@ -3351,6 +3373,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
         context.which_thinglist = which_thinglist;
         context.visit           = nonDemo ? &visit : nullptr;
         P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &context, PIT_transPortalGetSectors);
+        efree(context.linegroups);
         list = pClip->sector_list;
     }
     else
