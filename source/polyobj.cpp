@@ -901,10 +901,12 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
     }
 }
 
-inline static bool lineCanCarry(const line_t &line)
+static bool Polyobj_specialLine(const line_t &line)
 {
     if(!(line.flags & ML_TWOSIDED) || !line.backsector)
         return false;
+    if(line.special)
+        return true;    // also include this one
     int16_t lineflags = line.flags;
     if(lineflags & ML_RESERVED)
         lineflags &= ~ML_BLOCKPLAYERS;
@@ -1104,7 +1106,7 @@ public:
 
 struct collectPortalThings_t
 {
-    PODCollection<const line_t *> portalLines;
+    PODCollection<line_t *>  portalLines;
     Collection<PortalThing>      &things;
 };
 static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
@@ -1139,10 +1141,10 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
     return true;
 }
 
-static PODCollection<const line_t *> Polyobj_collectLinesBox(const polyobj_t &po, fixed_t bbox[4],
+static PODCollection<line_t *> Polyobj_collectLinesBox(const polyobj_t &po, fixed_t bbox[4],
                                                              bool (*linePredicate)(const line_t &))
 {
-    PODCollection<const line_t *> collection;
+    PODCollection<line_t *> collection;
     M_ClearBox(bbox);
     for(int i = 0; i < po.numLines; ++i)
     {
@@ -1313,51 +1315,64 @@ static bool Polyobj_canCarryThing(const line_t &line, const Mobj &mobj)
     return false;
 }
 
-struct collect3DMidTexThings_t
+struct LineRelation
 {
-    PODCollection<const line_t *> carrierLines;
-    Collection<MobjReference>     things;
+    line_t       &line;
+    MobjReference mobj;
+    int           side;
 };
 
-static bool PolyobjIT_collectThingsToCarry(int x, int y, int groupid, void *data)
+struct ControlThings
 {
-    auto context = static_cast<collect3DMidTexThings_t *>(data);
+    PODCollection<line_t *>   specialLines;
+    Collection<MobjReference> thingsToCarry;
+    Collection<LineRelation>  linesToCross;
+};
+
+static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data)
+{
+    auto context = static_cast<ControlThings *>(data);
 
     MobjReference next;
     for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next.get())
     {
         next = mo->bnext;
-        if(mo->groupid != groupid || mo->flags & (MF_NOCLIP | MF_NOSECTOR | MF_NOBLOCKMAP))
+        if(mo->groupid != groupid || mo->flags & MF_NOCLIP)
             continue;
         const line_t *online = nullptr;
-        for(const line_t *line : context->carrierLines)
-            if(!Polyobj_untouched(line, mo) && Polyobj_canCarryThing(*line, *mo))
+        bool          addedCarry = false;
+        for(line_t *line : context->specialLines)
+        {
+            if(Polyobj_untouched(line, mo))
+                continue;
+            if(!addedCarry && Polyobj_canCarryThing(*line, *mo) && !(mo->flags & MF_NOSECTOR | MF_NOBLOCKMAP))
             {
-                online = line;
-                break;
+                context->thingsToCarry.add(MobjReference(mo));
+                addedCarry = true;
             }
-        if(!online)
-            continue;
-
-        context->things.add(MobjReference(mo));
+            if(line->special && !(mo->flags & MF_TELEPORT))
+            {
+                context->linesToCross.add(
+                    LineRelation{ .line = *line, .mobj{ mo }, .side = P_PointOnLineSidePrecise(mo->x, mo->y, line) });
+            }
+        }        
     }
     return true;
 }
 
-static Collection<MobjReference> Polyobj_collectThingsToCarry(const polyobj_t &po)
+static ControlThings Polyobj_collectControlThings(const polyobj_t &po)
 {
     fixed_t                 bbox[4];
-    collect3DMidTexThings_t context = {
-        .carrierLines = Polyobj_collectLinesBox(po, bbox, lineCanCarry),
+    ControlThings context = {
+        .specialLines = Polyobj_collectLinesBox(po, bbox, Polyobj_specialLine),
     };
 
-    if(context.carrierLines.isEmpty())
+    if(context.specialLines.isEmpty())
         return {};
 
-    P_TransPortalBlockWalker(bbox, context.carrierLines[0]->frontsector->groupid, false, &context,
-                             PolyobjIT_collectThingsToCarry);
-    Collection<MobjReference> result = std::move(context.things);
-    return result;
+    P_TransPortalBlockWalker(bbox, context.specialLines[0]->frontsector->groupid, false, &context,
+                             PolyobjIT_collectControlThings);
+    return context;
 }
 
 enum class PolyMove
@@ -1382,6 +1397,18 @@ static void Polyobj_applyMovement(polyobj_t *po, PolyMove move)
     Polyobj_updateAnchoredPortals(*po);
 }
 
+static void Polyobj_makeThingsCrossLinesAfterMovement(const ControlThings &controlThings)
+{
+    if(P_LevelIsVanillaHexen())
+        return;
+
+    for(const LineRelation &relation : controlThings.linesToCross)
+    {
+        if(relation.side != P_PointOnLineSidePrecise(relation.mobj->x, relation.mobj->y, &relation.line))
+            P_CrossSpecialLine(&relation.line, relation.side, relation.mobj.get(), nullptr);
+    }
+}
+
 //
 // Polyobj_moveXY
 //
@@ -1401,12 +1428,12 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         return false;
 
     Collection<PortalThing>   pts;
-    Collection<MobjReference> thingsOn3DMidTex;
+    ControlThings      controlThings;
     if(!onload)
     {
         if(po->hasLinkedPortals)
             Polyobj_collectPortalThings(*po, pts);
-        thingsOn3DMidTex = Polyobj_collectThingsToCarry(*po);
+        controlThings = Polyobj_collectControlThings(*po);
     }
 
     // ioanch 20160226: update portal position
@@ -1525,9 +1552,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
                 }
             }
         }
-        for(MobjReference &mobj : thingsOn3DMidTex)
+        for(MobjReference &mobj : controlThings.thingsToCarry)
             if(!P_TryMove(mobj.get(), mobj->x + vec.x, mobj->y + vec.y, 1))
                 Polyobj_updateZRef(*mobj.get());
+        Polyobj_makeThingsCrossLinesAfterMovement(controlThings);
         // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
         if(!onload)
             Polyobj_moveObjectsInside(*po, -x, -y);
@@ -1704,9 +1732,9 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     origin.x = po->spawnSpot.x;
     origin.y = po->spawnSpot.y;
 
-    Collection<MobjReference> thingsOn3DMidTex;
+    ControlThings controlThings;
     if(!onload)
-        thingsOn3DMidTex = Polyobj_collectThingsToCarry(*po);
+        controlThings = Polyobj_collectControlThings(*po);
 
     // save current positions and rotate all vertices
     PODCollection<vertex_t> restoreVertices;
@@ -1761,7 +1789,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
         Polyobj_applyMovement(po, onload ? PolyMove::teleport : PolyMove::travel);
 
-        for(MobjReference &mobj : thingsOn3DMidTex)
+        for(MobjReference &mobj : controlThings.thingsToCarry)
         {
             const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, po->lines[0]->frontsector->groupid);
 
@@ -1773,6 +1801,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
                 Polyobj_updateZRef(*mobj.get());
             mobj->angle += delta;
         }
+        Polyobj_makeThingsCrossLinesAfterMovement(controlThings);
     }
 
     return !hitthing;
