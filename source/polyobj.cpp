@@ -933,12 +933,22 @@ static void Polyobj_makeThingCrossSpecialLine(Mobj &mo, line_t &line, const divl
 }
 #endif
 
-struct clipthings_t
+struct PortalAttempt
 {
-    polyobj_t       &po;
-    const line_t    &line;
-    const divline_t &oldLinePos;
-    bool             hitthing;
+    MobjReference mobj;
+    v3fixed_t     oldpos;
+    zrefs_t       oldzref;
+    prevpos_t     oldback;
+    const line_t *line;
+};
+
+struct ClipThings
+{
+    polyobj_t                 &po;
+    const line_t              &line;
+    const divline_t           &oldLinePos;
+    bool                       hitthing;
+    Collection<PortalAttempt> *portalMoves;
 };
 
 static bool Polyobj_checkThingFits(Mobj &thing)
@@ -973,7 +983,7 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
     if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
         return true;
 
-    auto            context  = static_cast<clipthings_t *>(data);
+    auto            context  = static_cast<ClipThings *>(data);
     const v2fixed_t midpoint = {
         context->line.v1->x + context->line.dx / 2,
         context->line.v1->y + context->line.dy / 2,
@@ -1010,11 +1020,13 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         if(context->line.pflags & PS_PASSABLE)
         {
             // HACK
-            v2fixed_t       pos  = { mo->x, mo->y };
-            const v2fixed_t vec  = { context->line.v1->x - context->oldLinePos.x,
-                                     context->line.v1->y - context->oldLinePos.y };
-            mo->x               += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
-            mo->y               += FixedMul(vec.y, 72090);
+            v3fixed_t       pos      = { mo->x, mo->y, mo->z };
+            zrefs_t         oldzref  = mo->zref;
+            prevpos_t       oldback  = mo->prevpos;
+            const v2fixed_t vec      = { context->line.v1->x - context->oldLinePos.x,
+                                         context->line.v1->y - context->oldLinePos.y };
+            mo->x                   += FixedMul(vec.x, 72090); // FRACUNIT * 1.1
+            mo->y                   += FixedMul(vec.y, 72090);
             if(!P_TryMove(mo, pos.x, pos.y, 1))
             {
                 mo->x = pos.x;
@@ -1023,6 +1035,16 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
                 // portalmap
                 Polyobj_pushThing(&context->po, &context->line, mo);
                 context->hitthing = true;
+            }
+            else if(context->portalMoves)
+            {
+                PortalAttempt attempt = {};
+                attempt.mobj          = mo;
+                attempt.oldpos        = pos;
+                attempt.oldzref       = oldzref;
+                attempt.oldback       = oldback;
+                attempt.line          = &context->line;
+                context->portalMoves->add(std::move(attempt));
             }
         }
         else
@@ -1042,13 +1064,15 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
 // portal walls.
 // Returns true if something was hit.
 //
-static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &oldLinePos)
+static bool Polyobj_clipThings(polyobj_t *po, line_t *line, const divline_t &oldLinePos,
+                               Collection<PortalAttempt> *portalMoves)
 {
-    clipthings_t context = {
-        .po         = *po,
-        .line       = *line,
-        .oldLinePos = oldLinePos,
-        .hitthing   = false,
+    ClipThings context = {
+        .po          = *po,
+        .line        = *line,
+        .oldLinePos  = oldLinePos,
+        .hitthing    = false,
+        .portalMoves = portalMoves,
     };
 
     // adjust linedef bounding box to blockmap, extend by MAXRADIUS
@@ -1075,6 +1099,7 @@ public:
     v2fixed_t     position;        // the position when touched
     v2fixed_t     velocity;        // the velocity when touched
     int           interiorgroupid; // the groupid of the portal this mobj touches
+    const line_t *line;
 };
 
 struct collectPortalThings_t
@@ -1091,12 +1116,14 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
         next = mo->bnext;
         if(mo->groupid != groupid || !Polyobj_canPushThing(*mo))
             continue;
-        int interiorgroupid = R_NOGROUP;
+        int           interiorgroupid = R_NOGROUP;
+        const line_t *portalline      = nullptr;
         for(const line_t *line : context->portalLines)
         {
             if(Polyobj_untouched(line, mo))
                 continue;
             interiorgroupid = line->portal->data.link.toid;
+            portalline      = line;
             break;
         }
         if(interiorgroupid == R_NOGROUP)
@@ -1106,6 +1133,7 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
         pt.position        = { mo->x, mo->y };
         pt.velocity        = { mo->momx, mo->momy };
         pt.interiorgroupid = interiorgroupid;
+        pt.line            = portalline;
         context->things.add(std::move(pt));
     }
     return true;
@@ -1404,6 +1432,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 
     // check for blocking things (yes, it needs to be done separately)
     // ioanch 20160302: do NOT collide and get back if onload = true.
+    Collection<PortalAttempt> portalMoves;
     if(!onload)
         for(i = 0; i < po->numLines; ++i)
         {
@@ -1411,7 +1440,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             P_MakeDivline(po->lines[i], &oldLinePos);
             oldLinePos.x -= vec.x;
             oldLinePos.y -= vec.y;
-            hitthing     |= Polyobj_clipThings(po, po->lines[i], oldLinePos);
+            hitthing     |= Polyobj_clipThings(po, po->lines[i], oldLinePos, &portalMoves);
         }
 
     if(hitthing)
@@ -1425,6 +1454,30 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
         {
             Polyobj_bboxSub(po->lines[i]->bbox, &vec);
             Polyobj_relinkLine(*po->lines[i]);
+        }
+
+        // Something got hit after some portals ate things, so restore them
+        for(const PortalAttempt &attempt : portalMoves)
+        {
+            P_UnsetThingPosition(attempt.mobj.get());
+            attempt.mobj->x       = attempt.oldpos.x;
+            attempt.mobj->y       = attempt.oldpos.y;
+            attempt.mobj->z       = attempt.oldpos.z;
+            attempt.mobj->zref    = attempt.oldzref;
+            attempt.mobj->prevpos = attempt.oldback;
+            P_SetThingPosition(attempt.mobj.get());
+            P_AdjustFloorClip(attempt.mobj.get());
+            for(DLListItem<spriteprojnode_t> *proj = attempt.mobj->spriteproj; proj; proj = proj->dllNext)
+            {
+                if(proj->dllObject->portalline != attempt.line)
+                    continue;
+                // proj->dllObject->shiftedcoord.x += x;
+                // proj->dllObject->shiftedcoord.y += y;
+                proj->dllObject->delta.x       += x;
+                proj->dllObject->delta.y       += y;
+                proj->dllObject->directdelta.x += x;
+                proj->dllObject->directdelta.y += y;
+            }
         }
 
         // ioanch 20160226: update portal position
@@ -1686,7 +1739,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
     // ioanch 20160302: do NOT collide if onload = true.
     if(!onload)
         for(i = 0; i < po->numLines; ++i)
-            hitthing |= Polyobj_clipThings(po, po->lines[i], linesBeforeMove[i]);
+            hitthing |= Polyobj_clipThings(po, po->lines[i], linesBeforeMove[i], nullptr);
 
     if(hitthing)
     {
