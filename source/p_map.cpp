@@ -863,7 +863,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
     bool anyslope = P_AnySlope(*ld);
 
-    if(anyslope || ld->intflags & MLI_DYNASEGLINE)
+    if(anyslope || Polyobj_IsLine(*ld))
     {
         // Find the two intersections with the bounding box
         v2fixed_t i1, i2;
@@ -2445,7 +2445,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
 
     li = in->d.line;
 
-    v2fixed_t edgepos; 
+    v2fixed_t edgepos;
     if(!(li->flags & ML_TWOSIDED))
     {
         if(P_PointOnLineSide(slidemo->x, slidemo->y, li))
@@ -2460,7 +2460,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
     // set openrange, opentop, openbottom.
     // These define a 'window' from one sector to another across a line
 
-    edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+    edgepos   = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
     clip.open = P_LineOpening(li, slidemo, &edgepos);
 
     if(clip.open.range < slidemo->height)

@@ -1550,7 +1550,7 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
 
 bool Polyobj_IsLine(const line_t &line)
 {
-    return !P_LevelIsVanillaHexen() && line.intflags & MLI_DYNASEGLINE;
+    return demo_version >= 406 && !P_LevelIsVanillaHexen() && line.intflags & MLI_DYNASEGLINE;
 }
 
 //

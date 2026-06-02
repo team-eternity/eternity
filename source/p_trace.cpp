@@ -139,9 +139,8 @@ static bool PTR_AimTraverse(intercept_t *in, void *context, const divline_t &tra
 
         dist = FixedMul(trace.attackrange, in->frac);
 
-        const sector_t *const frontsector =
-            li->intflags & MLI_DYNASEGLINE ? R_PointInSubsector(edgepos)->sector : li->frontsector;
-        const sector_t *const backsector = li->intflags & MLI_DYNASEGLINE ? frontsector : li->backsector;
+        const sector_t *const frontsector = Polyobj_IsLine(*li) ? R_PointInSubsector(edgepos)->sector : li->frontsector;
+        const sector_t *const backsector  = Polyobj_IsLine(*li) ? frontsector : li->backsector;
         // IMPORTANT: no portals here, no 1sportalline or edgepos2
 
         if(frontsector->srf.floor.getZAt(edgepos) != backsector->srf.floor.getZAt(edgepos))
