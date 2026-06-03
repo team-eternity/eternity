@@ -906,7 +906,7 @@ static bool Polyobj_specialLine(const line_t &line)
     if(!(line.flags & ML_TWOSIDED) || !line.backsector)
         return false;
     if(line.special)
-        return true;    // also include this one
+        return true; // also include this one
     int16_t lineflags = line.flags;
     if(lineflags & ML_RESERVED)
         lineflags &= ~ML_BLOCKPLAYERS;
@@ -1107,7 +1107,7 @@ public:
 struct collectPortalThings_t
 {
     PODCollection<line_t *>  portalLines;
-    Collection<PortalThing>      &things;
+    Collection<PortalThing> &things;
 };
 static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
 {
@@ -1142,7 +1142,7 @@ static bool PolyobjIT_collectPortalThings(int x, int y, int groupid, void *data)
 }
 
 static PODCollection<line_t *> Polyobj_collectLinesBox(const polyobj_t &po, fixed_t bbox[4],
-                                                             bool (*linePredicate)(const line_t &))
+                                                       bool (*linePredicate)(const line_t &))
 {
     PODCollection<line_t *> collection;
     M_ClearBox(bbox);
@@ -1339,13 +1339,12 @@ static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data
         next = mo->bnext;
         if(mo->groupid != groupid || mo->flags & MF_NOCLIP)
             continue;
-        const line_t *online = nullptr;
-        bool          addedCarry = false;
+        bool addedCarry = false;
         for(line_t *line : context->specialLines)
         {
             if(Polyobj_untouched(line, mo))
                 continue;
-            if(!addedCarry && Polyobj_canCarryThing(*line, *mo) && !(mo->flags & MF_NOSECTOR | MF_NOBLOCKMAP))
+            if(!addedCarry && Polyobj_canCarryThing(*line, *mo) && !(mo->flags & (MF_NOSECTOR | MF_NOBLOCKMAP)))
             {
                 context->thingsToCarry.add(MobjReference(mo));
                 addedCarry = true;
@@ -1355,14 +1354,14 @@ static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data
                 context->linesToCross.add(
                     LineRelation{ .line = *line, .mobj{ mo }, .side = P_PointOnLineSidePrecise(mo->x, mo->y, line) });
             }
-        }        
+        }
     }
     return true;
 }
 
 static ControlThings Polyobj_collectControlThings(const polyobj_t &po)
 {
-    fixed_t                 bbox[4];
+    fixed_t       bbox[4];
     ControlThings context = {
         .specialLines = Polyobj_collectLinesBox(po, bbox, Polyobj_specialLine),
     };
@@ -1427,8 +1426,8 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
     if(po->flags & POF_ISBAD)
         return false;
 
-    Collection<PortalThing>   pts;
-    ControlThings      controlThings;
+    Collection<PortalThing> pts;
+    ControlThings           controlThings;
     if(!onload)
     {
         if(po->hasLinkedPortals)
