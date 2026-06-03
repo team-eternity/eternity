@@ -1405,7 +1405,7 @@ static void Polyobj_makeThingsCrossLinesAfterMovement(const ControlThings &contr
     for(const LineRelation &relation : controlThings.linesToCross)
     {
         if(relation.side != P_PointOnLineSidePrecise(relation.mobj->x, relation.mobj->y, &relation.line))
-            P_CrossSpecialLine(&relation.line, relation.side, relation.mobj.get(), nullptr);
+            Thinker::AddMobileCrossLine(&relation.line, relation.side, relation.mobj.get());
     }
 }
 

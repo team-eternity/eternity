@@ -25,9 +25,13 @@
 #define P_TICK_H__
 
 #include "e_rtti.h"
+#include "m_collection.h"
 
+class Mobj;
 class SaveArchive;
 class Thinker;
+struct line_t;
+struct MobileCrossLineActivation;
 
 //
 // Thinker
@@ -64,6 +68,8 @@ protected:
     // haleyjd 12/22/2010: for savegame enumeration
     unsigned int ordinal;
 
+    static Collection<MobileCrossLineActivation> mobileCrossLineActivations;
+
 public:
     // Constructor
     Thinker()
@@ -77,6 +83,8 @@ public:
     // Static functions
     static void InitThinkers();
     static void RunThinkers();
+    static void ClearLevelData();
+    static void AddMobileCrossLine(line_t *line, int side, Mobj *mobj);
 
     // Methods
     void addThinker();

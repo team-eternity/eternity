@@ -2032,7 +2032,15 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
                 int oldside;
                 if((oldside = P_PointOnLineSide(ox, oy, line)) != P_PointOnLineSide(tx, ty, line))
-                    P_CrossSpecialLine(line, oldside, thing, nullptr);
+                {
+                    if(!P_LevelIsVanillaHexen() && line->intflags & MLI_DYNASEGLINE && line->flags & ML_TWOSIDED &&
+                       line->backsector)
+                    {
+                        Thinker::AddMobileCrossLine(line, oldside, thing);
+                    }
+                    else
+                        P_CrossSpecialLine(line, oldside, thing, nullptr);
+                }
             }
         }
 
@@ -3440,6 +3448,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
 //
 void P_ClearGlobalLevelReferences()
 {
+    Thinker::ClearLevelData();
     clip.thing       = nullptr; // this isn't reference-counted
     clip.ceilingline = clip.blockline = clip.zref.floorline = nullptr;
     clip.numspechit                                         = 0;

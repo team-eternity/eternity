@@ -21,6 +21,7 @@
 // Authors: James Haley, David Hill, Ioan Chera
 //
 
+#include <algorithm>
 #include "z_zone.h"
 
 #include "acs_intr.h"
@@ -70,6 +71,8 @@ Thinker thinkerclasscap[NUMTHCLASS];
 // haleyjd 11/14/11: Custom RTTI
 //
 IMPLEMENT_RTTI_TYPE(Thinker)
+
+Collection<MobileCrossLineActivation> Thinker::mobileCrossLineActivations;
 
 //
 // P_InitThinkers
@@ -226,6 +229,7 @@ void Thinker::remove()
 //
 void Thinker::RunThinkers(void)
 {
+    mobileCrossLineActivations.makeEmpty();
     for(currentthinker = thinkercap.next; currentthinker != &thinkercap; currentthinker = currentthinker->next)
     {
         if(currentthinker->removed)
@@ -233,7 +237,40 @@ void Thinker::RunThinkers(void)
         else
             currentthinker->Think();
     }
+    std::sort(mobileCrossLineActivations.begin(), mobileCrossLineActivations.end(),
+              [](const MobileCrossLineActivation &item1, const MobileCrossLineActivation &item2) {
+                  if(item1.line == item2.line)
+                      return item1.reference.get() < item2.reference.get();
+                  return item1.line < item2.line;
+              });
+    Mobj *mobj = nullptr;
+    line_t *line = nullptr;
+    int     sum  = 0;
+    for(MobileCrossLineActivation &activation : mobileCrossLineActivations)
+    {
+        if(activation.line != line || activation.reference.get() != mobj)
+        {
+            if(line && mobj && sum)
+                P_CrossSpecialLine(line, sum >= 1 ? 1 : 0, mobj, nullptr);
+            line = activation.line;
+            mobj = activation.reference.get();
+            sum  = 0;
+        }
+        sum += activation.side == 0 ? -1 : activation.side;
+    }
+    if(line && mobj && sum)
+        P_CrossSpecialLine(line, sum >= 1 ? 1 : 0, mobj, nullptr);
     S_MusInfoUpdate();
+}
+
+void Thinker::ClearLevelData()
+{
+    mobileCrossLineActivations.clear();
+}
+
+void Thinker::AddMobileCrossLine(line_t *line, int side, Mobj *mobj)
+{
+    mobileCrossLineActivations.add({ .line = line, .reference{ mobj }, .side = side });
 }
 
 //

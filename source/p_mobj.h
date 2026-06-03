@@ -673,6 +673,13 @@ private:
     Mobj *mobj = nullptr;
 };
 
+struct MobileCrossLineActivation
+{
+    line_t       *line;
+    MobjReference reference;
+    int           side;
+};
+
 //=============================================================================
 //
 // Misc. mobj flags
