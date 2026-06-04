@@ -1351,8 +1351,9 @@ static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data
             }
             if(line->special && !(mo->flags & MF_TELEPORT))
             {
-                context->linesToCross.add(
-                    LineRelation{ .line = *line, .mobj{ mo }, .side = P_PointOnLineSidePrecise(mo->x, mo->y, line) });
+                const linkoffset_t *link = P_GetLinkOffset(mo->groupid, line->frontsector->groupid);
+                context->linesToCross.add(LineRelation{
+                    .line = *line, .mobj{ mo }, .side = P_PointOnLineSide(mo->x + link->x, mo->y + link->y, line) });
             }
         }
     }
@@ -1403,8 +1404,11 @@ static void Polyobj_makeThingsCrossLinesAfterMovement(const ControlThings &contr
 
     for(const LineRelation &relation : controlThings.linesToCross)
     {
-        if(relation.side != P_PointOnLineSidePrecise(relation.mobj->x, relation.mobj->y, &relation.line))
+        const linkoffset_t *link = P_GetLinkOffset(relation.mobj->groupid, relation.line.frontsector->groupid);
+        if(relation.side != P_PointOnLineSide(relation.mobj->x + link->x, relation.mobj->y + link->y, &relation.line))
+        {
             Thinker::AddMobileCrossLine(&relation.line, relation.side, relation.mobj.get());
+        }
     }
 }
 

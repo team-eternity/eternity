@@ -771,7 +771,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
     {
         clip.blockline = ld;
         bool result    = clip.unstuck && !untouched(ld, link) &&
-                      FixedMul(clip.x - clip.thing->x, ld->dy) > FixedMul(clip.y - clip.thing->y, ld->dx);
+                         FixedMul(clip.x - clip.thing->x, ld->dy) > FixedMul(clip.y - clip.thing->y, ld->dx);
         if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
         {
             pushhit->add(ld);
@@ -2030,8 +2030,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                 int oldside;
                 if((oldside = P_PointOnLineSide(ox, oy, line)) != P_PointOnLineSide(tx, ty, line))
                 {
-                    if(!P_LevelIsVanillaHexen() && line->intflags & MLI_DYNASEGLINE && line->flags & ML_TWOSIDED &&
-                       line->backsector)
+                    if(demo_version >= 406 && !P_LevelIsVanillaHexen() && line->intflags & MLI_DYNASEGLINE &&
+                       line->flags & ML_TWOSIDED && line->backsector)
                     {
                         Thinker::AddMobileCrossLine(line, oldside, thing);
                     }
@@ -3056,17 +3056,24 @@ enum class SecnodeType
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thinglist, Mobj *thing, msecnode_t *nextnode, SecnodeType type)
+static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thinglist, Mobj *thing, msecnode_t *nextnode,
+                                SecnodeType type)
 {
     msecnode_t *node;
 
+    bool foundNormalNode = false;
     for(node = nextnode; node; node = node->m_tnext)
     {
         if(node->m_sector == s) // Already have a node for this sector?
         {
+            if(node->m_thing == thing && !(node->flags & MSN_POLYLINE))
+                foundNormalNode = true;
             node->m_thing = thing; // Yes. Setting m_thing says 'keep it'.
+
             if(type == SecnodeType::normal)
                 node->flags &= ~MSN_POLYLINE;
+            else if(type == SecnodeType::polyline && !foundNormalNode)
+                node->flags |= MSN_POLYLINE;
             return nextnode;
         }
     }
@@ -3196,7 +3203,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
     bbox[BOXTOP]             = pClip->bbox[BOXTOP] + link->y;
     bbox[BOXBOTTOM]          = pClip->bbox[BOXBOTTOM] + link->y;
 
-    const bool polyline = Polyobj_IsLine(*ld);
+    const bool        polyline = Polyobj_IsLine(*ld);
     const SecnodeType type =
         polyline && !(ld->intflags & MLI_1SPORTALLINE) ? SecnodeType::polyline : SecnodeType::normal;
 
@@ -3263,7 +3270,8 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
         }
         else
             frontsector = ld->frontsector;
-        pClip->sector_list = P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
+        pClip->sector_list =
+            P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
 
         if(ld->pflags & PS_PASSABLE && context->master)
         {

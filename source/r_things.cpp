@@ -1596,6 +1596,8 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
         for(const msecnode_t *sectorNode = sec->touching_thinglist_by_sprites; sectorNode;
             sectorNode                   = sectorNode->m_snext)
         {
+            if(sectorNode->flags & MSN_POLYLINE)
+                continue;
             const Mobj *const thing = sectorNode->m_thing;
 
             if(R_checkAndMarkSprite(spritecontext, heap, thing))

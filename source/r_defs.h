@@ -579,7 +579,7 @@ struct msecnode_t
     msecnode_t *m_tnext;  // next msecnode_t for this thing
     msecnode_t *m_sprev;  // prev msecnode_t for this sector
     msecnode_t *m_snext;  // next msecnode_t for this sector
-    unsigned    flags;  
+    unsigned    flags;
 };
 
 //
