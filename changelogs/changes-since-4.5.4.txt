@@ -94,6 +94,7 @@ Improvements
 * Added missing "3DMTPASSPROJ" extflag to ExtraData linedef entries.
 * WRAPMIDTEX applied over 3DMIDTEX now modifies the behavior so the line blocks the entire space.
 * Polyobjects with impassable 2-sided lines (of any flavour) can now carry and properly push (or not push) things.
+* Polyobjects with passable 2-sided lines can now cause actors to trigger their walkover specials when moving into them.
 
 Bug fixes
 ---------
