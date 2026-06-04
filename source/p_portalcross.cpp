@@ -621,12 +621,15 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
 //
 // P_SectorTouchesThingVertically
 //
-// ioanch 20160115: true if a thing touches a sector vertically
+// ioanch 20160115: true if a thing touches a sector vertically (or is in the same groupid)
 //
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
+    if(!useportalgroups || full_demo_version < make_full_version(340, 48) || sector->groupid == mobj->groupid)
+        return true;
     fixed_t   topz = mobj->z + mobj->height;
-    v2fixed_t mpos = { mobj->x, mobj->y };
+    const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, sector->groupid);
+    v2fixed_t mpos = { mobj->x + link->x, mobj->y + link->y };
     if(topz < sector->srf.floor.getZAt(mpos) || mobj->z > sector->srf.ceiling.getZAt(mpos))
         return false;
     if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(sector->srf.floor, mpos))

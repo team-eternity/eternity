@@ -1180,11 +1180,8 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane pl
         for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
         {
             // ioanch 20160115: portal aware
-            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-               !P_SectorTouchesThingVertically(sector, n->m_thing))
-            {
+            if(!P_SectorTouchesThingVertically(sector, n->m_thing))
                 continue;
-            }
             if(!n->visited) // unprocessed thing found
             {
                 n->visited = true;                       // mark thing as processed

@@ -1846,8 +1846,7 @@ void FrictionThinker::Think()
     while(node)
     {
         // ioanch 20160115: portal aware
-        if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-           !P_SectorTouchesThingVertically(sec, node->m_thing))
+        if(!P_SectorTouchesThingVertically(sec, node->m_thing))
         {
             node = node->m_snext;
             continue;

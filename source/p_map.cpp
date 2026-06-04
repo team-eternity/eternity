@@ -269,11 +269,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
     {
         for(m = mo->touching_sectorlist; m; m = m->m_tnext)
         {
-            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-               !P_SectorTouchesThingVertically(m->m_sector, mo))
-            {
+            if(!P_SectorTouchesThingVertically(m->m_sector, mo))
                 continue;
-            }
             if((sec = m->m_sector)->flags & SECF_FRICTION && (sec->friction < friction || friction == ORIG_FRICTION))
             {
                 bool onfloor = sec->srf.floor.slope ? mo->zref.slope.floor == sec->srf.floor.slope :
@@ -2964,11 +2961,8 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane
         for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
         {
             // ioanch 20160115: portal aware
-            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-               !P_SectorTouchesThingVertically(sector, n->m_thing))
-            {
+            if(!P_SectorTouchesThingVertically(sector, n->m_thing))
                 continue;
-            }
             if(!n->visited) // unprocessed thing found
             {
                 n->visited = true;                         // mark thing as processed
