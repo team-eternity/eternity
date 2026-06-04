@@ -564,6 +564,13 @@ struct subsector_t
 //
 // For the links, nullptr means top or end of list.
 
+// msecnode_t flags
+enum
+{
+    MSN_VISITED  = 1, // killough 4/4/98, 4/7/98: used in search algorithms
+    MSN_POLYLINE = 2,
+};
+
 struct msecnode_t
 {
     sector_t   *m_sector; // a sector containing this object
@@ -572,7 +579,7 @@ struct msecnode_t
     msecnode_t *m_tnext;  // next msecnode_t for this thing
     msecnode_t *m_sprev;  // prev msecnode_t for this sector
     msecnode_t *m_snext;  // next msecnode_t for this sector
-    bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+    unsigned    flags;  
 };
 
 //

@@ -503,6 +503,8 @@ static void P_HereticCurrent(player_t *player)
     // determine what touched sector the player is standing on
     for(m = thing->touching_sectorlist; m; m = m->m_tnext)
     {
+        if(m->flags & MSN_POLYLINE)
+            continue;
         if(E_StandingOnExactly(*m->m_sector, *thing))
             break;
     }

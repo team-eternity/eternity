@@ -1846,7 +1846,7 @@ void FrictionThinker::Think()
     while(node)
     {
         // ioanch 20160115: portal aware
-        if(!P_SectorTouchesThingVertically(sec, node->m_thing))
+        if(!P_SectorTouchesThingVertically(sec, node->m_thing) || node->flags & MSN_POLYLINE)
         {
             node = node->m_snext;
             continue;

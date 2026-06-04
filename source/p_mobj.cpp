@@ -4080,6 +4080,8 @@ void P_AdjustFloorClip(Mobj *thing)
     // involved (it does its own clipping)
     for(m = thing->touching_sectorlist; m; m = m->m_tnext)
     {
+        if(m->flags & MSN_POLYLINE)
+            continue;
         if(m->m_sector->heightsec == -1 &&
            ((!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height) ||
             (m->m_sector->srf.floor.slope && P_SlopesEqual(thing->zref.sector.floor, m->m_sector, surf_floor) &&

@@ -1173,7 +1173,7 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane pl
     // Mark all things invalid
 
     for(n = sector->touching_thinglist; n; n = n->m_snext)
-        n->visited = false;
+        n->flags &= ~MSN_VISITED;
 
     do
     {
@@ -1182,9 +1182,9 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane pl
             // ioanch 20160115: portal aware
             if(!P_SectorTouchesThingVertically(sector, n->m_thing))
                 continue;
-            if(!n->visited) // unprocessed thing found
+            if(!(n->flags & MSN_VISITED)) // unprocessed thing found
             {
-                n->visited = true;                       // mark thing as processed
+                n->flags |= MSN_VISITED;                 // mark thing as processed
                 if(!(n->m_thing->flags & MF_NOBLOCKMAP)) // jff 4/7/98 don't do these
                 {
                     iterator(n->m_thing); // process it

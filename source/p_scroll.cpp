@@ -181,7 +181,7 @@ void ScrollThinker::Think()
         for(node = sec->touching_thinglist; node; node = node->m_snext)
         {
             // ioanch 20160115: portal aware
-            if(!P_SectorTouchesThingVertically(sec, node->m_thing))
+            if(!P_SectorTouchesThingVertically(sec, node->m_thing) || node->flags & MSN_POLYLINE)
                 continue;
             if(!((thing = node->m_thing)->flags & MF_NOCLIP) && !(thing->flags2 & MF2_NOTHRUST) &&
                (!(thing->flags & MF_NOGRAVITY || !P_RestingOnGround(*thing, sec->srf.floor)) ||

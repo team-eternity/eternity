@@ -739,6 +739,8 @@ ETerrain *E_GetThingFloorType(const Mobj *thing)
         fixed_t z = thing->zref.floor;
         for(m = thing->touching_sectorlist; m; m = m->m_tnext)
         {
+            if(m->flags & MSN_POLYLINE)
+                continue;
             // Handle sloped floors a bit differently, using the designated floorsector
             const auto &mfloor = m->m_sector->srf.floor;
             if(mfloor.slope && mfloor.slope == thing->zref.slope.floor)
@@ -1089,7 +1091,7 @@ bool E_HitFloor(Mobj *thing)
 
     // determine what touched sector the thing is standing on
     for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-        if(E_StandingOnExactly(*m->m_sector, *thing))
+        if(!(m->flags & MSN_POLYLINE) && E_StandingOnExactly(*m->m_sector, *thing))
             break;
 
     // not on a floor or dealing with deep water, return solid
@@ -1108,7 +1110,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
     const msecnode_t *m;
     for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-        if(E_StandingOnExactly(*m->m_sector, thing))
+        if(!(m->flags & MSN_POLYLINE) && E_StandingOnExactly(*m->m_sector, thing))
             break;
 
     // NOTE: same conditions as E_HitFloor

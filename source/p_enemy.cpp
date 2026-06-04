@@ -457,8 +457,11 @@ static int P_IsUnderDamage(Mobj *actor)
 
     for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
     {
-        if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) && !cl->inStasis)
+        if(!(seclist->flags & MSN_POLYLINE) &&
+           (cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) && !cl->inStasis)
+        {
             dir |= cl->direction;
+        }
     }
 
     return dir;
