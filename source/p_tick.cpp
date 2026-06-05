@@ -270,7 +270,7 @@ void Thinker::ClearLevelData()
 
 void Thinker::AddMobileCrossLine(line_t *line, int side, Mobj *mobj)
 {
-    mobileCrossLineActivations.add({ .line = line, .reference{ mobj }, .side = side });
+    mobileCrossLineActivations.add({ .line = line, .reference = MobjReference(mobj), .side = side });
 }
 
 //

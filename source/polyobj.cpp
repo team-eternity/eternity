@@ -1353,7 +1353,7 @@ static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data
             {
                 const linkoffset_t *link = P_GetLinkOffset(mo->groupid, line->frontsector->groupid);
                 context->linesToCross.add(LineRelation{
-                    .line = *line, .mobj{ mo }, .side = P_PointOnLineSide(mo->x + link->x, mo->y + link->y, line) });
+                    .line = *line, .mobj = MobjReference(mo), .side = P_PointOnLineSide(mo->x + link->x, mo->y + link->y, line) });
             }
         }
     }
