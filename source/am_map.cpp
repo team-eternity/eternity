@@ -1124,6 +1124,14 @@ static void AM_moveCenterToPoint(v2fixed_t point)
     AM_changeWindowLoc();
 }
 
+static inline bool IsThinkerInList(const Thinker *candidate)
+{
+    for(Thinker *itr = thinkercap.next; itr != &thinkercap; itr = itr->next)
+        if(itr == candidate)
+            return true;
+    return false;
+}
+
 //
 // Used by player cheat codes to find tally-relevant objects on the map.
 //
@@ -1150,6 +1158,11 @@ void MobjLookupCheat::showNext(type_e type)
     const Thinker *start_th;
     Thinker       *th;
 
+    // Validate current thinker, if any, to allow for the possibility that it was removed from the map since the last
+    // call
+    if(current && !IsThinkerInList(static_cast<Thinker *>(current)))
+        current = nullptr;
+
     if(current)
         start_th = th = static_cast<Thinker *>(current);
     else
@@ -1158,6 +1171,9 @@ void MobjLookupCheat::showNext(type_e type)
     do
     {
         th = th->next;
+
+        if(!th)
+            break;
 
         Mobj *mo = thinker_cast<Mobj *>(th);
 
