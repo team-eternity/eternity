@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - macos-ci
   pull_request:
     branches:
       - master
@@ -15,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6.0.3
       with:
         submodules: recursive
         fetch-depth: 0
@@ -44,52 +45,61 @@ jobs:
 
     - name: Archive release build
       if: github.event_name == 'workflow_dispatch'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: windows-release
         path: build??/eternity/Release
 
   build-macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x86_64, arm64]
+        include:
+          - extra-cmake-arg: -DPNG_INTEL_SSE=on
+            arch: x86_64
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.3
         with:
           submodules: recursive
           fetch-depth: 0
           fetch-tags: true
-      
+
       - name: Configure CMake
         run: |
-          cmake -S . -B build-arm -G Xcode
-          cmake -S . -B build-intel -G Xcode -DCMAKE_OSX_ARCHITECTURES=x86_64 -DPNG_INTEL_SSE=on
-      
+          cmake -S . -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} ${{ matrix.extra-cmake-arg }}
+
       - name: Build
         run: |
-          cmake --build build-arm --config Release
-          cmake --build build-intel --config Release
+          cmake --build build --config Release
+
+      - name: Sign and notarize the bundle
+        uses: ioan-chera/action-macos-sign-notarize@v1.3
+        with:
+          certificate: ${{ secrets.MACOS_BUILD_CERTIFICATE_BASE64 }}
+          certificate-password: ${{ secrets.MACOS_P12_PASSWORD }}
+          username: ${{ secrets.MACOS_NOTARY_USER }}
+          password: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          entitlements-path: macosx/eternity/eternity.entitlements
+          apple-team-id: ${{ secrets.MACOS_TEAM_ID }}
+          app-path: build/macosx/launcher/Release/Eternity Engine.app
 
       - name: Add text files
-        if: github.event_name == 'workflow_dispatch'
+        # if: github.event_name == 'workflow_dispatch'
         run: |
-          cp COPYING build-arm/macosx/launcher/Release/COPYING.txt
-          cp COPYING-EE build-arm/macosx/launcher/Release/COPYING-EE.txt
-          cp docs/readme.txt "build-arm/macosx/launcher/Release/ee-$(git describe --tags).txt"
-
-          cp COPYING build-intel/macosx/launcher/Release/COPYING.txt
-          cp COPYING-EE build-intel/macosx/launcher/Release/COPYING-EE.txt
-          cp docs/readme.txt "build-intel/macosx/launcher/Release/ee-$(git describe --tags).txt"
+          cp COPYING build/macosx/launcher/Release/COPYING.txt
+          cp COPYING-EE build/macosx/launcher/Release/COPYING-EE.txt
+          cp docs/readme.txt "build/macosx/launcher/Release/ee-$(git describe --tags).txt"
 
       - name: build DMG
-        if: github.event_name == 'workflow_dispatch'
+        # if: github.event_name == 'workflow_dispatch'
         run: |
-          hdiutil create -srcfolder build-arm/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-applesilicon" -fs HFS+ -format UDZO ee-$(git describe --tags)-applesilicon.dmg
+          hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-${{ matrix.arch }}" -fs HFS+ -format UDZO ee-$(git describe --tags)-${{ matrix.arch }}.dmg
 
-          hdiutil create -srcfolder build-intel/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-intel" -fs HFS+ -format UDZO ee-$(git describe --tags)-intel.dmg
-
-      - name: Archive ARM release build
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+      - name: Archive release build
+        # if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: macos-release
           path: "*.dmg"
