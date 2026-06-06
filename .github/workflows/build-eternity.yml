@@ -88,6 +88,10 @@ jobs:
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app/Contents/Resources/eternity" -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app/Contents/Resources/SDL2_net.framework/Versions/A/SDL2_net" -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app/Contents/Resources/SDL2.framework/Versions/A/SDL2" -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app/Contents/Resources/SDL2_mixer.framework/Versions/A/SDL2_mixer" -v
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app" -v
       - name: Notarize app bundle
         env:
