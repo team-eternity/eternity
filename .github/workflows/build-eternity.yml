@@ -77,7 +77,7 @@ jobs:
       - name: Sign and notarize the bundle
         uses: lando/code-sign-action@v2
         with:
-          file: build/macosx/launcher/Release/Eternity Engine.app
+          file: build/macosx/launcher/Release/Eternity Engine.app/Contents/MacOS/Eternity Engine
           certificate-data: ${{ secrets.MACOS_BUILD_CERTIFICATE_BASE64 }}
           certificate-password: ${{ secrets.MACOS_P12_PASSWORD }}
           apple-notary-user: ${{ secrets.MACOS_NOTARY_USER }}
