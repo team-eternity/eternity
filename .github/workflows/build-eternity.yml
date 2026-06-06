@@ -35,10 +35,12 @@ jobs:
     - name: Add text files
       if: github.event_name == 'workflow_dispatch'
       run: |
+        Copy-Item AUTHORS build32/eternity/Release/AUTHORS.txt
         Copy-Item COPYING build32/eternity/Release/COPYING.txt
         Copy-Item COPYING-EE build32/eternity/Release/COPYING-EE.txt
         Copy-Item docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
 
+        Copy-Item AUTHORS build32/eternity/Release/AUTHORS.txt
         Copy-Item COPYING build64/eternity/Release/COPYING.txt
         Copy-Item COPYING-EE build64/eternity/Release/COPYING-EE.txt
         Copy-Item docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
@@ -116,6 +118,7 @@ jobs:
       - name: Add text files
         if: github.event_name == 'workflow_dispatch'
         run: |
+          cp AUTHORS build/macosx/launcher/Release/AUTHORS.txt
           cp COPYING build/macosx/launcher/Release/COPYING.txt
           cp COPYING-EE build/macosx/launcher/Release/COPYING-EE.txt
           cp docs/readme.txt "build/macosx/launcher/Release/ee-$(git describe --tags).txt"
