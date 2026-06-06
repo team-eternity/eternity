@@ -93,7 +93,7 @@ jobs:
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARY_USER }}
           PROD_MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
-          PROD_MACOS_NOTARIZATION_PWD: $${{ secrets.MACOS_NOTARY_PASSWORD }}
+          PROD_MACOS_NOTARIZATION_PWD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
         run: |
           echo "Create keychain profile"
           xcrun notarytool store-credentials "notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
