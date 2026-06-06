@@ -75,19 +75,15 @@ jobs:
           cmake --build build --config Release
 
       - name: Sign and notarize the bundle
-        uses: lando/code-sign-action@v2
+        uses: ioan-chera/action-macos-sign-notarize@v1.3
         with:
-          file: build/macosx/launcher/Release/Eternity Engine.app
-          certificate-data: ${{ secrets.MACOS_BUILD_CERTIFICATE_BASE64 }}
+          certificate: ${{ secrets.MACOS_BUILD_CERTIFICATE_BASE64 }}
           certificate-password: ${{ secrets.MACOS_P12_PASSWORD }}
-          apple-notary-user: ${{ secrets.MACOS_NOTARY_USER }}
-          apple-notary-password: ${{ secrets.MACOS_NOTARY_PASSWORD }}
-          apple-notary-tool: altool
+          username: ${{ secrets.MACOS_NOTARY_USER }}
+          password: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          entitlements-path: macosx/eternity/eternity.entitlements
           apple-team-id: ${{ secrets.MACOS_TEAM_ID }}
-          apple-product-id: net.mancubus.Eternity-Engine
-          options: --options runtime --entitlements entitlements.xml
-
-
+          app-path: build/macosx/launcher/Release/Eternity Engine.app
 
       - name: Add text files
         # if: github.event_name == 'workflow_dispatch'
