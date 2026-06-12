@@ -154,3 +154,4 @@ Bug fixes
 * Fixed default melee range still being wrongly used despite possibility to customize it, for some
   cases.
 * Fixed clip or wrap midtextures bleeding too far when viewed through a sector portal.
+* Fixed portal error occurring when being exactly colinear with a line portal out of your sight.
