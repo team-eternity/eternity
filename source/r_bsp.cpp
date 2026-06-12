@@ -2571,15 +2571,6 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
                                 (linedef.backsector->srf.ceiling.portal && linedef.extflags & EX_ML_UPPERPORTAL)));
     }
 
-    if(lineisportal && t1.x && t2.x && t1.x < t2.x &&
-       ((t1.y >= 0 && t1.y < NEARCLIP && t2.y / t2.x >= t1.y / t1.x) ||
-        (t2.y >= 0 && t2.y < NEARCLIP && t1.y / t1.x <= t2.y / t2.x)))
-    {
-        // handle the edge case where you're right with the nose on a portal line
-        t1.y = t2.y = NEARCLIP;
-        t1.x        = -(t2.x = 10 * FRACUNIT); // some large enough value
-    }
-
     // Use these to prevent portal lines from being cut off by the viewport
     bool clipped     = false;
     bool markx1cover = false;
@@ -2592,7 +2583,10 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
         // Simple reject for lines entirely behind the view plane.
         if(t2.y < NEARCLIP)
-            return;
+        {
+            if(!lineisportal || t2.y <= 0)
+                return;
+        }
 
         movey  = NEARCLIP - t1.y;
         t1.x  += (move = movey * ((t2.x - t1.x) / (t2.y - t1.y)));
@@ -2603,7 +2597,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
     i1 = 1.0f / t1.y;
     x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
-    if(lineisportal && x1 > bounds.fstartcolumn && clipped)
+    if(lineisportal && x1 > bounds.fstartcolumn && t1.x <= 0 && clipped)
         markx1cover = true;
 
     clipped = false;
@@ -2624,7 +2618,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
 
     // Fix now any wall or edge portal viewport cutoffs
-    if(lineisportal && x2 < bounds.fendcolumn && clipped && x2 >= x1)
+    if(lineisportal && x2 < bounds.fendcolumn && t2.x >= 0 && clipped && x2 >= x1)
         x2 = bounds.fendcolumn;
     if(markx1cover && x2 >= x1)
         x1 = bounds.fstartcolumn;
