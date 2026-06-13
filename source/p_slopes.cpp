@@ -273,9 +273,13 @@ void P_PostProcessSlopes()
     P_repositionThingsOnSlopes();
 }
 
+void P_PreZoneFreeMidTexExtras()
+{
+    pMidTexExtras.destroy(); // the elements will be purged by PU_LEVEL
+}
+
 void P_SpawnMidTexExtras()
 {
-    pMidTexExtras.destroy();
     pMidTexExtras.initialize(127);
     for(int i = 0; i < numlines; ++i)
     {

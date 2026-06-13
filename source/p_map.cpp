@@ -771,7 +771,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
     {
         clip.blockline = ld;
         bool result    = clip.unstuck && !untouched(ld, link) &&
-                         FixedMul(clip.x - clip.thing->x, ld->dy) > FixedMul(clip.y - clip.thing->y, ld->dx);
+                      FixedMul(clip.x - clip.thing->x, ld->dy) > FixedMul(clip.y - clip.thing->y, ld->dx);
         if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
         {
             pushhit->add(ld);
@@ -3469,6 +3469,7 @@ void P_ClearGlobalLevelReferences()
     clip.zref.sector                                        = {};
     clip.zref.slope                                         = {};
     P_ClearTarget(clip.linetarget);
+    P_PreZoneFreeMidTexExtras();
 }
 
 //
