@@ -39,18 +39,20 @@ jobs:
         Copy-Item COPYING build32/eternity/Release/COPYING.txt
         Copy-Item COPYING-EE build32/eternity/Release/COPYING-EE.txt
         Copy-Item docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
+        Compress-Archive -path build32\eternity\Release\* -destinationPath "ee-$(git describe --tags)-win32.zip"
 
         Copy-Item AUTHORS build32/eternity/Release/AUTHORS.txt
         Copy-Item COPYING build64/eternity/Release/COPYING.txt
         Copy-Item COPYING-EE build64/eternity/Release/COPYING-EE.txt
         Copy-Item docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
+        Compress-Archive -path build64\eternity\Release\* -destinationPath "ee-$(git describe --tags)-win64.zip"
 
     - name: Archive release build
       if: github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: windows-release
-        path: build??/eternity/Release
+        path: "*.zip"
+        archive: false
 
   build-macos:
     runs-on: macos-latest
@@ -126,7 +128,13 @@ jobs:
       - name: build DMG
         if: github.event_name == 'workflow_dispatch'
         run: |
-          hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-${{ matrix.arch }}" -fs HFS+ -format UDZO ee-$(git describe --tags)-${{ matrix.arch }}.dmg
+          if [ ${{ matrix.arch }} == x86_64 ]; then
+            nicename=intel
+          fi
+          if [ ${{ matrix.arch }} == arm64 ]; then
+            nicename=applesilicon
+          fi
+          hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-$nicename" -fs HFS+ -format UDZO ee-$(git describe --tags)-$nicename.dmg
 
       - name: Archive release build
         if: github.event_name == 'workflow_dispatch'
