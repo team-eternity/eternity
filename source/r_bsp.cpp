@@ -2584,8 +2584,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
         // Simple reject for lines entirely behind the view plane.
         if(t2.y < NEARCLIP)
         {
-            if(!lineisportal || t2.y <= 0)
-                return;
+            return;
         }
 
         movey  = NEARCLIP - t1.y;
@@ -2597,7 +2596,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
     i1 = 1.0f / t1.y;
     x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
-    if(lineisportal && x1 > bounds.fstartcolumn && t1.x <= 0 && clipped)
+    if(lineisportal && x1 > bounds.fstartcolumn && clipped)
         markx1cover = true;
 
     clipped = false;
@@ -2618,7 +2617,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
 
     // Fix now any wall or edge portal viewport cutoffs
-    if(lineisportal && x2 < bounds.fendcolumn && t2.x >= 0 && clipped && x2 >= x1)
+    if(lineisportal && x2 < bounds.fendcolumn && clipped && x2 >= x1)
         x2 = bounds.fendcolumn;
     if(markx1cover && x2 >= x1)
         x1 = bounds.fstartcolumn;
