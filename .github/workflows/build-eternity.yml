@@ -13,6 +13,17 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        config:
+          - name: Win32
+            aname: Win32
+            sname: win32
+            bname: build32
+          - name: Win64
+            aname: x64
+            sname: win64
+            bname: build64
 
     steps:
     - name: Checkout code
@@ -24,28 +35,20 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -S . -B build64 -G "Visual Studio 18 2026" -A x64
-        cmake -S . -B build32 -G "Visual Studio 18 2026" -A Win32
+        cmake -S . -B ${{ matrix.config.bname }} -G "Visual Studio 18 2026" -A ${{ matrix.config.aname }}
 
     - name: Build
       run: |
-        cmake --build build64 --config Release
-        cmake --build build32 --config Release
+        cmake --build ${{ matrix.config.bname }} --config Release
 
     - name: Add text files
       if: github.event_name == 'workflow_dispatch'
       run: |
-        Copy-Item AUTHORS build32/eternity/Release/AUTHORS.txt
-        Copy-Item COPYING build32/eternity/Release/COPYING.txt
-        Copy-Item COPYING-EE build32/eternity/Release/COPYING-EE.txt
-        Copy-Item docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
-        Compress-Archive -path build32\eternity\Release\* -destinationPath "ee-$(git describe --tags)-win32.zip"
-
-        Copy-Item AUTHORS build32/eternity/Release/AUTHORS.txt
-        Copy-Item COPYING build64/eternity/Release/COPYING.txt
-        Copy-Item COPYING-EE build64/eternity/Release/COPYING-EE.txt
-        Copy-Item docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
-        Compress-Archive -path build64\eternity\Release\* -destinationPath "ee-$(git describe --tags)-win64.zip"
+        Copy-Item AUTHORS ${{ matrix.config.bname }}/eternity/Release/AUTHORS.txt
+        Copy-Item COPYING ${{ matrix.config.bname }}/eternity/Release/COPYING.txt
+        Copy-Item COPYING-EE ${{ matrix.config.bname }}/eternity/Release/COPYING-EE.txt
+        Copy-Item docs/readme.txt "${{ matrix.config.bname }}/eternity/Release/ee-$(git describe --tags).txt"
+        Compress-Archive -path ${{ matrix.config.bname }}\eternity\Release\* -destinationPath "ee-$(git describe --tags)-${{ matrix.config.sname }}.zip"
 
     - name: Archive release build
       if: github.event_name == 'workflow_dispatch'
