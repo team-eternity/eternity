@@ -84,7 +84,7 @@ const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Nidhogg\"";
 // 4.04.01 'Glitnir Update 1' -- 10/13/24
 // 4.04.02 'Glitnir Update 2' -- 11/19/25
 // 4.05.04 'Citadel'          -- 08/23/25
-// 4.06.00 'Nidhogg'          -- 02/16/26
+// 4.06.00 'Nidhogg'          -- 06/13/26
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
