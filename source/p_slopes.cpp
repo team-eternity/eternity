@@ -815,8 +815,13 @@ bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const p
 
 bool P_AnySlope(const line_t &line)
 {
-    return line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope ||
-           (line.backsector && (line.backsector->srf.floor.slope || line.backsector->srf.ceiling.slope));
+    if(line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope)
+        return true;
+    const sector_t *backsector =
+        line.intflags & MLI_1SPORTALLINE && line.beyondportalline && line.portal && line.portal->type == R_LINKED ?
+            line.beyondportalline->frontsector :
+            line.backsector;
+    return backsector && (backsector->srf.floor.slope || backsector->srf.ceiling.slope);
 }
 
 //

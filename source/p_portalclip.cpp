@@ -75,12 +75,19 @@ static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
         front = ld->frontsector;
         back  = ld->backsector;
     }
+    v2fixed_t backpos = pos;
+    if(ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline && ld->portal && ld->portal->type == R_LINKED)
+    {
+        back       = ld->beyondportalline->frontsector;
+        backpos.x += ld->portal->data.link.delta.x;
+        backpos.y += ld->portal->data.link.delta.y;
+    }
     result.bottomend = P_visibleHeight<surf_floor>(front->srf.floor, pos);
     result.topend    = P_visibleHeight<surf_ceil>(front->srf.ceiling, pos);
 
     if(back)
     {
-        fixed_t bottomback = P_visibleHeight<surf_floor>(back->srf.floor, pos);
+        fixed_t bottomback = P_visibleHeight<surf_floor>(back->srf.floor, backpos);
         if(bottomback < result.bottomend)
         {
             result.bottomedge       = result.bottomend;
@@ -93,7 +100,7 @@ static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
             result.bottomedgesector = back;
         }
 
-        fixed_t topback = P_visibleHeight<surf_ceil>(back->srf.ceiling, pos);
+        fixed_t topback = P_visibleHeight<surf_ceil>(back->srf.ceiling, backpos);
         if(topback > result.topend)
         {
             result.topedge       = result.topend;
@@ -236,12 +243,48 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         heights[1] = P_getLineHeights(ld, i2);
 
         outerheights.bottomend  = emin(heights[0].bottomend, heights[1].bottomend);
-        outerheights.bottomedge = emin(heights[0].bottomedge, heights[1].bottomedge);
-        outerheights.topedge    = emax(heights[0].topedge, heights[1].topedge);
+        if(heights[0].bottomedge < heights[1].bottomedge)
+        {
+            outerheights.bottomedge       = heights[0].bottomedge;
+            outerheights.bottomedgesector = heights[0].bottomedgesector;
+        }
+        else
+        {
+            outerheights.bottomedge       = heights[1].bottomedge;
+            outerheights.bottomedgesector = heights[1].bottomedgesector;
+        }
+        if(heights[0].topedge > heights[1].topedge)
+        {
+            outerheights.topedge       = heights[0].topedge;
+            outerheights.topedgesector = heights[0].topedgesector;
+        }
+        else
+        {
+            outerheights.topedge       = heights[1].topedge;
+            outerheights.topedgesector = heights[1].topedgesector;
+        }
         outerheights.topend     = emax(heights[0].topend, heights[1].topend);
         innerheights.bottomend  = emax(heights[0].bottomend, heights[1].bottomend);
-        innerheights.bottomedge = emax(heights[0].bottomedge, heights[1].bottomedge);
-        innerheights.topedge    = emin(heights[0].topedge, heights[1].topedge);
+        if(heights[0].bottomedge > heights[1].bottomedge)
+        {
+            innerheights.bottomedge       = heights[0].bottomedge;
+            innerheights.bottomedgesector = heights[0].bottomedgesector;
+        }
+        else
+        {
+            innerheights.bottomedge       = heights[1].bottomedge;
+            innerheights.bottomedgesector = heights[1].bottomedgesector;
+        }
+        if(heights[0].topedge < heights[1].topedge)
+        {
+            innerheights.topedge       = heights[0].topedge;
+            innerheights.topedgesector = heights[0].topedgesector;
+        }
+        else
+        {
+            innerheights.topedge       = heights[1].topedge;
+            innerheights.topedgesector = heights[1].topedgesector;
+        }
         innerheights.topend     = emin(heights[0].topend, heights[1].topend);
     };
 
@@ -440,7 +483,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                              !!(lineclipflags & LINECLIP_ABOVEPORTAL) * UO_ABOVEPORTAL |
                              !!(lineclipflags & LINECLIP_UNDERPORTAL) * UO_UNDERPORTAL;
 
-    if(!po) // polyobject lines do not define elevation boundaries
+    // polyobject lines do not define elevation boundaries
+    if(!po || (ld->intflags & MLI_1SPORTALLINE && ld->intflags & MLI_DYNASEGLINE)) 
     {
         // Line is beyond the ceiling portal, but on the boundary: it is solid on the non-portal side, which makes it
         // block the head of the current thing. Do not allow it to block the floor as it would normally do.
@@ -460,14 +504,17 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         {
             // adjust the lowfloor to the real observed value, to prevent
             // wrong dropoffz
-            if(ld->backsector)
+            const sector_t *backsector = ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline ?
+                                             ld->beyondportalline->frontsector :
+                                             ld->backsector;
+            if(backsector && !po)
             {
                 if(!haveSlopes)
                 {
-                    if((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
+                    if((clip.open.sec.ceiling == backsector->srf.ceiling.height &&
                         clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
                        (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
-                        clip.open.sec.floor == ld->backsector->srf.floor.height))
+                        clip.open.sec.floor == backsector->srf.floor.height))
                     {
                         clip.open.lowfloor = clip.open.sec.floor;
                     }
@@ -475,10 +522,10 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                 else
                 {
                     // Different treatment due to complexity
-                    if((innerheights.topedgesector == ld->backsector &&
+                    if((innerheights.topedgesector == backsector &&
                         innerheights.bottomedgesector == ld->frontsector) ||
                        (innerheights.topedgesector == ld->frontsector &&
-                        innerheights.bottomedgesector == ld->backsector))
+                        innerheights.bottomedgesector == backsector))
                     {
                         clip.open.lowfloor = outerheights.bottomedge;
                     }

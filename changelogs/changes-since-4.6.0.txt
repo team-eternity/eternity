@@ -1,0 +1,9 @@
+﻿Changes since v4.06.00
+======================
+
+For v4.06.01
+------------
+
+Bug fixes:
+* Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
+  once again be walked above when they're below portals (HOM aside).
