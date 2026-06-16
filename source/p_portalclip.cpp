@@ -302,7 +302,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
         bool      postpone = false;
         v2fixed_t inters   = P_BoxLinePoint(bbox, ld);
         v2fixed_t i2;
-        angle_t   angle  = P_PointToAngle(ld->v1->x, ld->v1->y, ld->dx, ld->dy);
+        angle_t   angle  = P_PointToAngle(ld->v1->x, ld->v1->y, ld->v2->x, ld->v2->y);
         angle           -= ANG90;
         i2               = inters;
         i2.x            += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
