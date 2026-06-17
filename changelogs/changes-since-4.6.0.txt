@@ -4,6 +4,12 @@
 For v4.06.01
 ------------
 
+Improvements:
+* ACS GetCVar and GetCVarString no longer sound errors when given local, non-server user variables.
+  Now they'll just return the hardcoded default values always. This was needed because WADs like
+  Hell Revealations (hrs.zip) actually check the existence of specific variables just to determine
+  the current port, discarding the actual result.
+
 Bug fixes:
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
   once again be walked above when they're below portals (HOM aside).

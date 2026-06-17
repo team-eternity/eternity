@@ -35,6 +35,7 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
+#include "c_io.h"
 #include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
@@ -50,6 +51,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_misc.h"
 #include "m_random.h"
 #include "p_info.h"
 #include "p_inter.h"
@@ -991,6 +993,52 @@ bool ACS_CF_GameType(ACS_CF_ARGS)
     return false;
 }
 
+static int getDefaultIntPlaceholder(const variable_t *var)
+{
+    if(const default_t *def = var->cfgDefault)
+        switch(def->type)
+        {
+        case dt_integer: return (def->defaultvalue_i);
+        case dt_string:  return (0);
+        case dt_float:   return (M_DoubleToFixed(def->defaultvalue_f));
+        case dt_boolean: return ((int)def->defaultvalue_b);
+        default:         return (0);
+        }
+    else
+    {
+        extern int fov;
+        extern int turbo_scale;
+        // Here we select some variables with preset values
+        switch(var->type)
+        {
+        case vt_int:
+            if(var->variable == &mouseAccel_threshold)
+                return(10);
+            else if(var->variable == &fov)
+                return(90);
+            else if(var->variable == &r_precache)
+                return(1);
+            else if(var->variable == &turbo_scale)
+                return(100);
+            else
+                return(0);
+        case vt_float:
+            if(var->variable == &mouseAccel_value)
+                return(M_DoubleToFixed(2.0));
+            else
+                return(0);
+        case vt_toggle:
+            if(var->variable == &showpsprites)
+                return(1);
+            else if(var->variable == &mouseSensitivity_vanilla)
+                return(1);
+            else
+                return(0);
+        default: return(0);
+        }
+    }
+}
+
 //
 // ACS_CF_GetCVar
 //
@@ -1009,10 +1057,17 @@ bool ACS_CF_GetCVar(ACS_CF_ARGS)
         return false;
     }
 
+    // Shortcircuit for string or chararray
+    switch(var->type)
+    {
+    case vt_string:    thread->dataStk.push(0); return false;
+    case vt_chararray: thread->dataStk.push(0); return false;
+    default:           break;
+    }
+
     if(!(command->flags & cf_server))
     {
-        doom_warningf("Invalid non-server variable in ACS GetCVar: %s", name);
-        thread->dataStk.push(0);
+        thread->dataStk.push(getDefaultIntPlaceholder(var));
         return false;
     }
 
@@ -1020,8 +1075,6 @@ bool ACS_CF_GetCVar(ACS_CF_ARGS)
     {
     case vt_int:       thread->dataStk.push(*(int *)var->variable); break;
     case vt_float:     thread->dataStk.push(M_DoubleToFixed(*(double *)var->variable)); break;
-    case vt_string:    thread->dataStk.push(0); break;
-    case vt_chararray: thread->dataStk.push(0); break;
     case vt_toggle:    thread->dataStk.push(*(bool *)var->variable); break;
     default:           thread->dataStk.push(0); break;
     }
@@ -1047,7 +1100,42 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
 
     if(!(command->flags & cf_server))
     {
-        doom_warningf("Invalid non-server variable in ACS GetCVarString: %s", name);
+        int value;
+        static qstring string;
+        string.clearOrCreate(1024);
+        switch(var->type)
+        {
+        case vt_int:
+            value = getDefaultIntPlaceholder(var);
+            string.Printf(0, "%d", value);
+            break;
+        case vt_float:
+            value = getDefaultIntPlaceholder(var);
+            string.Printf(0, "%+.5f", M_FixedToDouble(value));
+            break;
+        case vt_toggle:
+            value = getDefaultIntPlaceholder(var);
+            string.Printf(0, "%d", (int)value);
+            break;
+        default: break;
+        }
+        if(!string.empty())
+        {
+            thread->dataStk.push(~ACSenv.getString(string.constPtr())->idx);
+            return false;
+        }
+
+        extern char *i_resolution;
+        extern char *i_videomode;
+        extern char *mn_demoname;
+        if(var->variable == &mn_demoname)
+            thread->dataStk.push(~ACSenv.getString("demo1")->idx);
+        else if(var->variable == &i_videomode)
+            thread->dataStk.push(~ACSenv.getString("640x480w")->idx);
+        else if(var->variable == &i_resolution)
+            thread->dataStk.push(~ACSenv.getString("windowsize")->idx);
+        else
+            thread->dataStk.push(~ACSenv.getString("")->idx);
         thread->dataStk.push(0);
         return false;
     }
