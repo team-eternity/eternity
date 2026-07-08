@@ -280,10 +280,13 @@ protected:
     void        coalesceMarkedResources();
     void        incrementSource(const openwad_t &openData);
     void        handleOpenError(openwad_t &openData, const wfileadd_t &addInfo, const char *filename) const;
+    bool        validateLumpDirectory(const openwad_t &openData, const wfileadd_t &addInfo, const wadinfo_t &header,
+                                      const filelump_t *fileinfo, long fileLength) const;
     openwad_t   openFile(const wfileadd_t &addInfo) const;
     lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
     bool        addSingleFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump);
     bool        addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo, int startlump);
+    static void openWadError(const openwad_t &openData, const wfileadd_t &addInfo, const char *format, ...);
     bool        addWadFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump);
     bool        addZipFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump);
     bool        addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &addInfo, int startlump);

@@ -9,6 +9,8 @@ Improvements:
   Now they'll just return the hardcoded default values always. This was needed because WADs like
   Hell Revealations (hrs.zip) actually check the existence of specific variables just to determine
   the current port, discarding the actual result.
+* Added input checking for WAD files, to prevent crashes or lock-ups on loading corrupted or plain
+  invalid data as WADs.
 
 Bug fixes:
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
