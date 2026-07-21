@@ -569,7 +569,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
     CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
     CFG_INT(ITEM_TNG_PAINCHANCE,      0,             CFGF_NONE), \
     CFG_INT(ITEM_TNG_MASS,            100,           CFGF_NONE), \
-    CFG_INT(ITEM_TNG_RESPAWNTIME,     (12*35),       CFGF_NONE), \
+    CFG_INT(ITEM_TNG_RESPAWNTIME,     (12*TICRATE),  CFGF_NONE), \
     CFG_INT(ITEM_TNG_RESPCHANCE,      4,             CFGF_NONE), \
     CFG_INT(ITEM_TNG_AIMSHIFT,        -1,            CFGF_NONE), \
     CFG_INT(ITEM_TNG_DAMAGE,          0,             CFGF_NONE), \

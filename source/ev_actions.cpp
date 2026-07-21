@@ -1370,7 +1370,7 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
     dd.spac         = instance->spac;
     dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
     dd.topcountdown = 0;
-    dd.delay_value  = instance->args[2] * 35 / 8; // OCTICS
+    dd.delay_value  = instance->args[2] * TICRATE / 8; // OCTICS
     dd.altlighttag  = instance->args[3];
     dd.thing        = instance->actor;
 
@@ -4317,7 +4317,7 @@ DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
 DEFINE_ACTION(EV_ActionParamPlatGeneric)
 {
     fixed_t speed = instance->args[1] * (FRACUNIT / 8);
-    int     delay = instance->args[2] * 35 / 8; // OCTICS
+    int     delay = instance->args[2] * TICRATE / 8; // OCTICS
 
     int     target;
     fixed_t height = 0;

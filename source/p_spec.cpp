@@ -1384,7 +1384,7 @@ void P_UpdateSpecials()
     int     pic;
 
     // Downcount level timer, exit level if elapsed
-    if(levelTimeLimit && leveltime >= levelTimeLimit * 35 * 60)
+    if(levelTimeLimit && leveltime >= levelTimeLimit * TICRATE * 60)
         G_ExitLevel();
 
     // Check frag counters, if frag limit reached, exit level // Ty 03/18/98

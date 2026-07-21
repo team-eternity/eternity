@@ -374,7 +374,7 @@ void HUDMessageWidget::ticker()
 
         if(current_messages)
             --current_messages;
-        scrolltime = leveltime + (message_timer * 35) / 1000;
+        scrolltime = leveltime + (message_timer * TICRATE) / 1000;
     }
 }
 
@@ -463,7 +463,7 @@ void HUDMessageWidget::addMessage(const char *s)
     psnprintf(dest, MAXHUDMSGLEN, "%s", s);
     V_FontFitTextToRect(hud_font, dest, 0, 0, 320, 200);
 
-    scrolltime = leveltime + (message_timer * 35) / 1000;
+    scrolltime = leveltime + (message_timer * TICRATE) / 1000;
 }
 
 //
@@ -846,7 +846,7 @@ void HU_CenterMessage(const char *s)
         qstr.constPtr(), (SCREENWIDTH - V_FontStringWidth(hud_font, s)) / 2,
         (SCREENHEIGHT - V_FontStringHeight(hud_font, s) - ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) /
             2,
-        leveltime + (message_timer * 35) / 1000);
+        leveltime + (message_timer * TICRATE) / 1000);
 
     // print message to console also
     C_Printf("%s\n", s);
@@ -1069,7 +1069,7 @@ void HUDLevelTimeWidget::ticker()
         return;
     }
 
-    seconds    = leveltime / 35;
+    seconds    = leveltime / TICRATE;
     timestr[0] = '\0';
 
     psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", hu_timecolor + 128, seconds / 3600, (seconds % 3600) / 60,

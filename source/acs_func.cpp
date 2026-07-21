@@ -965,7 +965,7 @@ bool ACS_CF_EndPrint(ACS_CF_ARGS)
 //
 bool ACS_CF_EndPrintBold(ACS_CF_ARGS)
 {
-    HU_CenterMsgTimedColor(thread->printBuf.data(), FC_GOLD, 20 * 35);
+    HU_CenterMsgTimedColor(thread->printBuf.data(), FC_GOLD, 20 * TICRATE);
     thread->printBuf.drop();
 
     return false;

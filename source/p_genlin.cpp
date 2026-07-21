@@ -681,16 +681,16 @@ int EV_DoGenLift(const line_t *line, int special, int tag)
     switch(Dely)
     {
     case 0: //
-        delay = 1 * 35;
+        delay = 1 * TICRATE;
         break;
     case 1: //
-        delay = PLATWAIT * 35;
+        delay = PLATWAIT * TICRATE;
         break;
     case 2: //
-        delay = 5 * 35;
+        delay = 5 * TICRATE;
         break;
     case 3: //
-        delay = 10 * 35;
+        delay = 10 * TICRATE;
         break;
     default: //
         delay = 0;
@@ -1533,7 +1533,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag)
     {
     default:
     case doorWaitOneSec: //
-        dd.delay_value = 35;
+        dd.delay_value = TICRATE;
         break;
     case doorWaitStd: //
         dd.delay_value = VDOORWAIT;

@@ -2708,7 +2708,7 @@ void P_RespawnSpecials()
 
     if(!(dmflags & DM_ITEMRESPAWN) ||                   // only respawn items in deathmatch
        iquehead == iquetail ||                          // nothing left to respawn?
-       leveltime - itemrespawntime[iquetail] < 30 * 35) // wait 30 seconds
+       leveltime - itemrespawntime[iquetail] < 30 * TICRATE) // wait 30 seconds
         return;
 
     mthing = &itemrespawnque[iquetail];

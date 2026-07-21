@@ -687,7 +687,7 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 
 void A_InitPhoenixPL2(actionargs_t *actionargs)
 {
-    constexpr int FLAME_THROWER_TICS = 10 * 35;
+    constexpr int FLAME_THROWER_TICS = 10 * TICRATE;
     Mobj         *mo                 = actionargs->actor;
     player_t     *player             = mo->player;
 
