@@ -13,5 +13,7 @@ Improvements:
   invalid data as WADs.
 
 Bug fixes:
+* Fixed crash or corruption occasionally happening when exiting map with sloped 3DMidTex lines.
+* Fixed inconsistent clipping behavior with sloped 3DMidTex lines.
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
   once again be walked above when they're below portals (HOM aside).
