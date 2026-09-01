@@ -661,6 +661,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 {
     // keep track of lineopening_t from "clip", for compatibility's sake
     lineopening_t open = clip.open;
+    open.midtexslopes  = {};
 
     // NOTE: default to line center if ppoint unspecified
     const v2fixed_t point     = ppoint ? *ppoint : v2fixed_t(linedef->soundorg.x, linedef->soundorg.y);
@@ -941,11 +942,13 @@ void lineopening_t::intersect(const lineopening_t &other)
         floorpic      = other.floorpic;
         touch3dside   = other.touch3dside;
         floorsector   = other.floorsector;
+        midtexslopes.floor = other.midtexslopes.floor;
     }
     if(other.height.ceiling < height.ceiling)
     {
         height.ceiling = other.height.ceiling;
         ceilsector     = other.ceilsector;
+        midtexslopes.ceiling = other.midtexslopes.ceiling;
     }
     range = height.ceiling == D_MAXINT || height.floor == D_MININT ? D_MAXINT : height.ceiling - height.floor;
 
