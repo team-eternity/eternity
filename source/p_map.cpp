@@ -3468,6 +3468,9 @@ void P_ClearGlobalLevelReferences()
     clip.numportalhit                                       = 0;
     clip.zref.sector                                        = {};
     clip.zref.slope                                         = {};
+    clip.open.midtexslopes                                  = {};
+    clip.open.floorsector                                   = nullptr;
+    clip.open.ceilsector                                    = nullptr;
     P_ClearTarget(clip.linetarget);
     P_PreZoneFreeMidTexExtras();
 }
