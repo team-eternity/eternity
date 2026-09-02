@@ -94,6 +94,10 @@ enum
 
 static constexpr int PU_PURGELEVEL = PU_CACHE; // First purgable tag's level.
 
+// Trick for visiting variants
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
 // killough 3/22/98: add file/line info
 
 void Z_Init();

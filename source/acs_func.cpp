@@ -996,14 +996,12 @@ bool ACS_CF_GameType(ACS_CF_ARGS)
 static int getDefaultIntPlaceholder(const variable_t *var)
 {
     if(const default_t *def = var->cfgDefault)
-        switch(def->type)
-        {
-        case dt_integer: return (def->defaultvalue_i);
-        case dt_string:  return (0);
-        case dt_float:   return (M_DoubleToFixed(def->defaultvalue_f));
-        case dt_boolean: return ((int)def->defaultvalue_b);
-        default:         return (0);
-        }
+    {
+        return std::visit(overloaded{ [](int arg) { return arg; }, [](const char *arg) { return 0; },
+                                      [](double arg) { return M_DoubleToFixed(arg); },
+                                      [](bool arg) { return (int)arg; } },
+                          def->defaultvalue);
+    }
     else
     {
         extern int fov;

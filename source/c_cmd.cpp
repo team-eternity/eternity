@@ -258,7 +258,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
                     C_Printf("%s\n", var->defines[count - var->min]);
 
                 if(def)
-                    C_Printf("Default value: %s\n", var->defines[def->defaultvalue_i - var->min]);
+                    C_Printf("Default value: %s\n", var->defines[std::get<int>(def->defaultvalue) - var->min]);
             }
             else
             {
@@ -273,7 +273,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
                     C_Printf("Value range for '%s':\n %d through %d\n", name, var->min, var->max);
 
                 if(def)
-                    C_Printf("Default value: %d\n", def->defaultvalue_i);
+                    C_Printf("Default value: %d\n", std::get<int>(def->defaultvalue));
             }
             break;
 
@@ -287,14 +287,14 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
                 if(def)
                 {
-                    C_Printf("Default value: %s\n", var->defines[def->defaultvalue_b]);
+                    C_Printf("Default value: %s\n", var->defines[std::get<bool>(def->defaultvalue)]);
                 }
             }
             else
             {
                 C_Printf("'%s' is a boolean value (0 or 1)\n", name);
                 if(def)
-                    C_Printf("Default value: %d\n", (int)def->defaultvalue_b);
+                    C_Printf("Default value: %d\n", (int)std::get<bool>(def->defaultvalue));
             }
             break;
 
@@ -318,7 +318,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
             }
 
             if(def)
-                C_Printf("Default value: %f\n", def->defaultvalue_f);
+                C_Printf("Default value: %f\n", std::get<double>(def->defaultvalue));
             break;
 
         default:
@@ -330,7 +330,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
                 C_Printf("Value for '%s':\n Unlimited-length string\n", name);
 
             if(def)
-                C_Printf("Default value:\n \"%s\"\n", def->defaultvalue_s);
+                C_Printf("Default value:\n \"%s\"\n", std::get<const char *>(def->defaultvalue));
             break;
         }
 

@@ -25,6 +25,7 @@
 #define M_MISC_H__
 
 #include "doomtype.h"
+#include <variant>
 
 //
 // MISC
@@ -69,6 +70,8 @@ struct default_i
 
 // clang-format on
 
+using DefaultValue = std::variant<int, const char *, double, bool>;
+
 struct default_t
 {
     enum wad_e
@@ -79,15 +82,11 @@ struct default_t
     };
 
     const char *const   name; // name
-    const defaulttype_e type; // type
 
     void *const location; // default variable
     void *const current;  // possible nondefault variable
 
-    int         defaultvalue_i; // built-in default value
-    const char *defaultvalue_s;
-    double      defaultvalue_f;
-    bool        defaultvalue_b;
+    DefaultValue defaultvalue;  // built-in default value
 
     struct
     {
@@ -113,55 +112,102 @@ struct default_t
 };
 
 // haleyjd 07/27/09: Macros for defining configuration values.
-
-#define DEFAULT_ARGS(type) const char *const name, void *const loc, void *const cur, type def, \
-    const default_t::wad_e wad, const char *const help
-
-#define DEFAULT_NUM_ARGS(type) const char *const name, void *const loc, void *const cur, type def, \
-    const int min, const int max, const default_t::wad_e wad, const char *const help
+// (ioanch) functions by now
 
 constexpr default_t DEFAULT_END()
 {
     return {
-        nullptr, dt_integer, nullptr, nullptr, 0, nullptr, 0.0, false, { 0, 0 },
-                default_t::wad_no,
-        nullptr, nullptr,    nullptr, 0,       0, nullptr, 0.0, false, nullptr
+        nullptr, nullptr, nullptr, 0,     { 0, 0 },
+                 default_t::wad_no, nullptr, nullptr, nullptr,
+        0,       0,          nullptr, 0.0,     false, nullptr
     };
 }
 
-constexpr default_t DEFAULT_INT(DEFAULT_NUM_ARGS(const int))
+constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *const cur, int def, const int min,
+                                const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        name, dt_integer, loc,     cur, def, nullptr, 0.0, false, { min, max },
-                    wad,
-        help, nullptr,    nullptr, 0,   0,   nullptr, 0.0, false, nullptr
+        .name           = name,
+        .location       = loc,
+        .current        = cur,
+        .defaultvalue   = def,
+        .limit          = { min, max },
+        .wad_allowed    = wad,
+        .help           = help,
+        .first          = nullptr,
+        .next           = nullptr,
+        .modified       = 0,
+        .orig_default_i = 0,
+        .orig_default_s = nullptr,
+        .orig_default_f = 0.0,
+        .orig_default_b = false,
+        .methods        = nullptr
     };
 }
 
-constexpr default_t DEFAULT_STR(DEFAULT_ARGS(const char *))
+constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *const cur, const char *def,
+                                const default_t::wad_e wad, const char *const help)
 {
     return {
-        name, dt_string, loc,     cur, 0, def,     0.0, false, { 0, 0 },
-                        wad,
-        help, nullptr,   nullptr, 0,   0, nullptr, 0.0, false, nullptr
+        .name           = name,
+        .location       = loc,
+        .current        = cur,
+        .defaultvalue   = def,
+        .limit          = { 0, 0 },
+        .wad_allowed    = wad,
+        .help           = help,
+        .first          = nullptr,
+        .next           = nullptr,
+        .modified       = 0,
+        .orig_default_i = 0,
+        .orig_default_s = nullptr,
+        .orig_default_f = 0.0,
+        .orig_default_b = false,
+        .methods        = nullptr
     };
 }
 
-constexpr default_t DEFAULT_FLOAT(DEFAULT_NUM_ARGS(const double))
+constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void *const cur, double def, const int min,
+                                  const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        name, dt_float, loc,     cur, 0, nullptr, def, false, { min, max },
-                    wad,
-        help, nullptr,  nullptr, 0,   0, nullptr, 0.0, false, nullptr
+        .name           = name,
+        .location       = loc,
+        .current        = cur,
+        .defaultvalue   = def,
+        .limit          = { min, max },
+        .wad_allowed    = wad,
+        .help           = help,
+        .first          = nullptr,
+        .next           = nullptr,
+        .modified       = 0,
+        .orig_default_i = 0,
+        .orig_default_s = nullptr,
+        .orig_default_f = 0.0,
+        .orig_default_b = false,
+        .methods        = nullptr
     };
 }
 
-constexpr default_t DEFAULT_BOOL(DEFAULT_ARGS(const bool))
+constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *const cur, bool def,
+                                 const default_t::wad_e wad, const char *const help)
 {
     return {
-        name, dt_boolean, loc,     cur, 0, nullptr, 0.0, def,   { 0, 1 },
-                      wad,
-        help, nullptr,    nullptr, 0,   0, nullptr, 0.0, false, nullptr
+        .name           = name,
+        .location       = loc,
+        .current        = cur,
+        .defaultvalue   = def,
+        .limit          = { 0, 1 },
+        .wad_allowed    = wad,
+        .help           = help,
+        .first          = nullptr,
+        .next           = nullptr,
+        .modified       = 0,
+        .orig_default_i = 0,
+        .orig_default_s = nullptr,
+        .orig_default_f = 0.0,
+        .orig_default_b = false,
+        .methods        = nullptr
     };
 }
 

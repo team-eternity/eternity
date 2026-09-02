@@ -1005,14 +1005,14 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 
 #ifdef RANGECHECK
         // FIXME: allow defaults for all types
-        if(def->type != dt_integer)
+        if(!std::holds_alternative<int>(def->defaultvalue))
         {
             I_FatalError(I_ERR_KILL, "M_ApplyGameModeDefaults: override for non-integer default %s\n", def->name);
         }
 #endif
         // replace the default value
         if(def)
-            def->defaultvalue_i = ovr->defaultvalue;
+            def->defaultvalue = ovr->defaultvalue;
 
         ++ovr;
     }
@@ -1030,7 +1030,7 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Write help for a string option
 static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
 {
-    return (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
+    return (fprintf(f, "[(\"%s\")]", std::get<const char *>(dp->defaultvalue)) == EOF);
 }
 
 // Write a string option key/value pair
@@ -1093,7 +1093,7 @@ static void M_setDefaultString(default_t *dp)
     // in it or not. This provides consistency later on when/if we need to
     // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-    *(char **)dp->location = estrdup(dp->defaultvalue_s);
+    *(char **)dp->location = estrdup(std::get<const char *>(dp->defaultvalue));
 }
 
 // Test if a string default matches the given cvar
@@ -1111,7 +1111,7 @@ static bool M_checkCVarString(default_t *dp, variable_t *var)
 
 static void M_getDefaultString(default_t *dp, void *dest)
 {
-    *(const char **)dest = dp->defaultvalue_s;
+    *(const char **)dest = std::get<const char *>(dp->defaultvalue);
 }
 
 //
@@ -1126,19 +1126,19 @@ static bool M_writeDefaultHelpInt(default_t *dp, FILE *f)
     if(dp->limit.min == UL)
     {
         if(dp->limit.max == UL)
-            written = (fprintf(f, "[?-?(%d)]", dp->defaultvalue_i) == EOF);
+            written = (fprintf(f, "[?-?(%d)]", std::get<int>(dp->defaultvalue)) == EOF);
         else
         {
-            written = (fprintf(f, "[?-%d(%d)]", dp->limit.max, dp->defaultvalue_i) == EOF);
+            written = (fprintf(f, "[?-%d(%d)]", dp->limit.max, std::get<int>(dp->defaultvalue)) == EOF);
         }
     }
     else if(dp->limit.max == UL)
     {
-        written = (fprintf(f, "[%d-?(%d)]", dp->limit.min, dp->defaultvalue_i) == EOF);
+        written = (fprintf(f, "[%d-?(%d)]", dp->limit.min, std::get<int>(dp->defaultvalue)) == EOF);
     }
     else
     {
-        written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max, dp->defaultvalue_i) == EOF);
+        written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max, std::get<int>(dp->defaultvalue)) == EOF);
     }
 
     return written;
@@ -1197,7 +1197,7 @@ static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
 // Set to default value
 static void M_setDefaultInt(default_t *dp)
 {
-    *(int *)dp->location = dp->defaultvalue_i;
+    *(int *)dp->location = std::get<int>(dp->defaultvalue);
 }
 
 // Test if an integer default matches the given cvar
@@ -1211,7 +1211,7 @@ static bool M_checkCVarInt(default_t *dp, variable_t *var)
 
 static void M_getDefaultInt(default_t *dp, void *dest)
 {
-    *(int *)dest = dp->defaultvalue_i;
+    *(int *)dest = std::get<int>(dp->defaultvalue);
 }
 
 //
@@ -1226,20 +1226,20 @@ static bool M_writeDefaultHelpFloat(default_t *dp, FILE *f)
     if(dp->limit.min == UL)
     {
         if(dp->limit.max == UL)
-            written = (fprintf(f, "[?-?](%g)]", dp->defaultvalue_f) == EOF);
+            written = (fprintf(f, "[?-?](%g)]", std::get<double>(dp->defaultvalue)) == EOF);
         else
         {
-            written = (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, dp->defaultvalue_f) == EOF);
+            written = (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, std::get<double>(dp->defaultvalue)) == EOF);
         }
     }
     else if(dp->limit.max == UL)
     {
-        written = (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0, dp->defaultvalue_f) == EOF);
+        written = (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0, std::get<double>(dp->defaultvalue)) == EOF);
     }
     else
     {
         written = (fprintf(f, "[%g-%g(%g)]", (double)dp->limit.min / 100.0, (double)dp->limit.max / 100.0,
-                           dp->defaultvalue_f) == EOF);
+                           std::get<double>(dp->defaultvalue)) == EOF);
     }
 
     return written;
@@ -1294,7 +1294,7 @@ static bool M_readDefaultFloat(default_t *dp, char *src, bool wad)
 // Set to default value
 static void M_setDefaultFloat(default_t *dp)
 {
-    *(double *)dp->location = dp->defaultvalue_f;
+    *(double *)dp->location = std::get<double>(dp->defaultvalue);
 }
 
 // Test if a float default matches the given cvar
@@ -1308,7 +1308,7 @@ static bool M_checkCVarFloat(default_t *dp, variable_t *var)
 
 static void M_getDefaultFloat(default_t *dp, void *dest)
 {
-    *(double *)dest = dp->defaultvalue_f;
+    *(double *)dest = std::get<double>(dp->defaultvalue);
 }
 
 //
@@ -1318,7 +1318,7 @@ static void M_getDefaultFloat(default_t *dp, void *dest)
 // Write help for a bool option
 static bool M_writeDefaultHelpBool(default_t *dp, FILE *f)
 {
-    return (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
+    return (fprintf(f, "[0-1(%d)]", !!std::get<bool>(dp->defaultvalue)) == EOF);
 }
 
 // Write a key/value pair for a bool option
@@ -1364,7 +1364,7 @@ static bool M_readDefaultBool(default_t *dp, char *src, bool wad)
 // Set to default value
 static void M_setDefaultBool(default_t *dp)
 {
-    *(bool *)dp->location = dp->defaultvalue_b;
+    *(bool *)dp->location = std::get<bool>(dp->defaultvalue);
 }
 
 // Test if a bool default matches the given cvar
@@ -1378,7 +1378,7 @@ static bool M_checkCVarBool(default_t *dp, variable_t *var)
 
 static void M_getDefaultBool(default_t *dp, void *dest)
 {
-    *(bool *)dest = dp->defaultvalue_b;
+    *(bool *)dest = std::get<bool>(dp->defaultvalue);
 }
 
 // clang-format off
