@@ -436,15 +436,14 @@ static void WI_drawLF()
         if(mapName)
         {
             drawTextAndCarriageReturn(in_bigfont, mapName);
+            if(estrnonempty(wi_creator))
+                drawTextAndCarriageReturn(in_font, wi_creator);
         }
         else
         {
             V_DrawPatch((SCREENWIDTH - patch->width) / 2, y, &subscreen43, patch);
             y += (5 * patch->height) / 4;
         }
-
-        if(estrnonempty(wi_creator))
-            drawTextAndCarriageReturn(in_font, wi_creator);
 
         // draw "Finished!"
         V_DrawPatch((SCREENWIDTH - finished->width) / 2, y, &subscreen43, finished);
@@ -527,20 +526,15 @@ static void WI_drawEL()
         {
             V_FontWriteText(in_bigfont, nextMapName, (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName)) / 2, y,
                             &subscreen43);
-            if(wi_nextCreator)
+            if(estrnonempty(wi_nextCreator))
+            {
                 y += (5 * V_FontStringHeight(in_bigfont, nextMapName)) / 4;
+                V_FontWriteText(in_font, wi_nextCreator, (SCREENWIDTH - V_FontStringWidth(in_font, wi_nextCreator)) / 2,
+                                y, &subscreen43);
+            }
         }
         else
-        {
             V_DrawPatch((SCREENWIDTH - patch->width) / 2, y, &subscreen43, patch);
-            if(wi_nextCreator)
-                y += (5 * patch->height) / 4;
-        }
-        if(wi_nextCreator)
-        {
-            V_FontWriteText(in_font, wi_nextCreator, (SCREENWIDTH - V_FontStringWidth(in_font, wi_nextCreator)) / 2, y,
-                            &subscreen43);
-        }
     }
 
     // haleyjd 06/17/06: set any loaded MapInfo patch to PU_CACHE here

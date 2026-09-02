@@ -11,6 +11,11 @@ Improvements:
   the current port, discarding the actual result.
 * Added input checking for WAD files, to prevent crashes or lock-ups on loading corrupted or plain
   invalid data as WADs.
+* Fixed so the author name no longer renders under the level name when it's specified by graphics.
+  It will only show when specified by text. This is to align with the situation from:
+  https://github.com/doom-cross-port-collab/umapinfo/issues/12, and because it's too likely for the
+  level graphics to have the author name drawn inside it, causing duplication if the author setting
+  in map info also exists.
 
 Bug fixes:
 * Fixed crash or corruption occasionally happening when exiting map with sloped 3DMidTex lines.
