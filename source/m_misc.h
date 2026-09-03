@@ -54,7 +54,8 @@ enum defaulttype_e
 struct default_t;
 struct variable_t;
 
-using DefaultValue = std::variant<int, const char *, double, bool>;
+using DefaultValue  = std::variant<int, const char *, double, bool>;
+using DefaultTarget = std::variant<int *, char **, double *, bool *>;
 
 struct default_t
 {
@@ -74,8 +75,8 @@ struct default_t
 
     const char *const name; // name
 
-    void *const location; // default variable
-    void *const current;  // possible nondefault variable
+    const DefaultTarget location; // default variable
+    void *const         current;  // possible nondefault variable
 
     DefaultValue defaultvalue; // built-in default value
 
@@ -103,8 +104,8 @@ struct default_t
 constexpr default_t DEFAULT_END()
 {
     return {
-        nullptr, nullptr, nullptr, 0, { 0, 0 },
-            default_t::wad_no, nullptr, nullptr, nullptr, 0, 0
+        nullptr, static_cast<int *>(nullptr), nullptr, 0, { 0, 0 },
+             default_t::wad_no, nullptr, nullptr, nullptr, 0, 0
     };
 }
 
@@ -113,7 +114,7 @@ constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *c
 {
     return {
         .name         = name,
-        .location     = loc,
+        .location     = static_cast<int *>(loc),
         .current      = cur,
         .defaultvalue = def,
         .limit        = { min, max },
@@ -131,7 +132,7 @@ constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *c
 {
     return {
         .name         = name,
-        .location     = loc,
+        .location     = static_cast<char **>(loc),
         .current      = cur,
         .defaultvalue = def,
         .limit        = { 0, 0 },
@@ -149,7 +150,7 @@ constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void 
 {
     return {
         .name         = name,
-        .location     = loc,
+        .location     = static_cast<double *>(loc),
         .current      = cur,
         .defaultvalue = def,
         .limit        = { min, max },
@@ -167,7 +168,7 @@ constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *
 {
     return {
         .name         = name,
-        .location     = loc,
+        .location     = static_cast<bool *>(loc),
         .current      = cur,
         .defaultvalue = def,
         .limit        = { 0, 1 },

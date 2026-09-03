@@ -1086,7 +1086,7 @@ bool default_t::writeOpt(FILE *f) const
 {
     return std::visit(overloaded{ // Write an integer key/value pair
                                   [f, this](int orig_default) {
-                                      int value = modified ? orig_default : *(int *)location;
+                                      int value = modified ? orig_default : *std::get<int *>(location);
 
                                       return (fprintf(f, "%-25s %5i\n", name,
                                                       strncmp(name, "key_", 4) ? value : I_DoomCode2ScanCode(value)) ==
@@ -1094,19 +1094,19 @@ bool default_t::writeOpt(FILE *f) const
                                   },
                                   // Write a string option key/value pair
                                   [f, this](const char *orig_default) {
-                                      const char *value = modified ? orig_default : *(const char **)location;
+                                      const char *value = modified ? orig_default : *std::get<char **>(location);
 
                                       return (fprintf(f, "%-25s \"%s\"\n", name, value) == EOF);
                                   },
                                   // Write a key/value pair for a float option
                                   [f, this](double orig_default) {
-                                      double value = modified ? orig_default : *(double *)location;
+                                      double value = modified ? orig_default : *std::get<double *>(location);
 
                                       return (fprintf(f, "%-25s %#g\n", name, value) == EOF);
                                   },
                                   // Write a key/value pair for a bool option
                                   [f, this](bool orig_default) {
-                                      bool value = modified ? orig_default : *(bool *)location;
+                                      bool value = modified ? orig_default : *std::get<bool *>(location);
 
                                       return (fprintf(f, "%-25s %5i\n", name, !!value) == EOF);
                                   } },
@@ -1125,13 +1125,13 @@ void default_t::setValue(void *value, bool wad)
                                    {
                                        if(!modified) // First time it's modified by wad
                                        {
-                                           modified     = 1;                // Mark it as modified
-                                           orig_default = *(int *)location; // Save original default
+                                           modified     = 1;                          // Mark it as modified
+                                           orig_default = *std::get<int *>(location); // Save original default
                                        }
                                        if(current) // Change current value
                                            *(int *)current = parm;
                                    }
-                                   *(int *)location = parm; // Change default
+                                   *std::get<int *>(location) = parm; // Change default
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
@@ -1140,15 +1140,15 @@ void default_t::setValue(void *value, bool wad)
                            [this, value, wad](const char *) {
                                const char *strparm = (const char *)value;
 
-                               if(wad && !modified)                                            // Modified by wad
-                               {                                                               // First time modified
-                                   modified           = 1;                                     // Mark it as modified
-                                   this->orig_default = *static_cast<const char **>(location); // Save original default
+                               if(wad && !modified)                                   // Modified by wad
+                               {                                                      // First time modified
+                                   modified           = 1;                            // Mark it as modified
+                                   this->orig_default = *std::get<char **>(location); // Save original default
                                }
                                else
-                                   efree(*(char **)location); // Free old value
+                                   efree(*std::get<char **>(location)); // Free old value
 
-                               *(char **)location = estrdup(strparm); // Change default value
+                               *std::get<char **>(location) = estrdup(strparm); // Change default value
 
                                if(current) // Current value
                                {
@@ -1170,13 +1170,13 @@ void default_t::setValue(void *value, bool wad)
                                    {
                                        if(!modified) // First time it's modified by wad
                                        {
-                                           modified     = 1;                   // Mark it as modified
-                                           orig_default = *(double *)location; // Save original default
+                                           modified     = 1;                             // Mark it as modified
+                                           orig_default = *std::get<double *>(location); // Save original default
                                        }
                                        if(current) // Change current value
                                            *(double *)current = tmp;
                                    }
-                                   *(double *)location = tmp; // Change default
+                                   *std::get<double *>(location) = tmp; // Change default
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
@@ -1188,13 +1188,13 @@ void default_t::setValue(void *value, bool wad)
                                {
                                    if(!modified) // First time it's modified by wad
                                    {
-                                       modified     = 1;                 // Mark it as modified
-                                       orig_default = *(bool *)location; // Save original default
+                                       modified     = 1;                           // Mark it as modified
+                                       orig_default = *std::get<bool *>(location); // Save original default
                                    }
                                    if(current) // Change current value
                                        *(bool *)current = !!parm;
                                }
-                               *(bool *)location = !!parm; // Change default
+                               *std::get<bool *>(location) = !!parm; // Change default
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
                            } },
@@ -1266,7 +1266,7 @@ void default_t::setDefault()
     // Set to default value
     std::visit(overloaded{
 
-                   [this](int defaultvalue) { *(int *)location = defaultvalue; },
+                   [this](int defaultvalue) { *std::get<int *>(location) = defaultvalue; },
                    [this](const char *defaultvalue) {
                        // phares 4/13/98:
                        // provide default strings with their own malloced memory so that when
@@ -1275,48 +1275,51 @@ void default_t::setDefault()
                        // in it or not. This provides consistency later on when/if we need to
                        // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-                       *(char **)location = estrdup(defaultvalue);
+                       *std::get<char **>(location) = estrdup(defaultvalue);
                    },
-                   [this](double defaultvalue) { *(double *)location = defaultvalue; },
-                   [this](bool defaultvalue) { *(bool *)location = defaultvalue; } },
+                   [this](double defaultvalue) { *std::get<double *>(location) = defaultvalue; },
+                   [this](bool defaultvalue) { *std::get<bool *>(location) = defaultvalue; } },
                defaultvalue);
 }
 
 bool default_t::checkCVar(const variable_t *var) const
 {
-    return std::visit(overloaded{ // Test if an integer default matches the given cvar
-                                  [this, var](int) {
-                                      if(var->type != vt_int)
-                                          return false;
+    return std::visit(
+        overloaded{
+            // Test if an integer default matches the given cvar
+            [this, var](int) {
+                if(var->type != vt_int)
+                    return false;
 
-                                      return (location == var->variable || location == var->v_default);
-                                  },
-                                  // Test if a string default matches the given cvar
-                                  [this, var](const char *) {
-                                      // config strings only match string and chararray cvar types
-                                      if(var->type != vt_string && var->type != vt_chararray)
-                                          return false;
+                return (std::get<int *>(location) == var->variable || std::get<int *>(location) == var->v_default);
+            },
+            // Test if a string default matches the given cvar
+            [this, var](const char *) {
+                // config strings only match string and chararray cvar types
+                if(var->type != vt_string && var->type != vt_chararray)
+                    return false;
 
-                                      // FIXME: this test may not work for vt_chararray (* vs **)
+                // FIXME: this test may not work for vt_chararray (* vs **)
 
-                                      // test the pointer
-                                      return (location == var->variable || location == var->v_default);
-                                  },
-                                  // Test if a float default matches the given cvar
-                                  [this, var](double) {
-                                      if(var->type != vt_float)
-                                          return false;
+                // test the pointer
+                return (std::get<char **>(location) == var->variable || std::get<char **>(location) == var->v_default);
+            },
+            // Test if a float default matches the given cvar
+            [this, var](double) {
+                if(var->type != vt_float)
+                    return false;
 
-                                      return (location == var->variable || location == var->v_default);
-                                  },
-                                  // Test if a bool default matches the given cvar
-                                  [this, var](bool) {
-                                      if(var->type != vt_toggle)
-                                          return false;
+                return (std::get<double *>(location) == var->variable ||
+                        std::get<double *>(location) == var->v_default);
+            },
+            // Test if a bool default matches the given cvar
+            [this, var](bool) {
+                if(var->type != vt_toggle)
+                    return false;
 
-                                      return (location == var->variable || location == var->v_default);
-                                  } },
-                      defaultvalue);
+                return (std::get<bool *>(location) == var->variable || std::get<bool *>(location) == var->v_default);
+            } },
+        defaultvalue);
 }
 
 //=============================================================================
