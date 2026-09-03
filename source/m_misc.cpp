@@ -1023,78 +1023,268 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Methods for different types of default items
 //
 
+bool default_t::writeHelp(FILE *f) const
+{
+    return std::visit(
+        overloaded{ // Write help for an integer option
+                    [f, this](int defaultvalue) {
+                        bool written = false;
+
+                        if(limit.min == UL)
+                        {
+                            if(limit.max == UL)
+                                written = (fprintf(f, "[?-?(%d)]", defaultvalue) == EOF);
+                            else
+                            {
+                                written = (fprintf(f, "[?-%d(%d)]", limit.max, defaultvalue) == EOF);
+                            }
+                        }
+                        else if(limit.max == UL)
+                        {
+                            written = (fprintf(f, "[%d-?(%d)]", limit.min, defaultvalue) == EOF);
+                        }
+                        else
+                        {
+                            written = (fprintf(f, "[%d-%d(%d)]", limit.min, limit.max, defaultvalue) == EOF);
+                        }
+
+                        return written;
+                    },
+                    // Write help for a string option
+                    [f](const char *defaultvalue) { return fprintf(f, "[(\"%s\")]", defaultvalue) == EOF; },
+                    // Write help for a float option
+                    [f, this](double defaultvalue) {
+                        bool written = false;
+
+                        if(limit.min == UL)
+                        {
+                            if(limit.max == UL)
+                                written = (fprintf(f, "[?-?](%g)]", defaultvalue) == EOF);
+                            else
+                            {
+                                written = (fprintf(f, "[?-%g(%g)]", (double)limit.max / 100.0, defaultvalue) == EOF);
+                            }
+                        }
+                        else if(limit.max == UL)
+                        {
+                            written = (fprintf(f, "[%g-?(%g)]", (double)limit.min / 100.0, defaultvalue) == EOF);
+                        }
+                        else
+                        {
+                            written = (fprintf(f, "[%g-%g(%g)]", (double)limit.min / 100.0, (double)limit.max / 100.0,
+                                               defaultvalue) == EOF);
+                        }
+
+                        return written;
+                    },
+                    // Write help for a bool option
+                    [f](bool defaultvalue) { return (fprintf(f, "[0-1(%d)]", !!defaultvalue) == EOF); } },
+        defaultvalue);
+}
+
+bool default_t::writeOpt(FILE *f) const
+{
+    return std::visit(overloaded{ // Write an integer key/value pair
+                                  [f, this](int orig_default) {
+                                      int value = modified ? orig_default : *(int *)location;
+
+                                      return (fprintf(f, "%-25s %5i\n", name,
+                                                      strncmp(name, "key_", 4) ? value : I_DoomCode2ScanCode(value)) ==
+                                              EOF);
+                                  },
+                                  // Write a string option key/value pair
+                                  [f, this](const char *orig_default) {
+                                      const char *value = modified ? orig_default : *(const char **)location;
+
+                                      return (fprintf(f, "%-25s \"%s\"\n", name, value) == EOF);
+                                  },
+                                  // Write a key/value pair for a float option
+                                  [f, this](double orig_default) {
+                                      double value = modified ? orig_default : *(double *)location;
+
+                                      return (fprintf(f, "%-25s %#g\n", name, value) == EOF);
+                                  },
+                                  // Write a key/value pair for a bool option
+                                  [f, this](bool orig_default) {
+                                      bool value = modified ? orig_default : *(bool *)location;
+
+                                      return (fprintf(f, "%-25s %5i\n", name, !!value) == EOF);
+                                  }
+                      },
+                      orig_default);
+}
+
+void default_t::setValue(void *value, bool wad)
+{
+    std::visit(overloaded{ // Set the value of an integer option
+                           [this, value, wad](int) {
+                               int parm = *(int *)value;
+
+                               if((limit.min == UL || limit.min <= parm) && (limit.max == UL || limit.max >= parm))
+                               {
+                                   if(wad)
+                                   {
+                                       if(!modified) // First time it's modified by wad
+                                       {
+                                           modified     = 1;                // Mark it as modified
+                                           orig_default = *(int *)location; // Save original default
+                                       }
+                                       if(current) // Change current value
+                                           *(int *)current = parm;
+                                   }
+                                   *(int *)location = parm; // Change default
+                               }
+                               if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
+                                   cmd->handler();
+                           },
+                           // Set the value of a string option
+                           [this, value, wad](const char *) {
+                               const char *strparm = (const char *)value;
+
+                               if(wad && !modified)                                            // Modified by wad
+                               {                                                               // First time modified
+                                   modified           = 1;                                     // Mark it as modified
+                                   this->orig_default = *static_cast<const char **>(location); // Save original default
+                               }
+                               else
+                                   efree(*(char **)location); // Free old value
+
+                               *(char **)location = estrdup(strparm); // Change default value
+
+                               if(current) // Current value
+                               {
+                                   efree(*(char **)current);             // Free old value
+                                   *(char **)current = estrdup(strparm); // Change current value
+                               }
+                               if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
+                                   cmd->handler();
+                           },
+                           // Set the value of a float option
+                           [this, value, wad](double) {
+                               double tmp = *(double *)value;
+
+                               // jff 3/4/98 range check numeric parameters
+                               if((limit.min == UL || (double)limit.min / 100.0 <= tmp) &&
+                                  (limit.max == UL || (double)limit.max / 100.0 >= tmp))
+                               {
+                                   if(wad)
+                                   {
+                                       if(!modified) // First time it's modified by wad
+                                       {
+                                           modified     = 1;                   // Mark it as modified
+                                           orig_default = *(double *)location; // Save original default
+                                       }
+                                       if(current) // Change current value
+                                           *(double *)current = tmp;
+                                   }
+                                   *(double *)location = tmp; // Change default
+                               }
+                               if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
+                                   cmd->handler();
+                           },
+                           // Sets the value of a bool option
+                           [this, value, wad](bool) {
+                               bool parm = *(bool *)value;
+                               if(wad)
+                               {
+                                   if(!modified) // First time it's modified by wad
+                                   {
+                                       modified     = 1;                 // Mark it as modified
+                                       orig_default = *(bool *)location; // Save original default
+                                   }
+                                   if(current) // Change current value
+                                       *(bool *)current = !!parm;
+                               }
+                               *(bool *)location = !!parm; // Change default
+                               if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
+                                   cmd->handler();
+                           } },
+               orig_default);
+}
+
+bool default_t::readOpt(char *src, bool wad)
+{
+    return std::visit(overloaded{ // Read the value of an integer option and set it to the default
+                                  [this, src, wad](int) {
+                                      int parm = 0;
+
+                                      if(sscanf(src, "%i", &parm) != 1)
+                                          return true; // Not A Number
+
+                                      if(!strncmp(name, "key_", 4)) // killough
+                                          parm = I_ScanCode2DoomCode(parm);
+
+                                      // call setValue method through method table rather than directly
+                                      // (could allow redirection in the future)
+                                      setValue(&parm, wad);
+
+                                      return false;
+                                  },
+                                  // Read a string option and set it
+                                  [this, src, wad](const char *) {
+                                      int len = static_cast<int>(strlen(src) - 1);
+
+                                      while(ectype::isSpace(src[len]))
+                                          len--;
+
+                                      if(src[len] == '"')
+                                          len--;
+
+                                      src[len + 1] = 0;
+
+                                      setValue(src + 1, wad);
+
+                                      return false;
+                                  },
+                                  // Read the value of a float option from a string and set it
+                                  [this, src, wad](double) {
+                                      double tmp;
+
+                                      if(sscanf(src, "%lg", &tmp) != 1)
+                                          return true; // Not A Number
+
+                                      setValue(&tmp, wad);
+
+                                      return false;
+                                  },
+
+                                  // Reads the value of a bool option from a string and sets it
+                                  [this, src, wad](bool) {
+                                      int parm;
+
+                                      if(sscanf(src, "%i", &parm) != 1)
+                                          return true; // Not A Number
+
+                                      setValue(&parm, wad);
+
+                                      return false;
+                                  } },
+                      orig_default);
+}
+
+void default_t::setDefault()
+{
+    std::visit(
+        overloaded{ // Set to default value
+                    [this](const char *defaultvalue) {
+                        // phares 4/13/98:
+                        // provide default strings with their own malloced memory so that when
+                        // we leave this routine, that's what we're dealing with whether there
+                        // was a config file or not, and whether there were chat definitions
+                        // in it or not. This provides consistency later on when/if we need to
+                        // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
+
+                        *(char **)location = estrdup(defaultvalue);
+                    } },
+        defaultvalue);
+}
+
 //
 // Strings
 //
 
-// Write help for a string option
-static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
-{
-    return (fprintf(f, "[(\"%s\")]", std::get<const char *>(dp->defaultvalue)) == EOF);
-}
 
-// Write a string option key/value pair
-static bool M_writeDefaultString(default_t *dp, FILE *f)
-{
-    const char *value = dp->modified ? dp->orig_default_s : *(const char **)dp->location;
 
-    return (fprintf(f, "%-25s \"%s\"\n", dp->name, value) == EOF);
-}
-
-// Set the value of a string option
-static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
-{
-    const char *strparm = (const char *)value;
-
-    if(wad && !dp->modified)                         // Modified by wad
-    {                                                // First time modified
-        dp->modified       = 1;                      // Mark it as modified
-        dp->orig_default_s = *(char **)dp->location; // Save original default
-    }
-    else
-        efree(*(char **)dp->location); // Free old value
-
-    *(char **)dp->location = estrdup(strparm); // Change default value
-
-    if(dp->current) // Current value
-    {
-        efree(*(char **)dp->current);             // Free old value
-        *(char **)dp->current = estrdup(strparm); // Change current value
-    }
-    if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
-        cmd->handler();
-}
-
-// Read a string option and set it
-static bool M_readDefaultString(default_t *dp, char *src, bool wad)
-{
-    int len = static_cast<int>(strlen(src) - 1);
-
-    while(ectype::isSpace(src[len]))
-        len--;
-
-    if(src[len] == '"')
-        len--;
-
-    src[len + 1] = 0;
-
-    dp->methods->setValue(dp, src + 1, wad);
-
-    return false;
-}
-
-// Set to default value
-static void M_setDefaultString(default_t *dp)
-{
-    // phares 4/13/98:
-    // provide default strings with their own malloced memory so that when
-    // we leave this routine, that's what we're dealing with whether there
-    // was a config file or not, and whether there were chat definitions
-    // in it or not. This provides consistency later on when/if we need to
-    // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
-
-    *(char **)dp->location = estrdup(std::get<const char *>(dp->defaultvalue));
-}
 
 // Test if a string default matches the given cvar
 static bool M_checkCVarString(default_t *dp, variable_t *var)
@@ -1118,81 +1308,6 @@ static void M_getDefaultString(default_t *dp, void *dest)
 // Integers
 //
 
-// Write help for an integer option
-static bool M_writeDefaultHelpInt(default_t *dp, FILE *f)
-{
-    bool written = false;
-
-    if(dp->limit.min == UL)
-    {
-        if(dp->limit.max == UL)
-            written = (fprintf(f, "[?-?(%d)]", std::get<int>(dp->defaultvalue)) == EOF);
-        else
-        {
-            written = (fprintf(f, "[?-%d(%d)]", dp->limit.max, std::get<int>(dp->defaultvalue)) == EOF);
-        }
-    }
-    else if(dp->limit.max == UL)
-    {
-        written = (fprintf(f, "[%d-?(%d)]", dp->limit.min, std::get<int>(dp->defaultvalue)) == EOF);
-    }
-    else
-    {
-        written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max, std::get<int>(dp->defaultvalue)) == EOF);
-    }
-
-    return written;
-}
-
-// Write an integer key/value pair
-static bool M_writeDefaultInt(default_t *dp, FILE *f)
-{
-    int value = dp->modified ? dp->orig_default_i : *(int *)dp->location;
-
-    return (fprintf(f, "%-25s %5i\n", dp->name, strncmp(dp->name, "key_", 4) ? value : I_DoomCode2ScanCode(value)) ==
-            EOF);
-}
-
-// Set the value of an integer option
-static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
-{
-    int parm = *(int *)value;
-
-    if((dp->limit.min == UL || dp->limit.min <= parm) && (dp->limit.max == UL || dp->limit.max >= parm))
-    {
-        if(wad)
-        {
-            if(!dp->modified) // First time it's modified by wad
-            {
-                dp->modified       = 1;                    // Mark it as modified
-                dp->orig_default_i = *(int *)dp->location; // Save original default
-            }
-            if(dp->current) // Change current value
-                *(int *)dp->current = parm;
-        }
-        *(int *)dp->location = parm; // Change default
-    }
-    if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
-        cmd->handler();
-}
-
-// Read the value of an integer option and set it to the default
-static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
-{
-    int parm = 0;
-
-    if(sscanf(src, "%i", &parm) != 1)
-        return true; // Not A Number
-
-    if(!strncmp(dp->name, "key_", 4)) // killough
-        parm = I_ScanCode2DoomCode(parm);
-
-    // call setValue method through method table rather than directly
-    // (could allow redirection in the future)
-    dp->methods->setValue(dp, &parm, wad);
-
-    return false;
-}
 
 // Set to default value
 static void M_setDefaultInt(default_t *dp)
@@ -1218,78 +1333,7 @@ static void M_getDefaultInt(default_t *dp, void *dest)
 // Floats
 //
 
-// Write help for a float option
-static bool M_writeDefaultHelpFloat(default_t *dp, FILE *f)
-{
-    bool written = false;
 
-    if(dp->limit.min == UL)
-    {
-        if(dp->limit.max == UL)
-            written = (fprintf(f, "[?-?](%g)]", std::get<double>(dp->defaultvalue)) == EOF);
-        else
-        {
-            written = (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, std::get<double>(dp->defaultvalue)) == EOF);
-        }
-    }
-    else if(dp->limit.max == UL)
-    {
-        written = (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0, std::get<double>(dp->defaultvalue)) == EOF);
-    }
-    else
-    {
-        written = (fprintf(f, "[%g-%g(%g)]", (double)dp->limit.min / 100.0, (double)dp->limit.max / 100.0,
-                           std::get<double>(dp->defaultvalue)) == EOF);
-    }
-
-    return written;
-}
-
-// Write a key/value pair for a float option
-static bool M_writeDefaultFloat(default_t *dp, FILE *f)
-{
-    double value = dp->modified ? dp->orig_default_f : *(double *)dp->location;
-
-    return (fprintf(f, "%-25s %#g\n", dp->name, value) == EOF);
-}
-
-// Set the value of a float option
-static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
-{
-    double tmp = *(double *)value;
-
-    // jff 3/4/98 range check numeric parameters
-    if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
-       (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
-    {
-        if(wad)
-        {
-            if(!dp->modified) // First time it's modified by wad
-            {
-                dp->modified       = 1;                       // Mark it as modified
-                dp->orig_default_f = *(double *)dp->location; // Save original default
-            }
-            if(dp->current) // Change current value
-                *(double *)dp->current = tmp;
-        }
-        *(double *)dp->location = tmp; // Change default
-    }
-    if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
-        cmd->handler();
-}
-
-// Read the value of a float option from a string and set it
-static bool M_readDefaultFloat(default_t *dp, char *src, bool wad)
-{
-    double tmp;
-
-    if(sscanf(src, "%lg", &tmp) != 1)
-        return true; // Not A Number
-
-    dp->methods->setValue(dp, &tmp, wad);
-
-    return false;
-}
 
 // Set to default value
 static void M_setDefaultFloat(default_t *dp)
@@ -1315,51 +1359,6 @@ static void M_getDefaultFloat(default_t *dp, void *dest)
 // Booleans
 //
 
-// Write help for a bool option
-static bool M_writeDefaultHelpBool(default_t *dp, FILE *f)
-{
-    return (fprintf(f, "[0-1(%d)]", !!std::get<bool>(dp->defaultvalue)) == EOF);
-}
-
-// Write a key/value pair for a bool option
-static bool M_writeDefaultBool(default_t *dp, FILE *f)
-{
-    bool value = dp->modified ? dp->orig_default_b : *(bool *)dp->location;
-
-    return (fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF);
-}
-
-// Sets the value of a bool option
-static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
-{
-    bool parm = *(bool *)value;
-    if(wad)
-    {
-        if(!dp->modified) // First time it's modified by wad
-        {
-            dp->modified       = 1;                     // Mark it as modified
-            dp->orig_default_b = *(bool *)dp->location; // Save original default
-        }
-        if(dp->current) // Change current value
-            *(bool *)dp->current = !!parm;
-    }
-    *(bool *)dp->location = !!parm; // Change default
-    if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
-        cmd->handler();
-}
-
-// Reads the value of a bool option from a string and sets it
-static bool M_readDefaultBool(default_t *dp, char *src, bool wad)
-{
-    int parm;
-
-    if(sscanf(src, "%i", &parm) != 1)
-        return true; // Not A Number
-
-    dp->methods->setValue(dp, &parm, wad);
-
-    return false;
-}
 
 // Set to default value
 static void M_setDefaultBool(default_t *dp)
@@ -1389,40 +1388,24 @@ static void M_getDefaultBool(default_t *dp, void *dest)
 static default_i defaultInterfaces[] = {
     // dt_integer
     { 
-        M_writeDefaultHelpInt,
-        M_writeDefaultInt,
-        M_setDefaultValueInt,
-        M_readDefaultInt,
         M_setDefaultInt,
         M_checkCVarInt,
         M_getDefaultInt
     },
     // dt_string
     { 
-        M_writeDefaultHelpString,
-        M_writeDefaultString,
-        M_setDefaultValueString,
-        M_readDefaultString,
         M_setDefaultString,
         M_checkCVarString,
         M_getDefaultString
     },
     // dt_float
     { 
-        M_writeDefaultHelpFloat,
-        M_writeDefaultFloat,
-        M_setDefaultValueFloat,
-        M_readDefaultFloat,
         M_setDefaultFloat,
         M_checkCVarFloat,
         M_getDefaultFloat
     },
     // dt_boolean
     { 
-        M_writeDefaultHelpBool,
-        M_writeDefaultBool,
-        M_setDefaultValueBool,
-        M_readDefaultBool,
         M_setDefaultBool,
         M_checkCVarBool,
         M_getDefaultBool
@@ -1529,7 +1512,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
         if(config_help && !brackets)
         {
-            if(dp->methods->writeHelp(dp, f) || fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
+            if(dp->writeHelp(f) || fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
             {
                 M_defaultFileWriteError(df, tmpfile.constPtr());
                 fclose(f);
@@ -1544,7 +1527,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
         //  killough 3/6/98:
         //  use spaces instead of tabs for uniform justification
 
-        if(dp->methods->writeOpt(dp, f))
+        if(dp->writeOpt(f))
         {
             M_defaultFileWriteError(df, tmpfile.constPtr());
             fclose(f);
@@ -1606,7 +1589,7 @@ static bool M_parseOption(defaultfile_t *df, const char *p, default_t::wad_e min
         return true;
     }
 
-    return dp->methods->readOpt(dp, strparm, minimum_allowed != default_t::wad_no); // Success (false) or failure (true)
+    return dp->readOpt(strparm, minimum_allowed != default_t::wad_no); // Success (false) or failure (true)
 }
 
 //

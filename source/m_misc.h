@@ -59,11 +59,6 @@ struct variable_t;
 // haleyjd 07/03/10: interface object for defaults
 struct default_i
 {
-    bool (*writeHelp) (default_t *, FILE *);       // write help message
-    bool (*writeOpt)  (default_t *, FILE *);       // write option key and value
-    void (*setValue)  (default_t *, void *, bool); // set value
-    bool (*readOpt)   (default_t *, char *, bool); // read option from string
-    void (*setDefault)(default_t *);               // set to hardcoded default
     bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
     void (*getDefault)(default_t *, void *);       // get the default externally
 };
@@ -80,6 +75,12 @@ struct default_t
         wad_game,    // read from OPTIONS when gameplay is started (G_InitNew)
         wad_startup, // read from OPTIONS during program init
     };
+
+    bool writeHelp(FILE *f) const; // write help message
+    bool writeOpt(FILE *f) const;  // write option key and value
+    void setValue(void *, bool);   // set value
+    bool readOpt(char *, bool);    // read option from string
+    void setDefault();             // set to hardcoded default
 
     const char *const   name; // name
 
@@ -101,10 +102,7 @@ struct default_t
     default_t *first, *next; // hash table pointers
     int        modified;     // Whether it's been modified
 
-    int         orig_default_i; // Original default, if modified
-    const char *orig_default_s;
-    double      orig_default_f;
-    bool        orig_default_b;
+    DefaultValue orig_default;  // Original default, if modified
 
     default_i *methods;
 
@@ -117,9 +115,8 @@ struct default_t
 constexpr default_t DEFAULT_END()
 {
     return {
-        nullptr, nullptr, nullptr, 0,     { 0, 0 },
-                 default_t::wad_no, nullptr, nullptr, nullptr,
-        0,       0,          nullptr, 0.0,     false, nullptr
+        nullptr, nullptr, nullptr, 0, { 0, 0 },
+            default_t::wad_no, nullptr, nullptr, nullptr, 0, 0, nullptr
     };
 }
 
@@ -127,21 +124,18 @@ constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *c
                                 const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name           = name,
-        .location       = loc,
-        .current        = cur,
-        .defaultvalue   = def,
-        .limit          = { min, max },
-        .wad_allowed    = wad,
-        .help           = help,
-        .first          = nullptr,
-        .next           = nullptr,
-        .modified       = 0,
-        .orig_default_i = 0,
-        .orig_default_s = nullptr,
-        .orig_default_f = 0.0,
-        .orig_default_b = false,
-        .methods        = nullptr
+        .name         = name,
+        .location     = loc,
+        .current      = cur,
+        .defaultvalue = def,
+        .limit        = { min, max },
+        .wad_allowed  = wad,
+        .help         = help,
+        .first        = nullptr,
+        .next         = nullptr,
+        .modified     = 0,
+        .orig_default = 0,
+        .methods      = nullptr
     };
 }
 
@@ -149,21 +143,18 @@ constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *c
                                 const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name           = name,
-        .location       = loc,
-        .current        = cur,
-        .defaultvalue   = def,
-        .limit          = { 0, 0 },
-        .wad_allowed    = wad,
-        .help           = help,
-        .first          = nullptr,
-        .next           = nullptr,
-        .modified       = 0,
-        .orig_default_i = 0,
-        .orig_default_s = nullptr,
-        .orig_default_f = 0.0,
-        .orig_default_b = false,
-        .methods        = nullptr
+        .name         = name,
+        .location     = loc,
+        .current      = cur,
+        .defaultvalue = def,
+        .limit        = { 0, 0 },
+        .wad_allowed  = wad,
+        .help         = help,
+        .first        = nullptr,
+        .next         = nullptr,
+        .modified     = 0,
+        .orig_default = (const char *)nullptr,
+        .methods      = nullptr
     };
 }
 
@@ -171,21 +162,18 @@ constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void 
                                   const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name           = name,
-        .location       = loc,
-        .current        = cur,
-        .defaultvalue   = def,
-        .limit          = { min, max },
-        .wad_allowed    = wad,
-        .help           = help,
-        .first          = nullptr,
-        .next           = nullptr,
-        .modified       = 0,
-        .orig_default_i = 0,
-        .orig_default_s = nullptr,
-        .orig_default_f = 0.0,
-        .orig_default_b = false,
-        .methods        = nullptr
+        .name         = name,
+        .location     = loc,
+        .current      = cur,
+        .defaultvalue = def,
+        .limit        = { min, max },
+        .wad_allowed  = wad,
+        .help         = help,
+        .first        = nullptr,
+        .next         = nullptr,
+        .modified     = 0,
+        .orig_default = 0.0,
+        .methods      = nullptr
     };
 }
 
@@ -193,21 +181,18 @@ constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *
                                  const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name           = name,
-        .location       = loc,
-        .current        = cur,
-        .defaultvalue   = def,
-        .limit          = { 0, 1 },
-        .wad_allowed    = wad,
-        .help           = help,
-        .first          = nullptr,
-        .next           = nullptr,
-        .modified       = 0,
-        .orig_default_i = 0,
-        .orig_default_s = nullptr,
-        .orig_default_f = 0.0,
-        .orig_default_b = false,
-        .methods        = nullptr
+        .name         = name,
+        .location     = loc,
+        .current      = cur,
+        .defaultvalue = def,
+        .limit        = { 0, 1 },
+        .wad_allowed  = wad,
+        .help         = help,
+        .first        = nullptr,
+        .next         = nullptr,
+        .modified     = 0,
+        .orig_default = false,
+        .methods      = nullptr
     };
 }
 
