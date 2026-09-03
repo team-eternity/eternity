@@ -712,28 +712,28 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
         case vt_int:
         {
             int i;
-            dp->methods->getDefault(dp, &i);
+            dp->getDefault(&i);
             returnstr.Printf(0, "%d", i);
         }
         break;
         case vt_toggle:
         {
             bool b;
-            dp->methods->getDefault(dp, &b);
+            dp->getDefault(&b);
             returnstr.Printf(0, "%d", !!b);
         }
         break;
         case vt_float:
         {
             double f;
-            dp->methods->getDefault(dp, &f);
+            dp->getDefault(&f);
             returnstr.Printf(0, "%f", f);
         }
         break;
         case vt_string:
         {
             char *def;
-            dp->methods->getDefault(dp, &def);
+            dp->getDefault(&def);
             returnstr = def;
         }
         break;

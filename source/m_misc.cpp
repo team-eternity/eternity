@@ -1109,8 +1109,7 @@ bool default_t::writeOpt(FILE *f) const
                                       bool value = modified ? orig_default : *(bool *)location;
 
                                       return (fprintf(f, "%-25s %5i\n", name, !!value) == EOF);
-                                  }
-                      },
+                                  } },
                       orig_default);
 }
 
@@ -1264,167 +1263,74 @@ bool default_t::readOpt(char *src, bool wad)
 
 void default_t::setDefault()
 {
-    std::visit(
-        overloaded{ // Set to default value
-                    [this](const char *defaultvalue) {
-                        // phares 4/13/98:
-                        // provide default strings with their own malloced memory so that when
-                        // we leave this routine, that's what we're dealing with whether there
-                        // was a config file or not, and whether there were chat definitions
-                        // in it or not. This provides consistency later on when/if we need to
-                        // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
+    // Set to default value
+    std::visit(overloaded{
 
-                        *(char **)location = estrdup(defaultvalue);
-                    } },
-        defaultvalue);
+                   [this](int defaultvalue) { *(int *)location = defaultvalue; },
+                   [this](const char *defaultvalue) {
+                       // phares 4/13/98:
+                       // provide default strings with their own malloced memory so that when
+                       // we leave this routine, that's what we're dealing with whether there
+                       // was a config file or not, and whether there were chat definitions
+                       // in it or not. This provides consistency later on when/if we need to
+                       // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
+
+                       *(char **)location = estrdup(defaultvalue);
+                   },
+                   [this](double defaultvalue) { *(double *)location = defaultvalue; },
+                   [this](bool defaultvalue) { *(bool *)location = defaultvalue; } },
+               defaultvalue);
 }
 
-//
-// Strings
-//
-
-
-
-
-// Test if a string default matches the given cvar
-static bool M_checkCVarString(default_t *dp, variable_t *var)
+bool default_t::checkCVar(const variable_t *var) const
 {
-    // config strings only match string and chararray cvar types
-    if(var->type != vt_string && var->type != vt_chararray)
-        return false;
+    return std::visit(overloaded{ // Test if an integer default matches the given cvar
+                                  [this, var](int) {
+                                      if(var->type != vt_int)
+                                          return false;
 
-    // FIXME: this test may not work for vt_chararray (* vs **)
+                                      return (location == var->variable || location == var->v_default);
+                                  },
+                                  // Test if a string default matches the given cvar
+                                  [this, var](const char *) {
+                                      // config strings only match string and chararray cvar types
+                                      if(var->type != vt_string && var->type != vt_chararray)
+                                          return false;
 
-    // test the pointer
-    return (dp->location == var->variable || dp->location == var->v_default);
+                                      // FIXME: this test may not work for vt_chararray (* vs **)
+
+                                      // test the pointer
+                                      return (location == var->variable || location == var->v_default);
+                                  },
+                                  // Test if a float default matches the given cvar
+                                  [this, var](double) {
+                                      if(var->type != vt_float)
+                                          return false;
+
+                                      return (location == var->variable || location == var->v_default);
+                                  },
+                                  // Test if a bool default matches the given cvar
+                                  [this, var](bool) {
+                                      if(var->type != vt_toggle)
+                                          return false;
+
+                                      return (location == var->variable || location == var->v_default);
+                                  } },
+                      defaultvalue);
 }
 
-static void M_getDefaultString(default_t *dp, void *dest)
+void default_t::getDefault(void *dest) const // get the default externally
 {
-    *(const char **)dest = std::get<const char *>(dp->defaultvalue);
-}
+    std::visit(overloaded{
 
-//
-// Integers
-//
+                   [dest](int defaultvalue) { *(int *)dest = defaultvalue; },
+                   [dest](const char *defaultvalue) { *(const char **)dest = defaultvalue; },
+                   [dest](double defaultvalue) { *(double *)dest = defaultvalue; },
 
+                   [dest](bool defaultvalue) { *(bool *)dest = defaultvalue; }
 
-// Set to default value
-static void M_setDefaultInt(default_t *dp)
-{
-    *(int *)dp->location = std::get<int>(dp->defaultvalue);
-}
-
-// Test if an integer default matches the given cvar
-static bool M_checkCVarInt(default_t *dp, variable_t *var)
-{
-    if(var->type != vt_int)
-        return false;
-
-    return (dp->location == var->variable || dp->location == var->v_default);
-}
-
-static void M_getDefaultInt(default_t *dp, void *dest)
-{
-    *(int *)dest = std::get<int>(dp->defaultvalue);
-}
-
-//
-// Floats
-//
-
-
-
-// Set to default value
-static void M_setDefaultFloat(default_t *dp)
-{
-    *(double *)dp->location = std::get<double>(dp->defaultvalue);
-}
-
-// Test if a float default matches the given cvar
-static bool M_checkCVarFloat(default_t *dp, variable_t *var)
-{
-    if(var->type != vt_float)
-        return false;
-
-    return (dp->location == var->variable || dp->location == var->v_default);
-}
-
-static void M_getDefaultFloat(default_t *dp, void *dest)
-{
-    *(double *)dest = std::get<double>(dp->defaultvalue);
-}
-
-//
-// Booleans
-//
-
-
-// Set to default value
-static void M_setDefaultBool(default_t *dp)
-{
-    *(bool *)dp->location = std::get<bool>(dp->defaultvalue);
-}
-
-// Test if a bool default matches the given cvar
-static bool M_checkCVarBool(default_t *dp, variable_t *var)
-{
-    if(var->type != vt_toggle)
-        return false;
-
-    return (dp->location == var->variable || dp->location == var->v_default);
-}
-
-static void M_getDefaultBool(default_t *dp, void *dest)
-{
-    *(bool *)dest = std::get<bool>(dp->defaultvalue);
-}
-
-// clang-format off
-
-//
-// Interface objects for defaults
-//
-static default_i defaultInterfaces[] = {
-    // dt_integer
-    { 
-        M_setDefaultInt,
-        M_checkCVarInt,
-        M_getDefaultInt
-    },
-    // dt_string
-    { 
-        M_setDefaultString,
-        M_checkCVarString,
-        M_getDefaultString
-    },
-    // dt_float
-    { 
-        M_setDefaultFloat,
-        M_checkCVarFloat,
-        M_getDefaultFloat
-    },
-    // dt_boolean
-    { 
-        M_setDefaultBool,
-        M_checkCVarBool,
-        M_getDefaultBool
-    },
-};
-
-// clang-format on
-
-//
-// M_populateDefaultMethods
-//
-// Method population for default objects
-//
-static void M_populateDefaultMethods(defaultfile_t *df)
-{
-    default_t *dp;
-
-    for(dp = df->defaults; dp->name; dp++)
-        dp->methods = &defaultInterfaces[dp->type];
+               },
+               defaultvalue);
 }
 
 //=============================================================================
@@ -1584,7 +1490,8 @@ static bool M_parseOption(defaultfile_t *df, const char *p, default_t::wad_e min
     //  killough 10/98: move to be made part of main test, add comment-handling
 
     if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) || !(dp = M_LookupDefault(df, name)) ||
-       (*strparm == '"') == (dp->type != dt_string) || (dp->wad_allowed < minimum_allowed))
+       (*strparm == '"') == !std::holds_alternative<const char *>(dp->defaultvalue) ||
+       (dp->wad_allowed < minimum_allowed))
     {
         return true;
     }
@@ -1647,12 +1554,9 @@ void M_LoadDefaultFile(defaultfile_t *df)
     default_t *dp;
     FILE      *f;
 
-    // haleyjd 07/03/10: set default object methods for easy calls
-    M_populateDefaultMethods(df);
-
     // set everything to base values
     for(dp = df->defaults; dp->name; dp++)
-        dp->methods->setDefault(dp);
+        dp->setDefault();
 
     M_NormalizeSlashes(df->fileName);
 
@@ -1739,7 +1643,7 @@ static default_t *M_findCVarInDefaults(default_t *defaultset, variable_t *var)
 
     for(dp = defaultset; dp->name; dp++)
     {
-        if(dp->methods->checkCVar(dp, var))
+        if(dp->checkCVar(var))
         {
             ret = dp;
             break;

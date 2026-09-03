@@ -54,17 +54,6 @@ enum defaulttype_e
 struct default_t;
 struct variable_t;
 
-// clang-format off
-
-// haleyjd 07/03/10: interface object for defaults
-struct default_i
-{
-    bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
-    void (*getDefault)(default_t *, void *);       // get the default externally
-};
-
-// clang-format on
-
 using DefaultValue = std::variant<int, const char *, double, bool>;
 
 struct default_t
@@ -76,18 +65,20 @@ struct default_t
         wad_startup, // read from OPTIONS during program init
     };
 
-    bool writeHelp(FILE *f) const; // write help message
-    bool writeOpt(FILE *f) const;  // write option key and value
-    void setValue(void *, bool);   // set value
-    bool readOpt(char *, bool);    // read option from string
-    void setDefault();             // set to hardcoded default
+    bool writeHelp(FILE *f) const;            // write help message
+    bool writeOpt(FILE *f) const;             // write option key and value
+    void setValue(void *, bool);              // set value
+    bool readOpt(char *, bool);               // read option from string
+    void setDefault();                        // set to hardcoded default
+    bool checkCVar(const variable_t *) const; // check against a cvar
+    void getDefault(void *) const;            // get the default externally
 
-    const char *const   name; // name
+    const char *const name; // name
 
     void *const location; // default variable
     void *const current;  // possible nondefault variable
 
-    DefaultValue defaultvalue;  // built-in default value
+    DefaultValue defaultvalue; // built-in default value
 
     struct
     {
@@ -102,9 +93,7 @@ struct default_t
     default_t *first, *next; // hash table pointers
     int        modified;     // Whether it's been modified
 
-    DefaultValue orig_default;  // Original default, if modified
-
-    default_i *methods;
+    DefaultValue orig_default; // Original default, if modified
 
     // struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 };
@@ -116,7 +105,7 @@ constexpr default_t DEFAULT_END()
 {
     return {
         nullptr, nullptr, nullptr, 0, { 0, 0 },
-            default_t::wad_no, nullptr, nullptr, nullptr, 0, 0, nullptr
+            default_t::wad_no, nullptr, nullptr, nullptr, 0, 0
     };
 }
 
@@ -134,8 +123,7 @@ constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *c
         .first        = nullptr,
         .next         = nullptr,
         .modified     = 0,
-        .orig_default = 0,
-        .methods      = nullptr
+        .orig_default = 0
     };
 }
 
@@ -153,8 +141,7 @@ constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *c
         .first        = nullptr,
         .next         = nullptr,
         .modified     = 0,
-        .orig_default = (const char *)nullptr,
-        .methods      = nullptr
+        .orig_default = (const char *)nullptr
     };
 }
 
@@ -172,8 +159,7 @@ constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void 
         .first        = nullptr,
         .next         = nullptr,
         .modified     = 0,
-        .orig_default = 0.0,
-        .methods      = nullptr
+        .orig_default = 0.0
     };
 }
 
@@ -191,8 +177,7 @@ constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *
         .first        = nullptr,
         .next         = nullptr,
         .modified     = 0,
-        .orig_default = false,
-        .methods      = nullptr
+        .orig_default = false
     };
 }
 
