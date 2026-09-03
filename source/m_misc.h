@@ -71,7 +71,6 @@ struct default_t
     bool readOpt(char *, bool);               // read option from string
     void setDefault();                        // set to hardcoded default
     bool checkCVar(const variable_t *) const; // check against a cvar
-    void getDefault(void *) const;            // get the default externally
 
     const char *const name; // name
 

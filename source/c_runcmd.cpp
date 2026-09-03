@@ -678,7 +678,7 @@ static bool isnum(const char *text)
 // Take a string and see if it matches a define for a variable. Replace with the
 // literal value if so.
 //
-static const char *C_ValueForDefine(variable_t *variable, const char *s, int setflags)
+static const char *C_ValueForDefine(const variable_t *variable, const char *s, int setflags)
 {
     static qstring returnstr;
 
@@ -707,42 +707,12 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
     {
         default_t *dp = variable->cfgDefault;
 
-        switch(variable->type)
-        {
-        case vt_int:
-        {
-            int i;
-            dp->getDefault(&i);
-            returnstr.Printf(0, "%d", i);
-        }
-        break;
-        case vt_toggle:
-        {
-            bool b;
-            dp->getDefault(&b);
-            returnstr.Printf(0, "%d", !!b);
-        }
-        break;
-        case vt_float:
-        {
-            double f;
-            dp->getDefault(&f);
-            returnstr.Printf(0, "%f", f);
-        }
-        break;
-        case vt_string:
-        {
-            char *def;
-            dp->getDefault(&def);
-            returnstr = def;
-        }
-        break;
-        case vt_chararray:
-        {
-            // TODO
-        }
-        break;
-        }
+        std::visit(overloaded{ [](const char *def) { returnstr = def; },
+                               //
+                               [](double f) { returnstr.Printf(0, "%f", f); },
+                               // This one handles the remaining types (int, bool)
+                               [](auto i) { returnstr.Printf(0, "%d", i); } },
+                   dp->defaultvalue);
 
         return returnstr.constPtr();
     }

@@ -1319,20 +1319,6 @@ bool default_t::checkCVar(const variable_t *var) const
                       defaultvalue);
 }
 
-void default_t::getDefault(void *dest) const // get the default externally
-{
-    std::visit(overloaded{
-
-                   [dest](int defaultvalue) { *(int *)dest = defaultvalue; },
-                   [dest](const char *defaultvalue) { *(const char **)dest = defaultvalue; },
-                   [dest](double defaultvalue) { *(double *)dest = defaultvalue; },
-
-                   [dest](bool defaultvalue) { *(bool *)dest = defaultvalue; }
-
-               },
-               defaultvalue);
-}
-
 //=============================================================================
 //
 // Default File Writing
