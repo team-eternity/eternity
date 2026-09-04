@@ -76,7 +76,7 @@ struct default_t
     const char *const name; // name
 
     const DefaultTarget location; // default variable
-    void *const         current;  // possible nondefault variable
+    const DefaultTarget current;  // possible nondefault variable
 
     DefaultValue defaultvalue; // built-in default value
 
@@ -104,8 +104,17 @@ struct default_t
 constexpr default_t DEFAULT_END()
 {
     return {
-        nullptr, static_cast<int *>(nullptr), nullptr, 0, { 0, 0 },
-             default_t::wad_no, nullptr, nullptr, nullptr, 0, 0
+        nullptr,
+        static_cast<int *>(nullptr),
+        static_cast<int *>(nullptr),
+        0,
+        { 0, 0 },
+        default_t::wad_no,
+        nullptr,
+        nullptr,
+        nullptr,
+        0,
+        0
     };
 }
 
@@ -115,7 +124,7 @@ constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *c
     return {
         .name         = name,
         .location     = static_cast<int *>(loc),
-        .current      = cur,
+        .current      = static_cast<int *>(cur),
         .defaultvalue = def,
         .limit        = { min, max },
         .wad_allowed  = wad,
@@ -133,7 +142,7 @@ constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *c
     return {
         .name         = name,
         .location     = static_cast<char **>(loc),
-        .current      = cur,
+        .current      = static_cast<char **>(cur),
         .defaultvalue = def,
         .limit        = { 0, 0 },
         .wad_allowed  = wad,
@@ -151,7 +160,7 @@ constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void 
     return {
         .name         = name,
         .location     = static_cast<double *>(loc),
-        .current      = cur,
+        .current      = static_cast<double *>(cur),
         .defaultvalue = def,
         .limit        = { min, max },
         .wad_allowed  = wad,
@@ -169,7 +178,7 @@ constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *
     return {
         .name         = name,
         .location     = static_cast<bool *>(loc),
-        .current      = cur,
+        .current      = static_cast<bool *>(cur),
         .defaultvalue = def,
         .limit        = { 0, 1 },
         .wad_allowed  = wad,

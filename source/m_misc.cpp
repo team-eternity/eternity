@@ -1128,8 +1128,8 @@ void default_t::setValue(void *value, bool wad)
                                            modified     = 1;                          // Mark it as modified
                                            orig_default = *std::get<int *>(location); // Save original default
                                        }
-                                       if(current) // Change current value
-                                           *(int *)current = parm;
+                                       if(std::get<int *>(current)) // Change current value
+                                           *std::get<int *>(current) = parm;
                                    }
                                    *std::get<int *>(location) = parm; // Change default
                                }
@@ -1150,10 +1150,10 @@ void default_t::setValue(void *value, bool wad)
 
                                *std::get<char **>(location) = estrdup(strparm); // Change default value
 
-                               if(current) // Current value
+                               if(std::get<char **>(current)) // Current value
                                {
-                                   efree(*(char **)current);             // Free old value
-                                   *(char **)current = estrdup(strparm); // Change current value
+                                   efree(*std::get<char **>(current));             // Free old value
+                                   *std::get<char **>(current) = estrdup(strparm); // Change current value
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
@@ -1173,8 +1173,8 @@ void default_t::setValue(void *value, bool wad)
                                            modified     = 1;                             // Mark it as modified
                                            orig_default = *std::get<double *>(location); // Save original default
                                        }
-                                       if(current) // Change current value
-                                           *(double *)current = tmp;
+                                       if(std::get<double *>(current)) // Change current value
+                                           *std::get<double *>(current) = tmp;
                                    }
                                    *std::get<double *>(location) = tmp; // Change default
                                }
@@ -1191,8 +1191,8 @@ void default_t::setValue(void *value, bool wad)
                                        modified     = 1;                           // Mark it as modified
                                        orig_default = *std::get<bool *>(location); // Save original default
                                    }
-                                   if(current) // Change current value
-                                       *(bool *)current = !!parm;
+                                   if(std::get<bool *>(current)) // Change current value
+                                       *std::get<bool *>(current) = !!parm;
                                }
                                *std::get<bool *>(location) = !!parm; // Change default
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
