@@ -707,12 +707,13 @@ static const char *C_ValueForDefine(const variable_t *variable, const char *s, i
     {
         default_t *dp = variable->cfgDefault;
 
-        std::visit(overloaded{ [](const char *def) { returnstr = def; },
-                               //
-                               [](double f) { returnstr.Printf(0, "%f", f); },
-                               // This one handles the remaining types (int, bool)
-                               [](auto i) { returnstr.Printf(0, "%d", i); } },
-                   dp->defaultvalue);
+        std::visit(
+            overloaded{ [](const default_t::type_t<const char *> &arg) { returnstr = arg.defaultvalue; },
+                        //
+                        [](const default_t::type_t<double> &arg) { returnstr.Printf(0, "%f", arg.defaultvalue); },
+                        // This one handles the remaining types (int, bool)
+                        [](const auto &arg) { returnstr.Printf(0, "%d", arg.defaultvalue); } },
+            dp->data);
 
         return returnstr.constPtr();
     }

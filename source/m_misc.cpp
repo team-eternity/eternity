@@ -138,7 +138,7 @@ default_t defaults[] = {
     DEFAULT_STR("name", &default_name, nullptr, "player", default_t::wad_no, "the default player name"),
 
     // jff 3/24/98 allow default skill setting
-    DEFAULT_INT("default_skill", &defaultskill, nullptr, 3, 1, 5, default_t::wad_no,
+    DEFAULT_INT("default_skill", reinterpret_cast<int *>(&defaultskill), nullptr, 3, 1, 5, default_t::wad_no,
                 "selects default skill 1=TYTD 2=NTR 3=HMP 4=UV 5=NM"),
 
     // haleyjd: fixed for cross-platform support -- see m_misc.h
@@ -203,8 +203,8 @@ default_t defaults[] = {
     // killough 7/19/98
     // sf:changed to bfgtype
     // haleyjd: FIXME - variable is of enum type, non-portable
-    DEFAULT_INT("bfgtype", &default_bfgtype, &bfgtype, 0, 0, 4, default_t::wad_game,
-                "0 - normal, 1 - classic, 2 - 11k, 3 - bouncing!, 4 - burst"),
+    DEFAULT_INT("bfgtype", reinterpret_cast<int *>(&default_bfgtype), reinterpret_cast<int *>(&bfgtype), 0, 0, 4,
+                default_t::wad_game, "0 - normal, 1 - classic, 2 - 11k, 3 - bouncing!, 4 - burst"),
 
     // sf
     DEFAULT_INT("crosshair", &crosshairnum, nullptr, 0, 0, CROSSHAIRS, default_t::wad_game,
@@ -307,8 +307,8 @@ default_t defaults[] = {
                   "adjust vertical (y) mouse sensitivity"),
 
     // SoM
-    DEFAULT_INT("mouse_accel", &mouseAccel_type, nullptr, ACCELTYPE_NONE, ACCELTYPE_NONE, ACCELTYPE_MAX,
-                default_t::wad_no, "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
+    DEFAULT_INT("mouse_accel", reinterpret_cast<int *>(&mouseAccel_type), nullptr, ACCELTYPE_NONE, ACCELTYPE_NONE,
+                ACCELTYPE_MAX, default_t::wad_no, "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
 
     // [CG] 01/20/12
     DEFAULT_BOOL("vanilla_sensitivity", &mouseSensitivity_vanilla, nullptr, true, default_t::wad_no,
@@ -1005,14 +1005,14 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 
 #ifdef RANGECHECK
         // FIXME: allow defaults for all types
-        if(!std::holds_alternative<int>(def->defaultvalue))
+        if(!std::holds_alternative<default_t::type_t<int>>(def->data))
         {
             I_FatalError(I_ERR_KILL, "M_ApplyGameModeDefaults: override for non-integer default %s\n", def->name);
         }
 #endif
         // replace the default value
         if(def)
-            def->defaultvalue = ovr->defaultvalue;
+            std::get<default_t::type_t<int>>(def->data).defaultvalue = ovr->defaultvalue;
 
         ++ovr;
     }
@@ -1027,96 +1027,97 @@ bool default_t::writeHelp(FILE *f) const
 {
     return std::visit(
         overloaded{ // Write help for an integer option
-                    [f, this](int defaultvalue) {
+                    [f, this](const type_t<int> &arg) {
                         bool written = false;
 
                         if(limit.min == UL)
                         {
                             if(limit.max == UL)
-                                written = (fprintf(f, "[?-?(%d)]", defaultvalue) == EOF);
+                                written = (fprintf(f, "[?-?(%d)]", arg.defaultvalue) == EOF);
                             else
                             {
-                                written = (fprintf(f, "[?-%d(%d)]", limit.max, defaultvalue) == EOF);
+                                written = (fprintf(f, "[?-%d(%d)]", limit.max, arg.defaultvalue) == EOF);
                             }
                         }
                         else if(limit.max == UL)
                         {
-                            written = (fprintf(f, "[%d-?(%d)]", limit.min, defaultvalue) == EOF);
+                            written = (fprintf(f, "[%d-?(%d)]", limit.min, arg.defaultvalue) == EOF);
                         }
                         else
                         {
-                            written = (fprintf(f, "[%d-%d(%d)]", limit.min, limit.max, defaultvalue) == EOF);
+                            written = (fprintf(f, "[%d-%d(%d)]", limit.min, limit.max, arg.defaultvalue) == EOF);
                         }
 
                         return written;
                     },
                     // Write help for a string option
-                    [f](const char *defaultvalue) { return fprintf(f, "[(\"%s\")]", defaultvalue) == EOF; },
+                    [f](const type_t<const char *> &arg) { return fprintf(f, "[(\"%s\")]", arg.defaultvalue) == EOF; },
                     // Write help for a float option
-                    [f, this](double defaultvalue) {
+                    [f, this](const type_t<double> &arg) {
                         bool written = false;
 
                         if(limit.min == UL)
                         {
                             if(limit.max == UL)
-                                written = (fprintf(f, "[?-?](%g)]", defaultvalue) == EOF);
+                                written = (fprintf(f, "[?-?](%g)]", arg.defaultvalue) == EOF);
                             else
                             {
-                                written = (fprintf(f, "[?-%g(%g)]", (double)limit.max / 100.0, defaultvalue) == EOF);
+                                written =
+                                    (fprintf(f, "[?-%g(%g)]", (double)limit.max / 100.0, arg.defaultvalue) == EOF);
                             }
                         }
                         else if(limit.max == UL)
                         {
-                            written = (fprintf(f, "[%g-?(%g)]", (double)limit.min / 100.0, defaultvalue) == EOF);
+                            written = (fprintf(f, "[%g-?(%g)]", (double)limit.min / 100.0, arg.defaultvalue) == EOF);
                         }
                         else
                         {
                             written = (fprintf(f, "[%g-%g(%g)]", (double)limit.min / 100.0, (double)limit.max / 100.0,
-                                               defaultvalue) == EOF);
+                                               arg.defaultvalue) == EOF);
                         }
 
                         return written;
                     },
                     // Write help for a bool option
-                    [f](bool defaultvalue) { return (fprintf(f, "[0-1(%d)]", !!defaultvalue) == EOF); } },
-        defaultvalue);
+                    [f](const type_t<bool> &arg) { return (fprintf(f, "[0-1(%d)]", !!arg.defaultvalue) == EOF); } },
+        data);
 }
 
 bool default_t::writeOpt(FILE *f) const
 {
     return std::visit(overloaded{ // Write an integer key/value pair
-                                  [f, this](int orig_default) {
-                                      int value = modified ? orig_default : *std::get<int *>(location);
+                                  [f, this](const type_t<int> &arg) {
+                                      int value = modified ? arg.orig_default : *arg.location;
 
                                       return (fprintf(f, "%-25s %5i\n", name,
                                                       strncmp(name, "key_", 4) ? value : I_DoomCode2ScanCode(value)) ==
                                               EOF);
                                   },
                                   // Write a string option key/value pair
-                                  [f, this](const char *orig_default) {
-                                      const char *value = modified ? orig_default : *std::get<char **>(location);
+                                  [f, this](const type_t<const char *> &arg) {
+                                      const char *value = modified ? arg.orig_default : *arg.location;
 
                                       return (fprintf(f, "%-25s \"%s\"\n", name, value) == EOF);
                                   },
                                   // Write a key/value pair for a float option
-                                  [f, this](double orig_default) {
-                                      double value = modified ? orig_default : *std::get<double *>(location);
+                                  [f, this](const type_t<double> &arg) {
+                                      double value = modified ? arg.orig_default : *arg.location;
 
                                       return (fprintf(f, "%-25s %#g\n", name, value) == EOF);
                                   },
                                   // Write a key/value pair for a bool option
-                                  [f, this](bool orig_default) {
-                                      bool value = modified ? orig_default : *std::get<bool *>(location);
+                                  [f, this](const type_t<bool> &arg) {
+                                      bool value = modified ? arg.orig_default : *arg.location;
 
                                       return (fprintf(f, "%-25s %5i\n", name, !!value) == EOF);
                                   } },
-                      orig_default);
+                      data);
 }
 
 void default_t::setValue(void *value, bool wad)
 {
     std::visit(overloaded{ // Set the value of an integer option
-                           [this, value, wad](int) {
+                           [this, value, wad](type_t<int> &arg) {
                                int parm = *(int *)value;
 
                                if((limit.min == UL || limit.min <= parm) && (limit.max == UL || limit.max >= parm))
@@ -1125,41 +1126,41 @@ void default_t::setValue(void *value, bool wad)
                                    {
                                        if(!modified) // First time it's modified by wad
                                        {
-                                           modified     = 1;                          // Mark it as modified
-                                           orig_default = *std::get<int *>(location); // Save original default
+                                           modified         = 1;             // Mark it as modified
+                                           arg.orig_default = *arg.location; // Save original default
                                        }
-                                       if(std::get<int *>(current)) // Change current value
-                                           *std::get<int *>(current) = parm;
+                                       if(arg.current) // Change current value
+                                           *arg.current = parm;
                                    }
-                                   *std::get<int *>(location) = parm; // Change default
+                                   *arg.location = parm; // Change default
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
                            },
                            // Set the value of a string option
-                           [this, value, wad](const char *) {
+                           [this, value, wad](type_t<const char *> &arg) {
                                const char *strparm = (const char *)value;
 
-                               if(wad && !modified)                                   // Modified by wad
-                               {                                                      // First time modified
-                                   modified           = 1;                            // Mark it as modified
-                                   this->orig_default = *std::get<char **>(location); // Save original default
+                               if(wad && !modified)                  // Modified by wad
+                               {                                     // First time modified
+                                   modified         = 1;             // Mark it as modified
+                                   arg.orig_default = *arg.location; // Save original default
                                }
                                else
-                                   efree(*std::get<char **>(location)); // Free old value
+                                   efree(*arg.location); // Free old value
 
-                               *std::get<char **>(location) = estrdup(strparm); // Change default value
+                               *arg.location = estrdup(strparm); // Change default value
 
-                               if(std::get<char **>(current)) // Current value
+                               if(arg.current) // Current value
                                {
-                                   efree(*std::get<char **>(current));             // Free old value
-                                   *std::get<char **>(current) = estrdup(strparm); // Change current value
+                                   efree(*arg.current);             // Free old value
+                                   *arg.current = estrdup(strparm); // Change current value
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
                            },
                            // Set the value of a float option
-                           [this, value, wad](double) {
+                           [this, value, wad](type_t<double> &arg) {
                                double tmp = *(double *)value;
 
                                // jff 3/4/98 range check numeric parameters
@@ -1170,41 +1171,41 @@ void default_t::setValue(void *value, bool wad)
                                    {
                                        if(!modified) // First time it's modified by wad
                                        {
-                                           modified     = 1;                             // Mark it as modified
-                                           orig_default = *std::get<double *>(location); // Save original default
+                                           modified         = 1;             // Mark it as modified
+                                           arg.orig_default = *arg.location; // Save original default
                                        }
-                                       if(std::get<double *>(current)) // Change current value
-                                           *std::get<double *>(current) = tmp;
+                                       if(arg.current) // Change current value
+                                           *arg.current = tmp;
                                    }
-                                   *std::get<double *>(location) = tmp; // Change default
+                                   *arg.location = tmp; // Change default
                                }
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
                            },
                            // Sets the value of a bool option
-                           [this, value, wad](bool) {
+                           [this, value, wad](type_t<bool> &arg) {
                                bool parm = *(bool *)value;
                                if(wad)
                                {
                                    if(!modified) // First time it's modified by wad
                                    {
-                                       modified     = 1;                           // Mark it as modified
-                                       orig_default = *std::get<bool *>(location); // Save original default
+                                       modified         = 1;             // Mark it as modified
+                                       arg.orig_default = *arg.location; // Save original default
                                    }
-                                   if(std::get<bool *>(current)) // Change current value
-                                       *std::get<bool *>(current) = !!parm;
+                                   if(arg.current) // Change current value
+                                       *arg.current = !!parm;
                                }
-                               *std::get<bool *>(location) = !!parm; // Change default
+                               *arg.location = !!parm; // Change default
                                if(const command_t *const cmd = C_GetCmdForName(name); cmd && cmd->handler)
                                    cmd->handler();
                            } },
-               orig_default);
+               data);
 }
 
 bool default_t::readOpt(char *src, bool wad)
 {
     return std::visit(overloaded{ // Read the value of an integer option and set it to the default
-                                  [this, src, wad](int) {
+                                  [this, src, wad](type_t<int>) {
                                       int parm = 0;
 
                                       if(sscanf(src, "%i", &parm) != 1)
@@ -1220,7 +1221,7 @@ bool default_t::readOpt(char *src, bool wad)
                                       return false;
                                   },
                                   // Read a string option and set it
-                                  [this, src, wad](const char *) {
+                                  [this, src, wad](type_t<const char *>) {
                                       int len = static_cast<int>(strlen(src) - 1);
 
                                       while(ectype::isSpace(src[len]))
@@ -1236,7 +1237,7 @@ bool default_t::readOpt(char *src, bool wad)
                                       return false;
                                   },
                                   // Read the value of a float option from a string and set it
-                                  [this, src, wad](double) {
+                                  [this, src, wad](type_t<double>) {
                                       double tmp;
 
                                       if(sscanf(src, "%lg", &tmp) != 1)
@@ -1248,7 +1249,7 @@ bool default_t::readOpt(char *src, bool wad)
                                   },
 
                                   // Reads the value of a bool option from a string and sets it
-                                  [this, src, wad](bool) {
+                                  [this, src, wad](type_t<bool>) {
                                       int parm;
 
                                       if(sscanf(src, "%i", &parm) != 1)
@@ -1258,7 +1259,7 @@ bool default_t::readOpt(char *src, bool wad)
 
                                       return false;
                                   } },
-                      orig_default);
+                      data);
 }
 
 void default_t::setDefault()
@@ -1266,8 +1267,7 @@ void default_t::setDefault()
     // Set to default value
     std::visit(overloaded{
 
-                   [this](int defaultvalue) { *std::get<int *>(location) = defaultvalue; },
-                   [this](const char *defaultvalue) {
+                   [this](type_t<const char *> &arg) {
                        // phares 4/13/98:
                        // provide default strings with their own malloced memory so that when
                        // we leave this routine, that's what we're dealing with whether there
@@ -1275,51 +1275,47 @@ void default_t::setDefault()
                        // in it or not. This provides consistency later on when/if we need to
                        // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-                       *std::get<char **>(location) = estrdup(defaultvalue);
+                       *arg.location = estrdup(arg.defaultvalue);
                    },
-                   [this](double defaultvalue) { *std::get<double *>(location) = defaultvalue; },
-                   [this](bool defaultvalue) { *std::get<bool *>(location) = defaultvalue; } },
-               defaultvalue);
+                   [this](auto &arg) { *arg.location = arg.defaultvalue; } },
+               data);
 }
 
 bool default_t::checkCVar(const variable_t *var) const
 {
-    return std::visit(
-        overloaded{
-            // Test if an integer default matches the given cvar
-            [this, var](int) {
-                if(var->type != vt_int)
-                    return false;
+    return std::visit(overloaded{ // Test if an integer default matches the given cvar
+                                  [this, var](const type_t<int> &arg) {
+                                      if(var->type != vt_int)
+                                          return false;
 
-                return (std::get<int *>(location) == var->variable || std::get<int *>(location) == var->v_default);
-            },
-            // Test if a string default matches the given cvar
-            [this, var](const char *) {
-                // config strings only match string and chararray cvar types
-                if(var->type != vt_string && var->type != vt_chararray)
-                    return false;
+                                      return (arg.location == var->variable || arg.location == var->v_default);
+                                  },
+                                  // Test if a string default matches the given cvar
+                                  [this, var](const type_t<const char *> &arg) {
+                                      // config strings only match string and chararray cvar types
+                                      if(var->type != vt_string && var->type != vt_chararray)
+                                          return false;
 
-                // FIXME: this test may not work for vt_chararray (* vs **)
+                                      // FIXME: this test may not work for vt_chararray (* vs **)
 
-                // test the pointer
-                return (std::get<char **>(location) == var->variable || std::get<char **>(location) == var->v_default);
-            },
-            // Test if a float default matches the given cvar
-            [this, var](double) {
-                if(var->type != vt_float)
-                    return false;
+                                      // test the pointer
+                                      return (arg.location == var->variable || arg.location == var->v_default);
+                                  },
+                                  // Test if a float default matches the given cvar
+                                  [this, var](const type_t<double> &arg) {
+                                      if(var->type != vt_float)
+                                          return false;
 
-                return (std::get<double *>(location) == var->variable ||
-                        std::get<double *>(location) == var->v_default);
-            },
-            // Test if a bool default matches the given cvar
-            [this, var](bool) {
-                if(var->type != vt_toggle)
-                    return false;
+                                      return (arg.location == var->variable || arg.location == var->v_default);
+                                  },
+                                  // Test if a bool default matches the given cvar
+                                  [this, var](const type_t<bool> &arg) {
+                                      if(var->type != vt_toggle)
+                                          return false;
 
-                return (std::get<bool *>(location) == var->variable || std::get<bool *>(location) == var->v_default);
-            } },
-        defaultvalue);
+                                      return (arg.location == var->variable || arg.location == var->v_default);
+                                  } },
+                      data);
 }
 
 //=============================================================================
@@ -1479,7 +1475,7 @@ static bool M_parseOption(defaultfile_t *df, const char *p, default_t::wad_e min
     //  killough 10/98: move to be made part of main test, add comment-handling
 
     if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) || !(dp = M_LookupDefault(df, name)) ||
-       (*strparm == '"') == !std::holds_alternative<const char *>(dp->defaultvalue) ||
+       (*strparm == '"') == !std::holds_alternative<default_t::type_t<const char *>>(dp->data) ||
        (dp->wad_allowed < minimum_allowed))
     {
         return true;

@@ -258,7 +258,8 @@ CONSOLE_COMMAND(cvarhelp, 0)
                     C_Printf("%s\n", var->defines[count - var->min]);
 
                 if(def)
-                    C_Printf("Default value: %s\n", var->defines[std::get<int>(def->defaultvalue) - var->min]);
+                    C_Printf("Default value: %s\n",
+                             var->defines[std::get<default_t::type_t<int>>(def->data).defaultvalue - var->min]);
             }
             else
             {
@@ -273,7 +274,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
                     C_Printf("Value range for '%s':\n %d through %d\n", name, var->min, var->max);
 
                 if(def)
-                    C_Printf("Default value: %d\n", std::get<int>(def->defaultvalue));
+                    C_Printf("Default value: %d\n", std::get<default_t::type_t<int>>(def->data).defaultvalue);
             }
             break;
 
@@ -287,14 +288,15 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
                 if(def)
                 {
-                    C_Printf("Default value: %s\n", var->defines[std::get<bool>(def->defaultvalue)]);
+                    C_Printf("Default value: %s\n",
+                             var->defines[std::get<default_t::type_t<bool>>(def->data).defaultvalue]);
                 }
             }
             else
             {
                 C_Printf("'%s' is a boolean value (0 or 1)\n", name);
                 if(def)
-                    C_Printf("Default value: %d\n", (int)std::get<bool>(def->defaultvalue));
+                    C_Printf("Default value: %d\n", (int)std::get<default_t::type_t<bool>>(def->data).defaultvalue);
             }
             break;
 
@@ -318,7 +320,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
             }
 
             if(def)
-                C_Printf("Default value: %f\n", std::get<double>(def->defaultvalue));
+                C_Printf("Default value: %f\n", std::get<default_t::type_t<double>>(def->data).defaultvalue);
             break;
 
         default:
@@ -330,7 +332,8 @@ CONSOLE_COMMAND(cvarhelp, 0)
                 C_Printf("Value for '%s':\n Unlimited-length string\n", name);
 
             if(def)
-                C_Printf("Default value:\n \"%s\"\n", std::get<const char *>(def->defaultvalue));
+                C_Printf("Default value:\n \"%s\"\n",
+                         std::get<default_t::type_t<const char *>>(def->data).defaultvalue);
             break;
         }
 

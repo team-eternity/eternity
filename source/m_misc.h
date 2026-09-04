@@ -119,75 +119,63 @@ constexpr default_t DEFAULT_END()
     };
 }
 
-constexpr default_t DEFAULT_INT(const char *const name, void *const loc, void *const cur, int def, const int min,
+constexpr default_t DEFAULT_INT(const char *const name, int *const loc, int *const cur, int def, const int min,
                                 const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name         = name,
-        .location     = static_cast<int *>(loc),
-        .current      = static_cast<int *>(cur),
-        .defaultvalue = def,
-        .limit        = { min, max },
-        .wad_allowed  = wad,
-        .help         = help,
-        .first        = nullptr,
-        .next         = nullptr,
-        .modified     = 0,
-        .orig_default = 0
+        .name        = name,
+        .data        = default_t::type_t<int>{ .location = loc, .current = cur, .defaultvalue = def },
+        .limit       = { min, max },
+        .wad_allowed = wad,
+        .help        = help,
+        .first       = nullptr,
+        .next        = nullptr,
+        .modified    = 0,
     };
 }
 
-constexpr default_t DEFAULT_STR(const char *const name, void *const loc, void *const cur, const char *def,
+constexpr default_t DEFAULT_STR(const char *const name, char **const loc, char **const cur, const char *def,
                                 const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name         = name,
-        .location     = static_cast<char **>(loc),
-        .current      = static_cast<char **>(cur),
-        .defaultvalue = def,
-        .limit        = { 0, 0 },
-        .wad_allowed  = wad,
-        .help         = help,
-        .first        = nullptr,
-        .next         = nullptr,
-        .modified     = 0,
-        .orig_default = (const char *)nullptr
+        .name        = name,
+        .data        = default_t::type_t<const char *>{ .location = loc, .current = cur, .defaultvalue = def },
+        .limit       = { 0, 0 },
+        .wad_allowed = wad,
+        .help        = help,
+        .first       = nullptr,
+        .next        = nullptr,
+        .modified    = 0,
     };
 }
 
-constexpr default_t DEFAULT_FLOAT(const char *const name, void *const loc, void *const cur, double def, const int min,
-                                  const int max, const default_t::wad_e wad, const char *const help)
+constexpr default_t DEFAULT_FLOAT(const char *const name, double *const loc, double *const cur, double def,
+                                  const int min, const int max, const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name         = name,
-        .location     = static_cast<double *>(loc),
-        .current      = static_cast<double *>(cur),
-        .defaultvalue = def,
-        .limit        = { min, max },
-        .wad_allowed  = wad,
-        .help         = help,
-        .first        = nullptr,
-        .next         = nullptr,
-        .modified     = 0,
-        .orig_default = 0.0
+        .name        = name,
+        .data        = default_t::type_t<double>{ .location = loc, .current = cur, .defaultvalue = def },
+        .limit       = { min, max },
+        .wad_allowed = wad,
+        .help        = help,
+        .first       = nullptr,
+        .next        = nullptr,
+        .modified    = 0,
     };
 }
 
-constexpr default_t DEFAULT_BOOL(const char *const name, void *const loc, void *const cur, bool def,
+constexpr default_t DEFAULT_BOOL(const char *const name, bool *const loc, bool *const cur, bool def,
                                  const default_t::wad_e wad, const char *const help)
 {
     return {
-        .name         = name,
-        .location     = static_cast<bool *>(loc),
-        .current      = static_cast<bool *>(cur),
-        .defaultvalue = def,
-        .limit        = { 0, 1 },
-        .wad_allowed  = wad,
-        .help         = help,
-        .first        = nullptr,
-        .next         = nullptr,
-        .modified     = 0,
-        .orig_default = false
+        .name        = name,
+        .data        = default_t::type_t<bool>{ .location = loc, .current = cur, .defaultvalue = def },
+        .limit       = { 0, 1 },
+        .wad_allowed = wad,
+        .help        = help,
+        .first       = nullptr,
+        .next        = nullptr,
+        .modified    = 0,
     };
 }
 

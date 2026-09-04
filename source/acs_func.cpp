@@ -997,10 +997,12 @@ static int getDefaultIntPlaceholder(const variable_t *var)
 {
     if(const default_t *def = var->cfgDefault)
     {
-        return std::visit(overloaded{ [](int arg) { return arg; }, [](const char *arg) { return 0; },
-                                      [](double arg) { return M_DoubleToFixed(arg); },
-                                      [](bool arg) { return (int)arg; } },
-                          def->defaultvalue);
+        return std::visit(
+            overloaded{ [](const default_t::type_t<int> &arg) { return arg.defaultvalue; },
+                        [](const default_t::type_t<const char *> &arg) { return 0; },
+                        [](const default_t::type_t<double> &arg) { return M_DoubleToFixed(arg.defaultvalue); },
+                        [](const default_t::type_t<bool> &arg) { return (int)arg.defaultvalue; } },
+            def->data);
     }
     else
     {
@@ -1011,28 +1013,28 @@ static int getDefaultIntPlaceholder(const variable_t *var)
         {
         case vt_int:
             if(var->variable == &mouseAccel_threshold)
-                return(10);
+                return (10);
             else if(var->variable == &fov)
-                return(90);
+                return (90);
             else if(var->variable == &r_precache)
-                return(1);
+                return (1);
             else if(var->variable == &turbo_scale)
-                return(100);
+                return (100);
             else
-                return(0);
+                return (0);
         case vt_float:
             if(var->variable == &mouseAccel_value)
-                return(M_DoubleToFixed(2.0));
+                return (M_DoubleToFixed(2.0));
             else
-                return(0);
+                return (0);
         case vt_toggle:
             if(var->variable == &showpsprites)
-                return(1);
+                return (1);
             else if(var->variable == &mouseSensitivity_vanilla)
-                return(1);
+                return (1);
             else
-                return(0);
-        default: return(0);
+                return (0);
+        default: return (0);
         }
     }
 }
@@ -1071,10 +1073,10 @@ bool ACS_CF_GetCVar(ACS_CF_ARGS)
 
     switch(var->type)
     {
-    case vt_int:       thread->dataStk.push(*(int *)var->variable); break;
-    case vt_float:     thread->dataStk.push(M_DoubleToFixed(*(double *)var->variable)); break;
-    case vt_toggle:    thread->dataStk.push(*(bool *)var->variable); break;
-    default:           thread->dataStk.push(0); break;
+    case vt_int:    thread->dataStk.push(*(int *)var->variable); break;
+    case vt_float:  thread->dataStk.push(M_DoubleToFixed(*(double *)var->variable)); break;
+    case vt_toggle: thread->dataStk.push(*(bool *)var->variable); break;
+    default:        thread->dataStk.push(0); break;
     }
 
     return false;
@@ -1098,7 +1100,7 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
 
     if(!(command->flags & cf_server))
     {
-        int value;
+        int            value;
         static qstring string;
         string.clearOrCreate(1024);
         switch(var->type)
@@ -2823,7 +2825,6 @@ bool ACS_CF_SoundSequence(ACS_CF_ARGS)
 {
     auto        info = &static_cast<ACSThread *>(thread)->info;
     const char *snd  = thread->scopeMap->getString(argV[0])->str;
-    sector_t   *sec;
 
     if(info->line)
         S_StartSectorSequenceName(&ACS_getLineSector(*info->line), snd, SEQ_ORIGIN_SECTOR_F);
