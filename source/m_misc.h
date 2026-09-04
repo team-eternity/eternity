@@ -54,9 +54,6 @@ enum defaulttype_e
 struct default_t;
 struct variable_t;
 
-using DefaultValue  = std::variant<int, const char *, double, bool>;
-using DefaultTarget = std::variant<int *, char **, double *, bool *>;
-
 struct default_t
 {
     enum wad_e
@@ -64,6 +61,23 @@ struct default_t
         wad_no,
         wad_game,    // read from OPTIONS when gameplay is started (G_InitNew)
         wad_startup, // read from OPTIONS during program init
+    };
+
+    template<typename T>
+    struct type_t
+    {
+        T *const location;
+        T *const current;
+        T        defaultvalue;
+        T        orig_default;
+    };
+    template<>
+    struct type_t<const char *>
+    {
+        char **const location; // discard the const for "const char *" due to dynamic allocation
+        char **const current;
+        const char  *defaultvalue;
+        const char  *orig_default;
     };
 
     bool writeHelp(FILE *f) const;            // write help message
@@ -75,10 +89,7 @@ struct default_t
 
     const char *const name; // name
 
-    const DefaultTarget location; // default variable
-    const DefaultTarget current;  // possible nondefault variable
-
-    DefaultValue defaultvalue; // built-in default value
+    std::variant<type_t<int>, type_t<const char *>, type_t<double>, type_t<bool>> data;
 
     struct
     {
@@ -93,8 +104,6 @@ struct default_t
     default_t *first, *next; // hash table pointers
     int        modified;     // Whether it's been modified
 
-    DefaultValue orig_default; // Original default, if modified
-
     // struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 };
 
@@ -104,17 +113,9 @@ struct default_t
 constexpr default_t DEFAULT_END()
 {
     return {
-        nullptr,
-        static_cast<int *>(nullptr),
-        static_cast<int *>(nullptr),
-        0,
-        { 0, 0 },
-        default_t::wad_no,
-        nullptr,
-        nullptr,
-        nullptr,
-        0,
-        0
+        nullptr, default_t::type_t<int>{ nullptr, nullptr, 0, 0 },
+         { 0, 0 },
+         default_t::wad_no, nullptr, nullptr, 0, 0
     };
 }
 
