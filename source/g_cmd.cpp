@@ -801,6 +801,7 @@ const char *comp_strings[] = {
     "ninja",      //          04/18/10: ninja spawn
     "aircontrol", //
     "thingsectorlight", //
+    "voodooscroller", // mbf21
 };
 
 static void Handler_CompTHeights()

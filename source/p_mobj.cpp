@@ -610,6 +610,7 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move, bool nolimit)
         mo->intflags |= MIF_NOSPEEDCAP;
     mo->momx += FixedMul(move, finecosine[angle]);
     mo->momy += FixedMul(move, finesine[angle]);
+    mo->intflags |= MIF_SCROLLING;
 }
 
 //
@@ -994,7 +995,8 @@ void P_XYMovement(Mobj *mo)
     // moving corresponding player, except in old demos:
 
     if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED && mo->momy > -STOPSPEED && mo->momy < STOPSPEED &&
-       (!player || !(player->cmd.forwardmove | player->cmd.sidemove) || (player->mo != mo && demo_version >= 203)))
+       (!player || !(player->cmd.forwardmove | player->cmd.sidemove)
+           || (player->mo != mo && demo_version >= 203 && (comp[comp_voodooscroller] || !(mo->intflags & MIF_SCROLLING)))))
     {
         // if in a walking frame, stop moving
 
@@ -1837,6 +1839,7 @@ void Mobj::Think()
     if(momx | momy || flags & MF_SKULLFLY)
     {
         P_XYMovement(this);
+        intflags &= ~MIF_SCROLLING;
         if(removed) // killough: mobj was removed
             return;
     }

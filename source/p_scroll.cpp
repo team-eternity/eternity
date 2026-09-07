@@ -189,6 +189,7 @@ void ScrollThinker::Think()
             {
                 thing->momx += dx;
                 thing->momy += dy;
+                thing->intflags |= MIF_SCROLLING;
             }
         }
         break;

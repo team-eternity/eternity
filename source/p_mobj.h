@@ -879,6 +879,7 @@ enum
     MIF_SKULLFLYSEE           = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
 
     MIF_NOSPEEDCAP = 0x00100000, // Don't apply MAXMOVE speed limit when thrusted
+    MIF_SCROLLING  = 0x00200000, // Object is affected by scroller / pusher / puller
 
     // these should be cleared when a thing is being raised
     MIF_CLEARRAISED = (MIF_DIEDFALLING | MIF_SCREAMED | MIF_CRASHED | MIF_SKULLFLYSEE | MIF_WIMPYDEATH),
