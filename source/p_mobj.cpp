@@ -610,7 +610,6 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move, bool nolimit)
         mo->intflags |= MIF_NOSPEEDCAP;
     mo->momx += FixedMul(move, finecosine[angle]);
     mo->momy += FixedMul(move, finesine[angle]);
-    mo->intflags |= MIF_SCROLLING;
 }
 
 //
