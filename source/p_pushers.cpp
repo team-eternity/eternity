@@ -162,6 +162,7 @@ static bool PIT_PushThing(Mobj *thing, void *context)
                 pushangle += ANG180; // away
 
             P_ThrustMobj(thing, pushangle, speed, false);
+            thing->intflags |= MIF_SCROLLING;
         }
     }
     return true;

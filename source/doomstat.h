@@ -163,6 +163,7 @@ enum
     comp_jump,       // Disable jumping and air control
     comp_aircontrol = comp_jump,
     comp_thingsectorlight,
+    comp_voodooscroller, // mbf21
     COMP_TOTAL,  // counts the used comps. MUST BE LAST ONE + 1.
     MBF_COMP_TOTAL = 32 // limit on the MBF demo format
 };

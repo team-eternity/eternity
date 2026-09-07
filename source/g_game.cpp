@@ -1009,6 +1009,8 @@ struct complevel_s
     { 335, 335, false }, // comp_special
     { 337, 337, false }, // comp_ninja
     { 340, 340, false }, // comp_jump
+    { 406, 406, false }, // comp_thingsectorlight (FIXME: use MBF version number?)
+    { 221, 221, true  }, // comp_voodooscroller
     { 0,   0,   false }
 };
 
@@ -3337,7 +3339,7 @@ byte *G_WriteOptions(byte *demoptr)
     *demoptr++ = monkeys; // byte 26
 
     // killough 10/98: a compatibility vector now
-    for(int i = 0; i < COMP_TOTAL; i++)
+    for(int i = 0; i < emin(COMP_TOTAL, MBF_COMP_TOTAL); i++)
         *demoptr++ = comp[i] != 0; // bytes 27 - 58 : comp
     for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
         *demoptr++ = 0; // comp padding
@@ -3427,7 +3429,7 @@ byte *G_ReadOptions(byte *demoptr)
 
         { // killough 10/98: a compatibility vector now
             int i;
-            for(i = 0; i < COMP_TOTAL; ++i)
+            for(i = 0; i < emin(COMP_TOTAL, MBF_COMP_TOTAL); ++i)
                 comp[i] = *demoptr++;
             for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
                 demoptr++; // comp padding

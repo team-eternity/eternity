@@ -2915,19 +2915,20 @@ static menuitem_t mn_compat1_items[] = {
 
 static menuitem_t mn_compat2_items[] = {
     { it_title,  "Compatibility",                       nullptr,           "m_compat", 0                 },
-    { it_gap,    nullptr,                               nullptr,           nullptr,    0                 },
-    { it_info,   "Simulation",                          nullptr,           nullptr,    MENUITEM_CENTERED },
-    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff",    nullptr,    0                 },
-    { it_toggle, "Actors never fall off ledges",        "comp_falloff",    nullptr,    0                 },
-    { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag",   nullptr,    0                 },
-    { it_toggle, "Monsters can respawn outside map",    "comp_respawnfix", nullptr,    0                 },
-    { it_toggle, "Disable terrain types",               "comp_terrain",    nullptr,    0                 },
-    { it_toggle, "Disable falling damage",              "comp_fallingdmg", nullptr,    0                 },
-    { it_toggle, "Actors have infinite height",         "comp_overunder",  nullptr,    0                 },
-    { it_toggle, "Doom actor heights are inaccurate",   "comp_theights",   nullptr,    0                 },
-    { it_toggle, "Bullets never hit floors & ceilings", "comp_planeshoot", nullptr,    0                 },
-    { it_toggle, "Respawns are sometimes silent in DM", "comp_ninja",      nullptr,    0                 },
-    { it_end,    nullptr,                               nullptr,           nullptr,    0                 }
+    { it_gap,    nullptr,                               nullptr,               nullptr,    0                 },
+    { it_info,   "Simulation",                          nullptr,               nullptr,    MENUITEM_CENTERED },
+    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff",        nullptr,    0                 },
+    { it_toggle, "Actors never fall off ledges",        "comp_falloff",        nullptr,    0                 },
+    { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag",       nullptr,    0                 },
+    { it_toggle, "Monsters can respawn outside map",    "comp_respawnfix",     nullptr,    0                 },
+    { it_toggle, "Disable terrain types",               "comp_terrain",        nullptr,    0                 },
+    { it_toggle, "Disable falling damage",              "comp_fallingdmg",     nullptr,    0                 },
+    { it_toggle, "Actors have infinite height",         "comp_overunder",      nullptr,    0                 },
+    { it_toggle, "Doom actor heights are inaccurate",   "comp_theights",       nullptr,    0                 },
+    { it_toggle, "Bullets never hit floors & ceilings", "comp_planeshoot",     nullptr,    0                 },
+    { it_toggle, "Respawns are sometimes silent in DM", "comp_ninja",          nullptr,    0                 },
+    { it_toggle, "Voodoo dolls may move too slowly",    "comp_voodooscroller", nullptr,    0                 },
+    { it_end,    nullptr,                               nullptr,               nullptr,    0                 }
 };
 
 static menuitem_t mn_compat3_items[] = {

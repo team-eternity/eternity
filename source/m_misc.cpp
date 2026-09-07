@@ -471,6 +471,9 @@ default_t defaults[] = {
     DEFAULT_INT("comp_thingsectorlight", &default_comp[comp_thingsectorlight], &comp[comp_thingsectorlight], 0, 0, 1,
                 default_t::wad_game, "MObjs are lit by transfered light"),
 
+    DEFAULT_INT("comp_voodooscroller", &default_comp[comp_voodooscroller], &comp[comp_voodooscroller], 0, 0, 1,
+                default_t::wad_game, "Voodoo dolls on slow scrollers move too slowly"),
+
     // For key bindings, the values stored in the key_* variables       // phares
     // are the internal Doom Codes. The values stored in the default.cfg
     // file are the keyboard codes. I_ScanCode2DoomCode converts from
