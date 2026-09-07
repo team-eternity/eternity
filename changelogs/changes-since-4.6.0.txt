@@ -4,6 +4,9 @@
 For v4.06.01
 ------------
 
+Features:
+* Added the comp_voodooscroller OPTIONS compatibility setting from the MBF21 updated standard.
+
 Improvements:
 * ACS GetCVar and GetCVarString no longer sound errors when given local, non-server user variables.
   Now they'll just return the hardcoded default values always. This was needed because WADs like

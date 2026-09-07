@@ -1707,7 +1707,7 @@ bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ)
 //
 // killough 3/15/98: allow dropoff as option
 //
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, const int dropoff)
 {
     fixed_t        oldx, oldy, oldz;
     int            oldgroupid;
