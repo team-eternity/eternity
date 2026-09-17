@@ -625,8 +625,8 @@ void XL_BuildUMapInfoEpisodes()
         }
     }
     // Now we have the items
-    // Cut them off to 8 (UMAPINFO limit)
-    replacement.cap(8);
+    // Cut them off to 10 (UMAPINFO limit since v2.3; previously it was 8)
+    replacement.cap(10);
 
     // Destructor will finish setting it up (or not if nothing changed)
 }
