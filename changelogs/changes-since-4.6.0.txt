@@ -25,3 +25,7 @@ Bug fixes:
 * Fixed inconsistent clipping behavior with sloped 3DMidTex lines.
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
   once again be walked above when they're below portals (HOM aside).
+
+Side effects:
+* Minimum macOS deployment version is now 12, due to system toolchain changes. Development is being
+  done and live-tested only on macOS 26 as of now, so it is unknown how it performs on macOS 12.

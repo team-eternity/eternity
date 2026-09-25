@@ -22,8 +22,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Must be before project()
-# Can't set anything below 10.15 now (10.13 would have worked, but we want std::filesystem)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
+# Can't set anything below 12 now
+set(CMAKE_OSX_DEPLOYMENT_TARGET "12" CACHE STRING "Minimum macOS deployment version")
 
 project("Eternity Engine"
         VERSION 4.7.0
