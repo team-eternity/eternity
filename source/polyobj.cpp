@@ -1352,8 +1352,10 @@ static bool PolyobjIT_collectControlThings(int x, int y, int groupid, void *data
             if(line->special && !(mo->flags & MF_TELEPORT))
             {
                 const linkoffset_t *link = P_GetLinkOffset(mo->groupid, line->frontsector->groupid);
-                context->linesToCross.add(LineRelation{
-                    .line = *line, .mobj = MobjReference(mo), .side = P_PointOnLineSide(mo->x + link->x, mo->y + link->y, line) });
+                context->linesToCross.add(
+                    LineRelation{ .line = *line,
+                                  .mobj = MobjReference(mo),
+                                  .side = P_PointOnLineSide(mo->x + link->x, mo->y + link->y, line) });
             }
         }
     }
@@ -1612,7 +1614,6 @@ void Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y)
     {
         Polyobj_vecSub(po->vertices[i], &dist);
         po->tmpVerts[i] = *po->vertices[i]; // backup position
-        Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &dest);
     }
     po->lastBackupTic = gametic;
 

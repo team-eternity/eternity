@@ -1,7 +1,7 @@
 ﻿Changes since v4.06.00
 ======================
 
-For v4.06.01
+For v4.07.00
 ------------
 
 Features:
@@ -25,6 +25,7 @@ Bug fixes:
 * Fixed inconsistent clipping behavior with sloped 3DMidTex lines.
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
   once again be walked above when they're below portals (HOM aside).
+* Fixed polyobjects losing rotation information after running ACS SetPolyobjXY on them.
 
 Side effects:
 * Minimum macOS deployment version is now 12, due to system toolchain changes. Development is being
