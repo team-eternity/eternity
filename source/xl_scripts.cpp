@@ -33,6 +33,7 @@
 #include "d_gi.h"
 #include "e_fonts.h"
 #include "e_lib.h"
+#include "m_compare.h"
 #include "mn_emenu.h"
 #include "st_stuff.h"
 #include "v_font.h"
@@ -486,12 +487,12 @@ static void XL_buildInterMapInfo()
 XLEpisodeReplacement::XLEpisodeReplacement()
 {
     // If already overridden, do not override again.
-    if (mn_episode_override)
+    if(mn_episode_override)
     {
         disabled = true;
         return;
     }
-    const menu_t *base = GameModeInfo->episodeMenu;
+    const menu_t *base           = GameModeInfo->episodeMenu;
     bool          finishedPrefix = false;
 
     if(base)
@@ -524,7 +525,7 @@ XLEpisodeReplacement::XLEpisodeReplacement()
     }
 }
 
-XLEpisodeReplacement::~XLEpisodeReplacement() 
+XLEpisodeReplacement::~XLEpisodeReplacement()
 {
     if(disabled)
         return;
@@ -553,6 +554,10 @@ XLEpisodeReplacement::~XLEpisodeReplacement()
             int prefixHeight  = rowheight * ((int)prefixItems.getLength() - prefixGaps) + gapfont->cy * prefixGaps;
             int contentHeight = rowheight * ((int)items.getLength());
             int bottom        = newmenu.y + prefixHeight + contentHeight;
+
+            static int shiftedTop;
+            int        oldmenuy = newmenu.y;
+
             if(bottom > SCREENHEIGHT)
             {
                 // Center to fit it to screen
@@ -572,22 +577,19 @@ XLEpisodeReplacement::~XLEpisodeReplacement()
             }
             else if(GameModeInfo->StatusBar == &DoomStatusBar && bottom > SCREENHEIGHT - 32)
             {
-                static int shiftedTop;
-                int        oldmenuy = newmenu.y;
-                newmenu.y           = SCREENHEIGHT - 32 - prefixHeight - contentHeight; // touch the status bar
+                newmenu.y = SCREENHEIGHT - 32 - prefixHeight - contentHeight; // touch the status bar
                 if(newmenu.y < 0)
                     newmenu.y = 0;
-                shiftedTop = 38 - (oldmenuy - newmenu.y);
+            }
+            shiftedTop = emax(38 - (oldmenuy - newmenu.y), 0);
 
-                // HACK: replace the drawer function to something equivalent but dynamically offset.
-                extern menu_t menu_episode, menu_episodeDoom2Stub;
-                if(GameModeInfo->episodeMenu == &menu_episode || GameModeInfo->episodeMenu == &menu_episodeDoom2Stub)
-                {
-                    newmenu.drawer = []() {
-                        V_DrawPatch(54, shiftedTop, &subscreen43,
-                                    PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
-                    };
-                }
+            // HACK: replace the drawer function to something equivalent but dynamically offset.
+            extern menu_t menu_episode, menu_episodeDoom2Stub;
+            if(GameModeInfo->episodeMenu == &menu_episode || GameModeInfo->episodeMenu == &menu_episodeDoom2Stub)
+            {
+                newmenu.drawer = []() {
+                    V_DrawPatch(54, shiftedTop, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
+                };
             }
         }
     }
