@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley et al.
+// Copyright (C) 2026 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_edf.h"
 #include "e_inventory.h"
 #include "e_lib.h"
@@ -1729,7 +1730,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
     P_DropItems(target, false);
 
     if(EV_ActivateSpecialNum(target->special, target->args, target, false))
-        target->special = 0; // Stop special from executing if revived/respawned
+        if(E_CompatHackAllowMobjDeathSpecialReset(*target))
+            target->special = 0; // Stop special from executing if revived/respawned
 }
 
 //

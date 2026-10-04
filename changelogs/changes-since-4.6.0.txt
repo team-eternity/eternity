@@ -26,6 +26,8 @@ Bug fixes:
 * Fixed subtle bugs with portal-aware line hit physics. Most notably, polyobjects with portals can
   once again be walked above when they're below portals (HOM aside).
 * Fixed polyobjects losing rotation information after running ACS SetPolyobjXY on them.
+* Fixed a potential soft lock in Heartland MAP02 when the blue key should become available
+  (Doomworld thread #160390).
 
 Side effects:
 * Minimum macOS deployment version is now 12, due to system toolchain changes. Development is being
