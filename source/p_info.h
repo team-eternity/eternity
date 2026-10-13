@@ -156,6 +156,7 @@ struct LevelInfo_t
 
     // gameplay options
     bool disableJump; // if true, jumping is disabled
+    bool requireJump; // if true, jumping is enabled regardless of compatibility setting
 
     // misc
     int         gravity; // gravity factor

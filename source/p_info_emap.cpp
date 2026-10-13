@@ -207,6 +207,7 @@ static levelvar_t levelvars [] = {
     LI_BOOLNF("noautosequences",       noAutoSequences,   0),
     LI_STRING("outdoorfog",            outdoorFog,        0),
     LI_INTEGR("partime",               partime,           LV_PLAYSIM), // we can't be sure of timing
+    LI_BOOLNF("require-jump",          requireJump,       LV_PLAYSIM),
     LI_STRNUM("sector-colormaps",      sectorColormaps,   sectorColormapVals, 0),
     LI_DBLFIX("skydelta",              skyDelta,          0),
     LI_DBLFIX("sky2delta",             sky2Delta,         0),
@@ -478,8 +479,8 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
     LevelInfo.actions = newAction;
 }
 
-using varparserfn_t                          = void (*)(levelvar_t *, const qstring &);
-static varparserfn_t infoVarParsers[IVT_END] = {
+using varparserfn_t                                = void (*)(levelvar_t *, const qstring &);
+static varparserfn_t       infoVarParsers[IVT_END] = {
     P_parseLevelString,      //
     P_parseLevelStrNum,      //
     P_parseLevelInt,         //

@@ -1089,11 +1089,12 @@ void E_ApplyTurbo(int ts)
 bool E_CanJump(const playerclass_t &pclass)
 {
     return demo_version >= 335 && pclass.jumpspeed > 0 &&
-           (pclass.flags & PCF_ALWAYSJUMP || (!getComp(comp_jump) && !LevelInfo.disableJump));
+           (pclass.flags & PCF_ALWAYSJUMP ||
+            ((!getComp(comp_jump) || LevelInfo.requireJump) && !LevelInfo.disableJump));
 }
 bool E_MayJumpIfOverriden(const playerclass_t &pclass)
 {
-    return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump;
+    return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump && !LevelInfo.requireJump;
 }
 
 // EOF
