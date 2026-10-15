@@ -54,6 +54,7 @@ enum class PropertyType
     setInteger,            // assign an integer number (replacing anything before it)
     setBoolean,            // true or false
     setTrue,               // only accept 'true'
+    setAllowRequire,       // only accept 'disallow', 'allow' or 'require'
     addEpisodeOrClear,     // accept three strings, or a single 'clear'
     addBossActionOrClear,  // accept <identifier>, <int>, <int> or 'clear'
 };
@@ -287,6 +288,10 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
     case PropertyType::setTrue: //
         error = valueIndex >= 1 || type != XLTokenizer::TOKEN_KEYWORD || value.strCaseCmp("true");
         break;
+    case PropertyType::setAllowRequire: //
+        error = valueIndex >= 1 || type != XLTokenizer::TOKEN_KEYWORD ||
+                (value.strCaseCmp("disallow") && value.strCaseCmp("allow") && value.strCaseCmp("require"));
+        break;
     case PropertyType::addEpisodeOrClear: //
         error = (gotClear && valueIndex >= 1) || (valueIndex >= 1 && type != XLTokenizer::TOKEN_STRING) ||
                 valueIndex >= 3 || (valueIndex == 0 && type != XLTokenizer::TOKEN_STRING && value.strCaseCmp("clear"));
@@ -344,6 +349,11 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
         break;
     case PropertyType::setTrue: //
         curInfo->setInt(key.constPtr(), XL_UMAPINFO_SPECVAL_TRUE);
+        break;
+    case PropertyType::setAllowRequire: //
+        curInfo->setInt(key.constPtr(), !value.strCaseCmp("disallow") ? XL_UMAPINFO_SPECVAL_FALSE :
+                                        !value.strCaseCmp("allow")    ? XL_UMAPINFO_SPECVAL_TRUE :
+                                                                        XL_UMAPINFO_SPECVAL_TRUE_STRONG);
         break;
     case PropertyType::addEpisodeOrClear: //
         if(!valueIndex)
