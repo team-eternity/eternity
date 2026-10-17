@@ -137,7 +137,8 @@ accept the same values in both types.\
   `false`. Also, if it's set to `true`, it will take precedence over
   `require-jump`, which will have no effect if set to `true`.
 
-  The jumping compatibility setting is also overriden by this.\
+  The jumping compatibility setting is also overridden by this. Since Eternity
+  v4.07, it also overrides `playerclass` `+AlwaysJump`.\
   Example:
 
       disable-jump = true
@@ -419,8 +420,6 @@ accept the same values in both types.\
   Use this for maps where jumping is a required part of gameplay and
   progress. NOTE: setting this to `true` has no effect if `disable-jump`
   is also `true`.\
-
-  The jumping compatibility setting is also overriden by this.\
   Example:
 
       require-jump = true
