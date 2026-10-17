@@ -132,7 +132,12 @@ accept the same values in both types.\
 
 - **disable-jump**\
   Disable player jump on this level. Use this for maps meant to be played
-  like in classic Doom.\
+  like in classic Doom. NOTE: if you need to override a `UMAPINFO` `jumping`
+  property set to `disallow`, you need to set `disable-jump` in `EMAPINFO` to
+  `false`. Also, if it's set to `true`, it will take precedence over
+  `require-jump`, which will have no effect if set to `true`.
+
+  The jumping compatibility setting is also overriden by this.\
   Example:
 
       disable-jump = true
@@ -412,7 +417,10 @@ accept the same values in both types.\
   Enable jumping in this level regardless of user compatibility setting.
   The player class needs to have a nonzero jumping speed for this to work.
   Use this for maps where jumping is a required part of gameplay and
-  progress.\
+  progress. NOTE: setting this to `true` has no effect if `disable-jump`
+  is also `true`.\
+
+  The jumping compatibility setting is also overriden by this.\
   Example:
 
       require-jump = true

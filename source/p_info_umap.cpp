@@ -382,7 +382,7 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
                 LevelInfo.disableJump = false;
                 LevelInfo.requireJump = true;
             }
-            else // allow
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE) // allow
             {
                 LevelInfo.disableJump = false;
                 LevelInfo.requireJump = false;
