@@ -1261,6 +1261,7 @@ static void P_ClearLevelVars()
 
     // gameplay
     LevelInfo.disableJump = false;
+    LevelInfo.requireJump = false;
 
     // air control
     // compatibility setting may override this. To completely disable it, use -1
@@ -1477,11 +1478,11 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
     }
 
     // additively process any SMMU header information for compatibility
-    bool levelHeaderInfoHasIgnore = false;
-    MetaTable *levelHeaderInfo = nullptr;
+    bool       levelHeaderInfoHasIgnore = false;
+    MetaTable *levelHeaderInfo          = nullptr;
     if((info = XL_ParseLevelInfo(dir, lumpnum)))
     {
-        if (!strcmp(info->getString("ignore", "0"), "1"))
+        if(!strcmp(info->getString("ignore", "0"), "1"))
         {
             C_Printf("Found ignored [level info]; if no EMAPINFO, will try MAPINFO if available...\n");
             levelHeaderInfoHasIgnore = true;

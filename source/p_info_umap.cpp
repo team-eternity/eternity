@@ -369,6 +369,26 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
         else if(val == XL_UMAPINFO_SPECVAL_FALSE)
             C_Printf(FC_ERROR "Invalid 'endcast = false' in UMAPINFO.\n");
 
+        if(demo_version >= 407)
+        {
+            val = info->getInt("jumping", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_FALSE) // disallow
+            {
+                LevelInfo.disableJump = true;
+                LevelInfo.requireJump = false;
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG) // require
+            {
+                LevelInfo.disableJump = false;
+                LevelInfo.requireJump = true;
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE) // allow
+            {
+                LevelInfo.disableJump = false;
+                LevelInfo.requireJump = false;
+            }
+        }
+
         // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
         val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)

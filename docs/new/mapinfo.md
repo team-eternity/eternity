@@ -104,10 +104,10 @@ accept the same values in both types.\
 
           boss-specials = MAP07_1|MAP07_2
           boss-specials = MAP07_1 | MAP07_2
-          
+
           boss-specials = MAP07_1+MAP07_2
           boss-specials = MAP07_2 + MAP07_2
-          
+
           boss-specials = MAP07_1,MAP07_2
           boss-specials = MAP07_1, MAP07_2
 
@@ -129,6 +129,19 @@ accept the same values in both types.\
   Example:
 
       creator = Edwin Chadwick 'chadders'
+
+- **disable-jump**\
+  Disable player jump on this level. Use this for maps meant to be played
+  like in classic Doom. NOTE: if you need to override a `UMAPINFO` `jumping`
+  property set to `disallow`, you need to set `disable-jump` in `EMAPINFO` to
+  `false`. Also, if it's set to `true`, it will take precedence over
+  `require-jump`, which will have no effect if set to `true`.
+
+  The jumping compatibility setting is also overridden by this. Since Eternity
+  v4.07, it also overrides `playerclass` `+AlwaysJump`.\
+  Example:
+
+      disable-jump = true
 
 - **doublesky**\
   Boolean value that determines whether or not this map uses double
@@ -203,12 +216,12 @@ accept the same values in both types.\
                         Play ends after this map.
           doom_deimos   The DOOM picture of Deimos above Hell will be displayed after
                         the intertext. Play ends after this map.
-          doom_bunny    The scrolling picture of Daisy's head on a pike will be 
-                        displayed, accompanied by the words "THE END" which are shot 
+          doom_bunny    The scrolling picture of Daisy's head on a pike will be
+                        displayed, accompanied by the words "THE END" which are shot
                         up with several bullets. Play ends after this map.
           doom_marine   The E4 ending picture of the Marine holding Daisy's head is
                         displayed after the intertext. Play ends after this map.
-          htic_credtis  The Heretic CREDITS screen will be displayed after the 
+          htic_credtis  The Heretic CREDITS screen will be displayed after the
                         intertext. Play ends after this map.
           htic_water    The Heretic underwater screen with special palette is
                         displayed after the intertext. Play ends after this map.
@@ -400,6 +413,16 @@ accept the same values in both types.\
   Example:
 
       partime = 200
+
+- **require-jump**\
+  Enable jumping in this level regardless of user compatibility setting.
+  The player class needs to have a nonzero jumping speed for this to work.
+  Use this for maps where jumping is a required part of gameplay and
+  progress. NOTE: setting this to `true` has no effect if `disable-jump`
+  is also `true`.\
+  Example:
+
+      require-jump = true
 
 - **skydelta**\
   Pixels per gametic that the primary sky texture should scroll. This

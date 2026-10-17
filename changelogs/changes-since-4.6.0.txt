@@ -6,6 +6,7 @@ For v4.07.00
 
 Features:
 * Added the comp_voodooscroller OPTIONS compatibility setting from the MBF21 updated standard.
+* Added "jumping" from UMAPINFO.
 
 Improvements:
 * ACS GetCVar and GetCVarString no longer sound errors when given local, non-server user variables.
@@ -19,6 +20,7 @@ Improvements:
   https://github.com/doom-cross-port-collab/umapinfo/issues/12, and because it's too likely for the
   level graphics to have the author name drawn inside it, causing duplication if the author setting
   in map info also exists.
+* UMAPINFO maximum episode count increased to 10.
 
 Bug fixes:
 * Fixed crash or corruption occasionally happening when exiting map with sloped 3DMidTex lines.

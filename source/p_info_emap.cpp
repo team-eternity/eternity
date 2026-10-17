@@ -112,18 +112,18 @@ enum
 //
 enum
 {
-    LV_MULTI   = 1, // allows multiple definitions
-    LV_PLAYSIM = 2, // influences the playsim, so don't apply it to classic port demos
+    LV_MULTI = 1, // allows multiple definitions
 };
 
 // levelvar structure maps from keys to LevelInfo structure fields
 struct levelvar_t
 {
-    int         type;     // determines how MetaTable value should be parsed
-    const char *name;     // key of the MetaTable value
-    void       *variable; // pointer to destination LevelInfo field
-    void       *extra;    // pointer to any "extra" info needed for this parsing
-    unsigned    flags;    // the flags
+    int         type;              // determines how MetaTable value should be parsed
+    const char *name;              // key of the MetaTable value
+    void       *variable;          // pointer to destination LevelInfo field
+    void       *extra;             // pointer to any "extra" info needed for this parsing
+    unsigned    flags;             // the flags
+    int         demo_full_version; // if not 0, minimum demo supporting this
 };
 
 //
@@ -132,99 +132,100 @@ struct levelvar_t
 // These provide a mapping between keywords and the fields of the LevelInfo
 // structure.
 //
-#define LI_STRING(name, field, flags) \
-    { IVT_STRING, name, (void *)(&(LevelInfo . field)), nullptr, flags }
+#define LI_STRING(name, field, demo_version, subversion) \
+    { IVT_STRING, name, (void *)(&(LevelInfo . field)), nullptr, 0, make_full_version(demo_version, subversion) }
 
-#define LI_STRNUM(name, field, extra, flags) \
-    { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra), flags }
+#define LI_STRNUM(name, field, extra, demo_version, subversion) \
+    { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra), 0, make_full_version(demo_version, subversion) }
 
-#define LI_INTEGR(name, field, flags) \
-    { IVT_INT, name, &(LevelInfo . field), nullptr, flags }
+#define LI_INTEGR(name, field, demo_version, subversion) \
+    { IVT_INT, name, &(LevelInfo . field), nullptr, 0, make_full_version(demo_version, subversion) }
 
-#define LI_DOUBLE(name, field) \
-    { IVT_DOUBLE, name, &(LevelInfo . field), nullptr, 0 }
+#define LI_DOUBLE(name, field, demo_version, subversion) \
+    { IVT_DOUBLE, name, &(LevelInfo . field), nullptr, 0, make_full_version(demo_version, subversion) }
 
-#define LI_BOOLNF(name, field, flags) \
-    { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, flags }
+#define LI_BOOLNF(name, field, demo_version, subversion) \
+    { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, 0, make_full_version(demo_version, subversion) }
 
-#define LI_FLAGSF(name, field, extra, flags) \
-    { IVT_FLAGS, name, &(LevelInfo . field), &(extra), flags }
+#define LI_FLAGSF(name, field, extra, demo_version, subversion) \
+    { IVT_FLAGS, name, &(LevelInfo . field), &(extra), 0, make_full_version(demo_version, subversion) }
 
-#define LI_ENVIRO(name, field) \
-    { IVT_ENVIRONMENT, name, &(LevelInfo . field), nullptr, 0 }
+#define LI_ENVIRO(name, field, demo_version, subversion) \
+    { IVT_ENVIRONMENT, name, &(LevelInfo . field), nullptr, 0, make_full_version(demo_version, subversion) }
 
-#define LI_ACTION(name, field) \
-    { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, LV_MULTI | LV_PLAYSIM }
+#define LI_ACTION(name, field, demo_version, subversion) \
+    { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, LV_MULTI, make_full_version(demo_version, subversion) }
 
-#define LI_DBLFIX(name, field, flags) \
-    { IVT_DOUBLEFIXED, name, &(LevelInfo . field), nullptr, flags }
+#define LI_DBLFIX(name, field, demo_version, subversion) \
+    { IVT_DOUBLEFIXED, name, &(LevelInfo . field), nullptr, 0, make_full_version(demo_version, subversion) }
 
 // clang-format off
 
 static levelvar_t levelvars [] = {
-    LI_BOOLNF("acsopendelay",          acsOpenDelay,      LV_PLAYSIM),
-    LI_STRING("acsscript",             acsScriptLump,     LV_PLAYSIM),
-    LI_INTEGR("aircontrol",            airControl,        LV_PLAYSIM),
-    LI_INTEGR("airfriction",           airFriction,       LV_PLAYSIM),
-    LI_BOOLNF("allowexittags",         allowExitTags,     LV_PLAYSIM),
-    LI_BOOLNF("allowsecrettags",       allowSecretTags,   LV_PLAYSIM),
-    LI_STRING("altskyname",            altSkyName,        0),
-    LI_FLAGSF("boss-specials",         bossSpecs,         boss_flagset, LV_PLAYSIM),
-    LI_STRING("colormap",              colorMap,          0),
-    LI_STRING("creator",               creator,           0),
-    LI_ENVIRO("defaultenvironment",    defaultEnvironment),
-    LI_BOOLNF("disable-jump",          disableJump,       LV_PLAYSIM),
-    LI_BOOLNF("doublesky",             doubleSky,         0),
-    LI_BOOLNF("edf-intername",         useEDFInterName,   0),
-    LI_BOOLNF("endofgame",             endOfGame,         LV_PLAYSIM),
-    LI_STRING("endpic",                endPic,            0), // not playsim by itself, needs "finaletype endpic"
-    LI_STRING("extradata",             extraData,         LV_PLAYSIM),
-    LI_BOOLNF("finale-normal",         finaleNormalOnly,  LV_PLAYSIM),
-    LI_BOOLNF("finale-secret",         finaleSecretOnly,  LV_PLAYSIM),
-    LI_BOOLNF("finale-early",          finaleEarly,       LV_PLAYSIM),
-    LI_STRNUM("finaletype",            finaleType,        finaleTypeVals, LV_PLAYSIM),
-    LI_STRNUM("finalesecrettype",      finaleSecretType,  finaleTypeVals, LV_PLAYSIM),
-    LI_BOOLNF("fullbright",            useFullBright,     0),
-    LI_INTEGR("gravity",               gravity,           LV_PLAYSIM),
-    LI_STRING("inter-backdrop",        backDrop,          0),
-    LI_STRING("inter-levelname",       interLevelName,    0),
-    LI_STRING("intermusic",            interMusic,        0),
-    LI_STRING("interpic",              interPic,          0),
-    LI_STRING("intertext",             interTextLump,     LV_PLAYSIM),
-    LI_STRING("intertext-secret",      interTextSLump,    LV_PLAYSIM),
-    LI_BOOLNF("killfinale",            killFinale,        LV_PLAYSIM),
-    LI_BOOLNF("killstats",             killStats,         LV_PLAYSIM),
-    LI_ACTION("levelaction",           actions),
-    LI_ACTION("levelaction-bossdeath", actions),
-    LI_STRING("levelname",             levelName,         0),
-    LI_STRING("levelpic",              levelPic,          0),
-    LI_STRING("levelpicnext",          nextLevelPic,      0),
-    LI_STRING("levelpicsecret",        nextSecretPic,     0),
-    LI_BOOLNF("lightning",             hasLightning,      LV_PLAYSIM), // sadly uses P_Random, so it's playsim
-    LI_STRING("music",                 musicName,         0),
-    LI_STRING("nextlevel",             nextLevel,         LV_PLAYSIM),
-    LI_STRING("nextsecret",            nextSecret,        LV_PLAYSIM),
-    LI_BOOLNF("noautosequences",       noAutoSequences,   0),
-    LI_STRING("outdoorfog",            outdoorFog,        0),
-    LI_INTEGR("partime",               partime,           LV_PLAYSIM), // we can't be sure of timing
-    LI_STRNUM("sector-colormaps",      sectorColormaps,   sectorColormapVals, 0),
-    LI_DBLFIX("skydelta",              skyDelta,          0),
-    LI_DBLFIX("sky2delta",             sky2Delta,         0),
-    LI_STRING("skyname",               skyName,           0),
-    LI_STRING("sky2name",              sky2Name,          0),
-    LI_INTEGR("skyrowoffset",          skyRowOffset,      0),
-    LI_INTEGR("sky2rowoffset",         sky2RowOffset,     0),
-    LI_STRING("sound-swtchn",          sound_swtchn,      0),
-    LI_STRING("sound-swtchx",          sound_swtchx,      0),
-    LI_STRING("sound-stnmov",          sound_stnmov,      0),
-    LI_STRING("sound-pstop",           sound_pstop,       0),
-    LI_STRING("sound-bdcls",           sound_bdcls,       0),
-    LI_STRING("sound-bdopn",           sound_bdopn,       0),
-    LI_STRING("sound-dorcls",          sound_dorcls,      0),
-    LI_STRING("sound-doropn",          sound_doropn,      0),
-    LI_STRING("sound-pstart",          sound_pstart,      0),
-    LI_STRING("sound-fcmove",          sound_fcmove,      0),
-    LI_BOOLNF("unevenlight",           unevenLight,       0),
+    LI_BOOLNF("acsopendelay",          acsOpenDelay,      342, 2),
+    LI_STRING("acsscript",             acsScriptLump,     340, 10),
+    LI_INTEGR("aircontrol",            airControl,        400, 0),
+    LI_INTEGR("airfriction",           airFriction,       400, 0),
+    LI_BOOLNF("allowexittags",         allowExitTags,     342, 2),
+    LI_BOOLNF("allowsecrettags",       allowSecretTags,   342, 2),
+    LI_STRING("altskyname",            altSkyName,        0, 0),
+    LI_FLAGSF("boss-specials",         bossSpecs,         boss_flagset, 333, 2),
+    LI_STRING("colormap",              colorMap,          0, 0),
+    LI_STRING("creator",               creator,           0, 0),
+    LI_ENVIRO("defaultenvironment",    defaultEnvironment, 0, 0),
+    LI_BOOLNF("disable-jump",          disableJump,       342, 2),
+    LI_BOOLNF("doublesky",             doubleSky,         0, 0),
+    LI_BOOLNF("edf-intername",         useEDFInterName,   0, 0),
+    LI_BOOLNF("endofgame",             endOfGame,         329, 6),
+    LI_STRING("endpic",                endPic,            0, 0), // not playsim by itself, needs "finaletype endpic"
+    LI_STRING("extradata",             extraData,         331, 10),
+    LI_BOOLNF("finale-normal",         finaleNormalOnly,  342, 2),
+    LI_BOOLNF("finale-secret",         finaleSecretOnly,  331, 10),
+    LI_BOOLNF("finale-early",          finaleEarly,       342, 2),
+    LI_STRNUM("finaletype",            finaleType,        finaleTypeVals, 333, 50),
+    LI_STRNUM("finalesecrettype",      finaleSecretType,  finaleTypeVals, 342, 2),
+    LI_BOOLNF("fullbright",            useFullBright,     0, 0),
+    LI_INTEGR("gravity",               gravity,           329, 6),
+    LI_STRING("inter-backdrop",        backDrop,          0, 0),
+    LI_STRING("inter-levelname",       interLevelName,    0, 0),
+    LI_STRING("intermusic",            interMusic,        0, 0),
+    LI_STRING("interpic",              interPic,          0, 0),
+    LI_STRING("intertext",             interTextLump,     329, 6),
+    LI_STRING("intertext-secret",      interTextSLump,    342, 2),
+    LI_BOOLNF("killfinale",            killFinale,        329, 6),
+    LI_BOOLNF("killstats",             killStats,         333, 2),
+    LI_ACTION("levelaction",           actions,           342, 2),
+    LI_ACTION("levelaction-bossdeath", actions,           404, 0),
+    LI_STRING("levelname",             levelName,         0, 0),
+    LI_STRING("levelpic",              levelPic,          0, 0),
+    LI_STRING("levelpicnext",          nextLevelPic,      0, 0),
+    LI_STRING("levelpicsecret",        nextSecretPic,     0, 0),
+    LI_BOOLNF("lightning",             hasLightning,      329, 6), // sadly uses P_Random, so it's playsim
+    LI_STRING("music",                 musicName,         0, 0),
+    LI_STRING("nextlevel",             nextLevel,         329, 6),
+    LI_STRING("nextsecret",            nextSecret,        329, 6),
+    LI_BOOLNF("noautosequences",       noAutoSequences,   0, 0),
+    LI_STRING("outdoorfog",            outdoorFog,        0, 0),
+    LI_INTEGR("partime",               partime,           329, 6), // we can't be sure of timing
+    LI_BOOLNF("require-jump",          requireJump,       407, 0),
+    LI_STRNUM("sector-colormaps",      sectorColormaps,   sectorColormapVals, 0, 0),
+    LI_DBLFIX("skydelta",              skyDelta,          0, 0),
+    LI_DBLFIX("sky2delta",             sky2Delta,         0, 0),
+    LI_STRING("skyname",               skyName,           0, 0),
+    LI_STRING("sky2name",              sky2Name,          0, 0),
+    LI_INTEGR("skyrowoffset",          skyRowOffset,      0, 0),
+    LI_INTEGR("sky2rowoffset",         sky2RowOffset,     0, 0),
+    LI_STRING("sound-swtchn",          sound_swtchn,      0, 0),
+    LI_STRING("sound-swtchx",          sound_swtchx,      0, 0),
+    LI_STRING("sound-stnmov",          sound_stnmov,      0, 0),
+    LI_STRING("sound-pstop",           sound_pstop,       0, 0),
+    LI_STRING("sound-bdcls",           sound_bdcls,       0, 0),
+    LI_STRING("sound-bdopn",           sound_bdopn,       0, 0),
+    LI_STRING("sound-dorcls",          sound_dorcls,      0, 0),
+    LI_STRING("sound-doropn",          sound_doropn,      0, 0),
+    LI_STRING("sound-pstart",          sound_pstart,      0, 0),
+    LI_STRING("sound-fcmove",          sound_fcmove,      0, 0),
+    LI_BOOLNF("unevenlight",           unevenLight,       0, 0),
 
     //{ IVT_STRING,  "defaultweapons", &info_weapons },
 };
@@ -478,8 +479,8 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
     LevelInfo.actions = newAction;
 }
 
-using varparserfn_t                          = void (*)(levelvar_t *, const qstring &);
-static varparserfn_t infoVarParsers[IVT_END] = {
+using varparserfn_t                                = void (*)(levelvar_t *, const qstring &);
+static varparserfn_t       infoVarParsers[IVT_END] = {
     P_parseLevelString,      //
     P_parseLevelStrNum,      //
     P_parseLevelInt,         //
@@ -504,7 +505,7 @@ void P_ProcessEMapInfo(MetaTable *info)
         MetaString *str      = nullptr;
 
         // Do not process playsim changers in MBF or less mode. Allow cosmetic changes to happen.
-        if(levelvar->flags & LV_PLAYSIM && demo_version <= 203)
+        if(levelvar->demo_full_version >= 1 && full_demo_version < levelvar->demo_full_version)
             continue;
 
         while((str = info->getNextKeyAndTypeEx<MetaString>(str, levelvar->name)))
