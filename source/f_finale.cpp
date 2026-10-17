@@ -100,9 +100,9 @@ static int         finaletype;
 //
 // haleyjd 01/26/14: Determine finale parameters to use.
 //
-static void F_setupFinale(bool secret)
+static void F_setupFinale(ExitType type)
 {
-    if(secret)
+    if(type == ExitType::secret)
     {
         if(LevelInfo.finaleSecretType != FINALE_UNSPECIFIED)
             finaletype = LevelInfo.finaleSecretType;
@@ -138,7 +138,7 @@ void F_Init()
 //
 // F_StartFinale
 //
-void F_StartFinale(bool secret)
+void F_StartFinale(ExitType type)
 {
     gameaction    = ga_nothing;
     gamestate     = GS_FINALE;
@@ -154,7 +154,7 @@ void F_StartFinale(bool secret)
     finalestage = 0;
     finalecount = 0;
 
-    F_setupFinale(secret);
+    F_setupFinale(type);
 }
 
 //

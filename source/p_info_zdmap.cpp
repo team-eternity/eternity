@@ -44,9 +44,9 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
     //
     // Sets the normal or secret next option. Returns true if it's a finale special
     //
-    auto setNextOrFinale = [xlmi](const char *s, const char *cluster, bool secret) -> bool {
-        int         &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
-        const char *&nextLevel  = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
+    auto setNextOrFinale = [xlmi](const char *s, const char *cluster, ExitType type) -> bool {
+        int         &finaleType = type == ExitType::secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
+        const char *&nextLevel  = type == ExitType::secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
 
         bool getfinale = true;
 
@@ -69,11 +69,11 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
             nextLevel = s;
             getfinale = false;
         }
-        
-        if (estrnonempty(cluster))
+
+        if(estrnonempty(cluster))
         {
             MetaTable *clusterdef = XL_ClusterForName(cluster);
-            if (clusterdef)
+            if(clusterdef)
             {
                 const char *str;
                 str = clusterdef->getString("flat", nullptr);
@@ -89,14 +89,14 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
         }
 
         if(getfinale)
-            P_EnsureDefaultStoryText(secret);
+            P_EnsureDefaultStoryText(type);
         return getfinale;
     };
 
     // Check prior end-of-game
 
-    const char *next       = xlmi->getString("next", nullptr);
-    const char *secretnext = xlmi->getString("secretnext", nullptr);
+    const char *next        = xlmi->getString("next", nullptr);
+    const char *secretnext  = xlmi->getString("secretnext", nullptr);
     const char *clustername = xlmi->getString("cluster", nullptr);
 
     if(!next && !secretnext) // no next map set
@@ -104,10 +104,10 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 
     bool nextfinale = false;
     if(next)
-        nextfinale = setNextOrFinale(next, clustername, false);
+        nextfinale = setNextOrFinale(next, clustername, ExitType::normal);
     bool secretnextfinale = false;
     if(secretnext)
-        secretnextfinale = setNextOrFinale(secretnext, clustername, true);
+        secretnextfinale = setNextOrFinale(secretnext, clustername, ExitType::secret);
 
     // Disable any previously set restrictions
     if(nextfinale)
@@ -212,7 +212,7 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
         for(size_t j = 0; j < specialactionbindings_size; ++j)
         {
             const specialactionbinding_t &actionBinding = specialactionbindings[j];
-        
+
             if(!hasflag(actionBinding.name))
                 continue;
 
@@ -257,7 +257,7 @@ bool P_ApplyHexenMapInfo()
     // Mark if classic demos to avoid changing certain playsim settings
     bool classicDemo = demo_version <= 203;
 
-    LevelInfo.levelName = xlmi->getString("name", "");
+    LevelInfo.levelName      = xlmi->getString("name", "");
     LevelInfo.interLevelName = LevelInfo.levelName;
 
     // sky textures

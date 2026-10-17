@@ -75,6 +75,12 @@ enum class UMapInfoAllow : int // similar to UMAPINFO specs, with allow as zero 
     require
 };
 
+enum class ExitType
+{
+    normal,
+    secret
+};
+
 // levelaction structures
 struct levelaction_t
 {
@@ -222,7 +228,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd);
 
 // ioanch
 bool P_LevelIsVanillaHexen();
-void P_EnsureDefaultStoryText(bool secret);
+void P_EnsureDefaultStoryText(ExitType type);
 
 const finalerule_t *P_DetermineEpisodeFinaleRule(bool checkmap);
 void                P_SetFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText);
