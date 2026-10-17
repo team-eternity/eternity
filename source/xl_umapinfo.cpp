@@ -503,6 +503,7 @@ static void XL_initRules()
     };
 
     addRule("author", PropertyType::setString);
+    addRule("crouching", PropertyType::setAllowRequire);
     addRule("levelname", PropertyType::setString);
     addRule("label", PropertyType::setStringOrClear);
     addRule("levelpic", PropertyType::setString);

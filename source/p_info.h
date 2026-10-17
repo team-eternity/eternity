@@ -187,6 +187,8 @@ struct LevelInfo_t
 
     fixed_t airControl;
     fixed_t airFriction;
+
+    bool crouchWarning;
 };
 
 // the one and only LevelInfo object

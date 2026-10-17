@@ -1268,6 +1268,8 @@ static void P_ClearLevelVars()
     LevelInfo.airControl  = 0;
     LevelInfo.airFriction = 0;
 
+    LevelInfo.crouchWarning = false;
+
     // haleyjd: construct defaults
     P_InfoDefaultLevelName();
     P_InfoDefaultSoundNames();

@@ -389,6 +389,10 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             }
         }
 
+        val = info->getInt("crouching", XL_UMAPINFO_SPECVAL_NOT_SET);
+        if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG)
+            LevelInfo.crouchWarning = true;
+
         // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
         val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)

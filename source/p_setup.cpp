@@ -3996,6 +3996,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_
         acslumpnum = setupwad->checkNumForNameNSG(LevelInfo.acsScriptLump, lumpinfo_t::ns_acs);
 
     ACS_LoadLevelScript(dir, acslumpnum);
+
+    if(LevelInfo.crouchWarning)
+        doom_printf("Level requires crouching and may not work as intended.");
 }
 
 //
