@@ -358,6 +358,20 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
         }
         else if(val == XL_UMAPINFO_SPECVAL_FALSE)
             C_Printf(FC_ERROR "Invalid 'endbunny = false' in UMAPINFO.\n");
+        if(demo_version >= 407)
+        {
+            // TODO: revise the false changes
+            val = info->getInt("enddemon", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_TRUE)
+            {
+                LevelInfo.endOfGame  = false;
+                LevelInfo.finaleType = FINALE_HTIC_DEMON;
+                reuseSecretStoryForMainExit();
+                P_EnsureDefaultStoryText(false);
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+                C_Printf(FC_ERROR "Invalid 'enddemon = false' in UMAPINFO.\n");
+        }
         val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {

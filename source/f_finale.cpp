@@ -710,9 +710,9 @@ static void F_BunnyScroll()
 //
 static void F_drawE2End(bool setPalette)
 {
-    int e2end = wGlobalDir.checkNumForName("E2END");
+    int       e2end = wGlobalDir.checkNumForName("E2END");
     VPNGImage png;
-    bool havePNGBlock = false;
+    bool      havePNGBlock = false;
 
     if(e2end >= 0)
     {
@@ -756,7 +756,7 @@ static void F_DrawUnderwater()
     switch(finalestage)
     {
     case 1:
-        C_InstaPopup(); // put away console if down
+        C_InstaPopup();    // put away console if down
         F_drawE2End(true); // set palette and draw
         finalestage = 3;
         [[fallthrough]];
@@ -822,8 +822,13 @@ static void F_InitDemonScroller()
     VBuffer vbuf;
 
     // get screens
-    lnum1  = W_GetNumForName("FINAL1");
-    lnum2  = W_GetNumForName("FINAL2");
+    lnum1 = W_CheckNumForName("FINAL1");
+    lnum2 = W_CheckNumForName("FINAL2");
+    if(lnum1 < 0 || lnum2 < 0)
+    {
+        C_Printf(FC_ERROR "Missing FINAL1 or FINAL2 lump for demon ending.\n");
+        return;
+    }
     lsize1 = W_LumpLength(lnum1);
     lsize2 = W_LumpLength(lnum2);
     bool     raw1, raw2;

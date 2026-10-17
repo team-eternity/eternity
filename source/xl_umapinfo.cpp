@@ -514,6 +514,7 @@ static void XL_initRules()
     addRule("exitpic", PropertyType::setString);
     addRule("enterpic", PropertyType::setString);
     addRule("partime", PropertyType::setInteger);
+    addRule("enddemon", PropertyType::setBoolean);
     addRule("endgame", PropertyType::setBoolean);
     addRule("endpic", PropertyType::setString);
     addRule("endbunny", PropertyType::setBoolean);
