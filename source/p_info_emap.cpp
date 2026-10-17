@@ -180,6 +180,7 @@ static levelvar_t levelvars [] = {
     LI_BOOLNF("doublesky",             doubleSky,         0, 0),
     LI_BOOLNF("edf-intername",         useEDFInterName,   0, 0),
     LI_BOOLNF("endofgame",             endOfGame,         329, 6),
+    LI_STRING("endpal",                endPal,            0, 0),
     LI_STRING("endpic",                endPic,            0, 0), // not playsim by itself, needs "finaletype endpic"
     LI_STRING("extradata",             extraData,         331, 10),
     LI_BOOLNF("finale-normal",         finaleNormalOnly,  342, 2),

@@ -941,6 +941,7 @@ static void P_InfoDefaultFinale()
     LevelInfo.endOfGame        = false;
     LevelInfo.useEDFInterName  = false;
     LevelInfo.endPic           = GameModeInfo->interPic; // just have a valid default
+    LevelInfo.endPal           = "PLAYPAL";
 
     // set data from the finaledata object
     if(fdata->musicnum != mus_None)

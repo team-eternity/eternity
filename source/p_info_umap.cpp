@@ -350,6 +350,9 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             reuseSecretStoryForMainExit();
             P_EnsureDefaultStoryText(ExitType::normal);
         }
+        strval = info->getString("endpalette", nullptr);
+        if(strval)
+            LevelInfo.endPal = strval;
         val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {

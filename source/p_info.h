@@ -136,6 +136,7 @@ struct LevelInfo_t
     bool        endOfGame;        // DOOM II: last map, trigger cast call
     bool        useEDFInterName;  // use an intermission map name from EDF
     const char *endPic;           // pic to use for the "end pic" finale type
+    const char *endPal;           // optional palette to use for the "end pic" finale type
 
     // level transfer stuff
     const char *nextLevel;       // name of next map for normal exit

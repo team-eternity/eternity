@@ -8,6 +8,7 @@ Features:
 * Added the comp_voodooscroller OPTIONS compatibility setting from the MBF21 updated standard.
 * Added "freeaim" and "jumping" from UMAPINFO. "Crouching" is recognized but does not enable the feature.
 * Added "enddemon" from UMAPINFO, and now "endbunny", "enddemon" and "endcast" when set to false will clear the finale.
+* Added "endpalette" from UMAPINFO.
 
 Improvements:
 * ACS GetCVar and GetCVarString no longer sound errors when given local, non-server user variables.
