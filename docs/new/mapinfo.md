@@ -243,6 +243,17 @@ accept the same values in both types.\
 
       fullbright = false
 
+- **freeaim**
+
+  Whether to allow, disallow or require looking up and down, like in non-Doom games. `Allow` is the default; `disallow` disables it even if set
+  to "yes" in user settings, and `require` enables it even if set to "no".
+
+  New to Eternity v4.07 and based on the equivalent property from `UMAPINFO`.
+
+  Example:
+
+      freeaim = require
+
 - **gravity**\
   Global gravity factor for the current level. The default gravity value
   is 65536.\

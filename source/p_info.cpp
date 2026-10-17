@@ -1356,10 +1356,10 @@ static void P_InitWeapons()
 //
 // If interText is not set, give it some dummy value
 //
-void P_EnsureDefaultStoryText(bool secret)
+void P_EnsureDefaultStoryText(ExitType type)
 {
     // no text defined? make up something.
-    const char *&interText = secret ? LevelInfo.interTextSecret : LevelInfo.interText;
+    const char *&interText = type == ExitType::secret ? LevelInfo.interTextSecret : LevelInfo.interText;
     if(!interText)
         interText = "You have won.";
 }

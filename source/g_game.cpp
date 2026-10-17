@@ -1976,7 +1976,7 @@ void G_ForceFinale()
     if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
         LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
-    P_EnsureDefaultStoryText(false);
+    P_EnsureDefaultStoryText(ExitType::normal);
 
     // set other variables for consistency
     LevelInfo.killFinale       = false;
@@ -2216,7 +2216,7 @@ void G_Ticker()
             G_DoCompleted();
             break;
         case ga_victory: //
-            F_StartFinale(secretexit);
+            F_StartFinale(secretexit ? ExitType::secret : ExitType::normal);
             break;
         case ga_worlddone: //
             G_DoWorldDone();
@@ -2806,7 +2806,7 @@ void G_WorldDone()
         players[consoleplayer].didsecret = true;
 
     if(G_doFinale())
-        F_StartFinale(secretexit);
+        F_StartFinale(secretexit ? ExitType::secret : ExitType::normal);
 }
 
 static skill_t d_skill;

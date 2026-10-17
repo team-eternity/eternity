@@ -315,15 +315,17 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.finaleSecretOnly = false;
         };
 
-        val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
-        if(val == XL_UMAPINFO_SPECVAL_FALSE)
-        {
+        auto clearFinale = []() {
             // Override a default map exit
             // Default map exits are defined in P_InfoDefaultFinale according to game mode info
             LevelInfo.finaleType  = FINALE_TEXT;
             LevelInfo.endOfGame   = false;
             LevelInfo.finaleEarly = false;
-        }
+        };
+
+        val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
+        if(val == XL_UMAPINFO_SPECVAL_FALSE)
+            clearFinale();
         else if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {
             const finalerule_t *rule = P_DetermineEpisodeFinaleRule(false);
@@ -335,7 +337,7 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             // Also generalize this (and same below) for both exits. The presence of the respective
             // intertext will dictate whether it will really happen.
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
         strval = info->getString("endpic", nullptr);
         if(strval)
@@ -346,7 +348,7 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.endPic     = strval;
 
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
         val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
@@ -354,20 +356,34 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.endOfGame  = false;
             LevelInfo.finaleType = FINALE_DOOM_BUNNY;
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
-        else if(val == XL_UMAPINFO_SPECVAL_FALSE)
-            C_Printf(FC_ERROR "Invalid 'endbunny = false' in UMAPINFO.\n");
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE && demo_version >= 407)
+            clearFinale();
+        if(demo_version >= 407)
+        {
+            // TODO: revise the false changes
+            val = info->getInt("enddemon", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_TRUE)
+            {
+                LevelInfo.endOfGame  = false;
+                LevelInfo.finaleType = FINALE_HTIC_DEMON;
+                reuseSecretStoryForMainExit();
+                P_EnsureDefaultStoryText(ExitType::normal);
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+                clearFinale();
+        }
         val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {
             LevelInfo.endOfGame  = true;
             LevelInfo.finaleType = FINALE_TEXT;
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
-        else if(val == XL_UMAPINFO_SPECVAL_FALSE)
-            C_Printf(FC_ERROR "Invalid 'endcast = false' in UMAPINFO.\n");
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE && demo_version >= 407)
+            clearFinale();
 
         if(demo_version >= 407)
         {
