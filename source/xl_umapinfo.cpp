@@ -522,6 +522,7 @@ static void XL_initRules()
     addRule("intertextsecret", PropertyType::setMultiStringOrClear);
     addRule("interbackdrop", PropertyType::setString);
     addRule("intermusic", PropertyType::setString);
+    addRule("jumping", PropertyType::setAllowRequire);
     addRule("episode", PropertyType::addEpisodeOrClear);
     addRule("bossaction", PropertyType::addBossActionOrClear);
 }
