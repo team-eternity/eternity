@@ -93,6 +93,9 @@ static const char *sectorColormapStrs[] = { "normal", "Boom", "SMMU" };
 
 static textvals_t sectorColormapVals = { sectorColormapStrs, earrlen(sectorColormapStrs), 0 };
 
+static const char *allowDisallowStrings[] = { "allow", "disallow", "require" };
+static textvals_t  allowDisallowValues    = { allowDisallowStrings, earrlen(allowDisallowStrings), 0 };
+
 // levelvar types
 enum
 {
@@ -184,6 +187,7 @@ static levelvar_t levelvars [] = {
     LI_BOOLNF("finale-early",          finaleEarly,       342, 2),
     LI_STRNUM("finaletype",            finaleType,        finaleTypeVals, 333, 50),
     LI_STRNUM("finalesecrettype",      finaleSecretType,  finaleTypeVals, 342, 2),
+    LI_STRNUM("freeaim",               freeAim,           allowDisallowValues, 407, 0),
     LI_BOOLNF("fullbright",            useFullBright,     0, 0),
     LI_INTEGR("gravity",               gravity,           329, 6),
     LI_STRING("inter-backdrop",        backDrop,          0, 0),

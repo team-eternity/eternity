@@ -809,7 +809,7 @@ void P_PlayerThink(player_t &player)
     }
 
     // haleyjd 04/03/05: new yshear code
-    if(!allowmlook)
+    if((!allowmlook && LevelInfo.freeAim != UMapInfoAllow::require) || LevelInfo.freeAim == UMapInfoAllow::disallow)
         player.prevpitch = player.pitch = 0;
     else
     {

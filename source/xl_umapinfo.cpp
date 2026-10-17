@@ -518,6 +518,7 @@ static void XL_initRules()
     addRule("endpic", PropertyType::setString);
     addRule("endbunny", PropertyType::setBoolean);
     addRule("endcast", PropertyType::setBoolean);
+    addRule("freeaim", PropertyType::setAllowRequire);
     addRule("nointermission", PropertyType::setBoolean);
     addRule("intertext", PropertyType::setMultiStringOrClear);
     addRule("intertextsecret", PropertyType::setMultiStringOrClear);

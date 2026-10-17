@@ -1262,6 +1262,7 @@ static void P_ClearLevelVars()
     // gameplay
     LevelInfo.disableJump = false;
     LevelInfo.requireJump = false;
+    LevelInfo.freeAim     = UMapInfoAllow::allow;
 
     // air control
     // compatibility setting may override this. To completely disable it, use -1

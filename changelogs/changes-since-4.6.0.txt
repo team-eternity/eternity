@@ -6,7 +6,7 @@ For v4.07.00
 
 Features:
 * Added the comp_voodooscroller OPTIONS compatibility setting from the MBF21 updated standard.
-* Added "jumping" from UMAPINFO.
+* Added "freeaim" and "jumping" from UMAPINFO. "Crouching" is recognized but does not enable the feature.
 
 Improvements:
 * ACS GetCVar and GetCVarString no longer sound errors when given local, non-server user variables.

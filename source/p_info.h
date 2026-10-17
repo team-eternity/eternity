@@ -68,6 +68,13 @@ enum
     SKYROWOFFSET_DEFAULT = INT_MIN,
 };
 
+enum class UMapInfoAllow : int // similar to UMAPINFO specs, with allow as zero default
+{
+    allow,
+    disallow,
+    require
+};
+
 // levelaction structures
 struct levelaction_t
 {
@@ -157,6 +164,8 @@ struct LevelInfo_t
     // gameplay options
     bool disableJump; // if true, jumping is disabled
     bool requireJump; // if true, jumping is enabled regardless of compatibility setting
+
+    UMapInfoAllow freeAim;
 
     // misc
     int         gravity; // gravity factor

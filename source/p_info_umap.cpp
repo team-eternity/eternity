@@ -387,6 +387,13 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
                 LevelInfo.disableJump = false;
                 LevelInfo.requireJump = false;
             }
+            val = info->getInt("freeaim", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_FALSE)
+                LevelInfo.freeAim = UMapInfoAllow::disallow;
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE)
+                LevelInfo.freeAim = UMapInfoAllow::allow;
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG)
+                LevelInfo.freeAim = UMapInfoAllow::require;
         }
 
         val = info->getInt("crouching", XL_UMAPINFO_SPECVAL_NOT_SET);

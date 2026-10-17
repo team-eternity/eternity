@@ -339,7 +339,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
     if(gameactions[ka_user4])
         cmd->actions |= AC_USER4;
 
-    int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+    const int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
     // console commands
     cmd->chatchar = C_dequeueChatChar();
