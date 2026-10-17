@@ -57,9 +57,16 @@
 #include "z_auto.h"
 
 // Stage of animation:
-//  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
-static int finalestage;
-static int finalecount;
+enum class FinaleStage
+{
+    text,
+    artScreen,
+    characterCast,
+    hereticUnderwater,
+    hereticUnderwaterFinished,
+};
+static FinaleStage finalestage;
+static int         finalecount;
 
 // defines for the end mission display text                     // phares
 
@@ -151,7 +158,7 @@ void F_StartFinale(ExitType type)
 
     S_ChangeMusicName(LevelInfo.interMusic, true);
 
-    finalestage = 0;
+    finalestage = FinaleStage::text;
     finalecount = 0;
 
     F_setupFinale(type);
@@ -162,14 +169,14 @@ void F_StartFinale(ExitType type)
 //
 bool F_Responder(const event_t *event)
 {
-    if(finalestage == 2)
+    if(finalestage == FinaleStage::characterCast)
         return F_CastResponder(event);
 
     // haleyjd: Heretic underwater hack for E2 end
-    if(finalestage == 3 && event->type == ev_keydown)
+    if(finalestage == FinaleStage::hereticUnderwater && event->type == ev_keydown)
     {
         // restore normal palette and kick out to title screen
-        finalestage = 4;
+        finalestage = FinaleStage::hereticUnderwaterFinished;
         I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
         return true;
     }
@@ -232,10 +239,10 @@ void F_Ticker()
     // advance animation
     finalecount++;
 
-    if(finalestage == 2)
+    if(finalestage == FinaleStage::characterCast)
         F_CastTicker();
 
-    if(!finalestage)
+    if(finalestage == FinaleStage::text)
     {
         float speed = demo_compatibility ? TEXTSPEED : Get_TextSpeed();
 
@@ -248,7 +255,7 @@ void F_Ticker()
             if(finaletype != FINALE_TEXT)
             {
                 finalecount = 0;
-                finalestage = 1;
+                finalestage = FinaleStage::artScreen;
 
                 // no wipe before Heretic E2 or E3 finales
                 if(finaletype != FINALE_HTIC_WATER && finaletype != FINALE_HTIC_DEMON)
@@ -395,7 +402,7 @@ static void F_StartCast()
     casttics      = caststate->tics;
     castrot       = 0;
     castdeath     = false;
-    finalestage   = 2;
+    finalestage   = FinaleStage::characterCast;
     castframes    = 0;
     castonmelee   = 0;
     castattacking = false;
@@ -752,25 +759,25 @@ static void F_drawE2End(bool setPalette)
 // haleyjd: heretic e2 ending -- sort of hackish
 static void F_DrawUnderwater()
 {
-    int initialstage = finalestage;
+    FinaleStage initialstage = finalestage;
     switch(finalestage)
     {
-    case 1:
+    case FinaleStage::artScreen:
         C_InstaPopup();    // put away console if down
         F_drawE2End(true); // set palette and draw
-        finalestage = 3;
+        finalestage = FinaleStage::hereticUnderwater;
         [[fallthrough]];
-    case 3:
+    case FinaleStage::hereticUnderwater:
         Console.enabled = false; // let console key fall through
         paused          = 0;
         menuactive      = false;
 
         // Redraw to cover possible pillarbox caused by D_Display
-        if(initialstage == 3)
+        if(initialstage == FinaleStage::hereticUnderwater)
             F_drawE2End(false); // redraw without changing palette
         break;
 
-    case 4:
+    case FinaleStage::hereticUnderwaterFinished:
         Console.enabled = true;
         V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("TITLE"));
         break;
@@ -993,10 +1000,10 @@ void F_Drawer()
 {
     switch(finalestage)
     {
-    case 2: //
+    case FinaleStage::characterCast: //
         F_CastDrawer();
         break;
-    case 0: //
+    case FinaleStage::text: //
         F_TextWrite();
         break;
     default: //

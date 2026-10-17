@@ -223,7 +223,7 @@ accept the same values in both types.\
                         displayed after the intertext. Play ends after this map.
           htic_credtis  The Heretic CREDITS screen will be displayed after the
                         intertext. Play ends after this map.
-          htic_water    The Heretic underwater screen with special palette is
+          htic_water    The Heretic underwater screen with a special palette is
                         displayed after the intertext. Play ends after this map.
           htic_demon    The Heretic demon scroller is displayed after the intertext.
                         Play ends after this map.
