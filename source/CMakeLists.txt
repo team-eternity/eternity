@@ -375,6 +375,8 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/id24_demoloop.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/id24_json.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/id24_json.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/id24_skydefs.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/id24_skydefs.h"
       SOURCE_GROUP "Source Files\\\\IN"
       "${CMAKE_CURRENT_SOURCE_DIR}/hi_stuff.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/hi_stuff.h"

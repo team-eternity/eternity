@@ -56,8 +56,6 @@ jsonLumpResult_e ParseJSONLump(const void *rawdata, size_t rawsize, const char *
                                const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
                                jsonWarning_t warningFunc);
 
-bool CoerceInt(const nlohmann::json &object, const char *fieldName, int &out, jsonWarning_t warningFunc);
-
 } // namespace id24
 
 #endif
