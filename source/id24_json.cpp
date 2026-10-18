@@ -169,6 +169,41 @@ jsonLumpResult_e ParseJSONLump(const void *rawdata, size_t rawsize, const char *
     return lumpFunc(root["data"], context, warningFunc);
 }
 
+const nlohmann::json *GetArray(const nlohmann::json &obj, const char *name)
+{
+    if(!obj.contains(name) || !obj[name].is_array())
+        return nullptr;
+    return &obj[name];
+}
+
+const nlohmann::json *GetObject(const nlohmann::json &obj, const char *name)
+{
+    if(!obj.contains(name) || !obj[name].is_object())
+        return nullptr;
+    return &obj[name];
+}
+
+const std::optional<int> GetInt(const nlohmann::json &obj, const char *name)
+{
+    if(!obj.contains(name) || !obj[name].is_number_integer())
+        return std::nullopt;
+    return obj[name].get<int>();
+}
+
+const std::optional<qstring> GetString(const nlohmann::json &obj, const char *name)
+{
+    if(!obj.contains(name) || !obj[name].is_string())
+        return std::nullopt;
+    return qstring(obj[name].get<std::string>().c_str());
+}
+
+const std::optional<double> GetDouble(const nlohmann::json &obj, const char *name)
+{
+    if(!obj.contains(name) || !obj[name].is_number())
+        return std::nullopt;
+    return obj[name].get<double>();
+}
+
 } // namespace id24
 
 // EOF

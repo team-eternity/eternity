@@ -28,6 +28,7 @@
 #define ID24_JSON_H_
 
 #include "nlohmann/json.hpp"
+#include <optional>
 
 class qstring;
 
@@ -55,6 +56,12 @@ typedef jsonLumpResult_e (*jsonLumpFunc_t)(const nlohmann::json &data, void *con
 jsonLumpResult_e ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
                                const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
                                jsonWarning_t warningFunc);
+
+const nlohmann::json        *GetArray(const nlohmann::json &obj, const char *name);
+const nlohmann::json        *GetObject(const nlohmann::json &obj, const char *name);
+const std::optional<int>     GetInt(const nlohmann::json &obj, const char *name);
+const std::optional<qstring> GetString(const nlohmann::json &obj, const char *name);
+const std::optional<double>  GetDouble(const nlohmann::json &obj, const char *name);
 
 } // namespace id24
 

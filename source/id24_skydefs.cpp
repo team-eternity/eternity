@@ -31,6 +31,7 @@
 #include "i_system.h"
 #include "id24_json.h"
 #include "m_collection.h"
+#include "m_qstr.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
@@ -41,7 +42,7 @@ struct sky_t
     enum type_e
     {
         normal,
-        fire,
+        fireType,
         withForeground
     };
 
@@ -75,50 +76,114 @@ struct flatmap_t
     char *sky;
 };
 
+class SkyDefs
+{
+public:
+    PODCollection<sky_t>     skies;
+    PODCollection<flatmap_t> flatmapping;
+};
+
 namespace id24
 {
 
 static PODCollection<sky_t>     skies;
 static PODCollection<flatmap_t> flatmapping;
 
-static jsonLumpResult_e parseFunc(const nlohmann::json &data, void *context, jsonWarning_t warningFunc)
+static void populateTexture(sky_t::tex_t &tex, const json &jsky)
 {
-    if(data.contains("skies") && data["skies"].is_array())
-    {
-        const json &jskies = data["skies"];
-        for(const json &jsky : jskies)
-        {
-            sky_t sky = {};
-            if(!jsky.contains("type") || !jsky["type"].is_number_integer())
-            {
-                warningFunc(true, "Missing or invalid 'type' integer in sky");
-                continue;
-            }
-            int type = jsky["type"].get<int>();
-            if(type != 0 && type != 1 && type != 2)
-            {
-                warningFunc(true, "Invalid type value in sky");
-                continue;
-            }
-            sky.type = static_cast<sky_t::type_e>(type);
-            if(!jsky.contains("name") || !jsky["name"].is_string())
-            {
-                warningFunc(true, "Missing or invalid 'name' string in sky");
-                continue;
-            }
-            sky.tex.name = estrdup(jsky["name"].get<std::string>().c_str());
+    tex.name    = estrdup(GetString(jsky, "name").value().constPtr());
+    tex.mid     = GetDouble(jsky, "mid").value();
+    tex.scrollx = GetDouble(jsky, "scrollx").value();
+    tex.scrolly = GetDouble(jsky, "scrolly").value();
+    tex.scalex  = GetDouble(jsky, "scalex").value();
+    tex.scaley  = GetDouble(jsky, "scaley").value();
+}
 
-            if(!jsky.contains("mid") || !jsky["mid"].is_number())
+static jsonLumpResult_e parseFunc(const json &data, void *context, jsonWarning_t warningFunc)
+{
+    auto skydefs = static_cast<SkyDefs *>(context);
+    try
+    {
+        const json *jskies = GetArray(data, "skies");
+        if(jskies)
+        {
+            if(jskies->empty())
             {
-                warningFunc(false, "Missing or invalid 'mid' string in sky, assuming 100");
-                // stays zero
+                warningFunc(true, "Invalid empty skies array in SKYDEFS");
+                return JLR_INVALID;
             }
-            else
+            for(const json &jsky : *jskies)
             {
-                sky.tex.mid = jsky["mid"].get<double>();
+                sky_t sky = {};
+                sky.type  = static_cast<sky_t::type_e>(GetInt(jsky, "type").value());
+                switch(sky.type)
+                {
+                case sky_t::normal:
+                case sky_t::fireType:
+                case sky_t::withForeground: break;
+                default:                    warningFunc(true, "Invalid type in SKYDEFS"); return JLR_INVALID;
+                }
+                populateTexture(sky.tex, jsky);
+                if(sky.type == sky_t::fireType)
+                {
+                    const json *jfire = GetObject(jsky, "fire");
+                    if(!jfire)
+                    {
+                        warningFunc(true, "Missing 'fire' for expected fire");
+                        return JLR_INVALID;
+                    }
+                    const json *jpalette = GetArray(*jfire, "palette");
+                    if(!jpalette || !jpalette->size())
+                    {
+                        warningFunc(true, "Missing 'palette' in fire");
+                        return JLR_INVALID;
+                    }
+                    sky.fire.palette_size = jpalette->size();
+                    sky.fire.palette      = emalloc(int *, sky.fire.palette_size * sizeof(int));
+                    int i                 = 0;
+                    for(const json &jpaletteEntry : *jpalette)
+                        sky.fire.palette[i++] = jpaletteEntry.get<int>();
+                    sky.fire.updatetime = GetDouble(*jfire, "updatetime").value();
+                    if(sky.fire.updatetime <= 0)
+                        warningFunc(true, "Invalid zero or negative fire updatetime");
+                }
+                else if(sky.type == sky_t::withForeground)
+                {
+                    const json *jforegroundtex = GetObject(jsky, "foregroundtex");
+                    if(!jforegroundtex)
+                    {
+                        warningFunc(true, "Missing 'foregroundtex' for expected foreground");
+                        continue;
+                    }
+                    populateTexture(sky.foregroundtex, *jforegroundtex);
+                }
+                skydefs->skies.add(sky);
+            }
+        }
+        const json *jflatmapping = GetArray(data, "flatmapping");
+        if(jflatmapping)
+        {
+            if(jflatmapping->empty())
+            {
+                warningFunc(true, "Invalid empty flatmapping array in SKYDEFS");
+                return JLR_INVALID;
+            }
+
+            for(const json &jflatmap : *jflatmapping)
+            {
+                flatmap_t flatmap = {};
+                flatmap.flat      = estrdup(GetString(jflatmap, "flat").value().constPtr());
+                flatmap.sky       = estrdup(GetString(jflatmap, "sky").value().constPtr());
+                skydefs->flatmapping.add(flatmap);
             }
         }
     }
+    catch(const std::bad_optional_access &e)
+    {
+        warningFunc(true, (qstring("Error in SKYDEFS: ") + e.what()).constPtr());
+        return JLR_INVALID;
+    }
+
     return JLR_OK;
 }
 
@@ -126,7 +191,7 @@ static void warningFunc(bool error, const char *msg)
 {
     // TODO: check if critical and quit
     if(error)
-        usermsg("SKYDEFS ERROR: %s\n", msg);
+        I_Error("SKYDEFS ERROR: %s\n", msg);
     else
         usermsg("SKYDEFS: %s", msg);
 }
@@ -144,10 +209,15 @@ void LoadSkyDefs()
 
     usermsg("Loading SKYDEFS...");
 
-    jsonLumpResult_e result =
-        ParseJSONLump(buf.get(), buf.getSize(), "skydefs", { 1, 0, 0 }, parseFunc, nullptr, warningFunc);
+    SkyDefs skydefs;
 
-    // TODO: populate
+    jsonLumpResult_e result =
+        ParseJSONLump(buf.get(), buf.getSize(), "skydefs", { 1, 0, 0 }, parseFunc, &skydefs, warningFunc);
+
+    if(result == JLR_OK)
+    {
+        // ok
+    }
 }
 } // namespace id24
 
