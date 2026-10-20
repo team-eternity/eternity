@@ -637,16 +637,14 @@ static void D_Display()
             if(oldgamestate != GS_LEVEL)
                 R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-            if(automapactive && !automap_overlay)
+            R_DrawViewBorder(); // redraw border
+            R_RenderPlayerView(&players[displayplayer], camera);
+
+            // draw playerview even if automap active, because we need 
+            // to update automap status
+            if(automapactive)
             {
                 AM_Drawer();
-            }
-            else
-            {
-                R_DrawViewBorder(); // redraw border
-                R_RenderPlayerView(&players[displayplayer], camera);
-                if(automapactive && automap_overlay)
-                    AM_Drawer();
             }
 
             ST_Drawer(scaledwindow.height == SCREENHEIGHT); // killough 11/98

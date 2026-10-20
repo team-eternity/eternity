@@ -1,4 +1,4 @@
-The Eternity Engine
+﻿The Eternity Engine
 ===================
 
 Eternity is an advanced [DOOM](http://doomwiki.org/wiki/Doom) source
