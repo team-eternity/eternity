@@ -577,7 +577,7 @@ static bool MN_FileResponder(event_t *ev, int action)
 
 char *wad_directory; // directory where user keeps wads
 
-static qstring wad_cur_directory; // current directory being viewed
+static fs::path wad_cur_directory; // current directory being viewed
 
 VARIABLE_STRING(wad_directory, nullptr, 1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
@@ -599,14 +599,24 @@ static void MN_doSelectWad(const char *path)
     static const char *exts[] = { "*.wad", "*.pke", "*.pk3" };
 
     if(path)
-        wad_cur_directory = path;
+        try
+        {
+            wad_cur_directory = fs::canonical(reinterpret_cast<const char8_t *>(path));
+        }
+        catch(fs::filesystem_error &e)
+        {
+            C_Printf(FC_ERROR "MN_doSelectWad: %s\n", e.what());
+            wad_cur_directory = reinterpret_cast<const char8_t *>(path);
+        }
 
-    int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(), exts, earrlen(exts), true);
+    int ret = MN_ReadDirectory(&mn_diskdir, reinterpret_cast<const char *>(wad_cur_directory.u8string().c_str()), exts,
+                               earrlen(exts), true);
 
     // check for standard errors
     if(ret)
     {
-        MN_ErrorMsg("Failed to open directory %s: errno %d", wad_cur_directory.constPtr(), ret);
+        MN_ErrorMsg("Failed to open directory %s: errno %d",
+                    reinterpret_cast<const char *>(wad_cur_directory.u8string().c_str()), ret);
         return;
     }
 
@@ -644,21 +654,20 @@ CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset)
     // parent or super-directory?
     if(newVal == "..")
     {
-        size_t lastslash;
-        if((lastslash = wad_cur_directory.findLastOf('/')) != qstring::npos)
-            wad_cur_directory.truncate(lastslash);
+        wad_cur_directory = wad_cur_directory.parent_path();
         MN_doSelectWad(nullptr);
     }
     else if(newVal.findFirstOf('/') == 0)
     {
-        wad_cur_directory.pathConcatenate(newVal);
+        wad_cur_directory /= reinterpret_cast<const char8_t *>(newVal.constPtr() + 1);
         MN_doSelectWad(nullptr);
     }
     else
     {
         if(mn_wadname)
             efree(mn_wadname);
-        qstring fullPath = wad_cur_directory / newVal;
+        qstring fullPath = qstring(reinterpret_cast<const char *>(
+            (wad_cur_directory / reinterpret_cast<const char8_t *>(newVal.constPtr())).u8string().c_str()));
         mn_wadname       = fullPath.duplicate();
     }
 }
