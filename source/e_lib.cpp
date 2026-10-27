@@ -218,7 +218,7 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
     qname.replace("\\", '/');
     if(qname[0] != '/')
     {
-        qstring parentdir = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(src->filename);
+        qstring parentdir = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(parentfile);
         size_t lastslashloc = parentdir.findLastOf('/');
         parentdir.truncate(lastslashloc + 1);
 
