@@ -28,7 +28,7 @@
 #define AEON_COMMON_H__
 
 #include "angelscript.h"
-#include "aswrappedcall.h"
+#include "autowrapper/aswrappedcall.h"
 
 struct aeonbehaviorreg_t
 {

@@ -106,7 +106,6 @@ include(ExternalLibraries)
 ######################### Set Build Targets   ##################################
 
 include_directories(acsvm)
-include_directories(angelscript/add_on/autowrapper)
 include_directories(angelscript/add_on/scriptarray)
 include_directories(angelscript/angelscript/include)
 include_directories(libpng)
