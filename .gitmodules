@@ -2,3 +2,6 @@
 	path = adlmidi
 	url = https://github.com/Wohlstand/libADLMIDI/
 	branch = master
+[submodule "external/angelscript"]
+	path = external/angelscript
+	url = https://github.com/anjo76/angelscript

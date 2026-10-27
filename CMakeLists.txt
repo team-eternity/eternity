@@ -106,8 +106,8 @@ include(ExternalLibraries)
 ######################### Set Build Targets   ##################################
 
 include_directories(acsvm)
-include_directories(angelscript/add_on/scriptarray)
-include_directories(angelscript/angelscript/include)
+include_directories(external/angelscript/sdk/add_on/scriptarray)
+include_directories(external/angelscript/sdk/angelscript/include)
 include_directories(libpng)
 include_directories(zlib)
 include_directories(adlmidi/include)
@@ -121,7 +121,7 @@ set(WITH_CPP_EXTRAS ON)
 add_subdirectory(adlmidi)
 
 enable_language(ASM)
-add_subdirectory(angelscript/angelscript/projects/cmake)
+add_subdirectory(external/angelscript/sdk/angelscript/projects/cmake)
 target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DAS_MAX_PORTABILITY)
 
 add_subdirectory(mcpp)
