@@ -176,7 +176,7 @@ public:
 
 private:
     CamContext(const camsightparams_t &inparams, const State *state);
-    static bool sightTraverse(const intercept_t *in, void *context, const divline_t &trace);
+    static bool sightTraverse(intercept_t *in, void *context, const divline_t &trace);
     bool        checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
                                   const divline_t &trace) const;
     bool recurse(int groupid, fixed_t x, fixed_t y, const State &state, bool *result, const linkdata_t &data) const;
@@ -213,7 +213,7 @@ CamContext::CamContext(const camsightparams_t &inparams, const State *instate)
 //
 // Intercept routine for CamContext
 //
-bool CamContext::sightTraverse(const intercept_t *in, void *vcontext, const divline_t &trace)
+bool CamContext::sightTraverse(intercept_t *in, void *vcontext, const divline_t &trace)
 {
     const line_t      *li      = in->d.line;
     tracelineopening_t lo      = { 0 };
@@ -226,7 +226,12 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext, const divl
     fixed_t         totalfrac = context.state.originfrac ?
                                     context.state.originfrac + FixedMul(in->frac, FRACUNIT - context.state.originfrac) :
                                     in->frac;
-    const sector_t *sector    = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    const sector_t *sector;
+    const bool      polyline = Polyobj_IsLine(*li);
+    if(polyline)
+        sector = R_PointInSubsector(edgepos)->sector;
+    else
+        sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
     if(sector && totalfrac > 0)
     {
         if(context.checkPortalSector(sector, totalfrac, in->frac, trace))
@@ -247,14 +252,29 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext, const divl
     if(lo.openrange <= 0 || li->extflags & EX_ML_BLOCKALL)
         return false;
 
-    const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
-    fixed_t         slope;
+    const sector_t *osector;
+    v2fixed_t       edgepos2 = edgepos;
+    if(li->intflags & MLI_1SPORTALLINE && li->beyondportalline)
+    {
+        osector = li->beyondportalline->frontsector;
+        if(li->portal && li->portal->type == R_LINKED)
+        {
+            edgepos2.x += li->portal->data.link.delta.x;
+            edgepos2.y += li->portal->data.link.delta.y;
+        }
+    }
+    else if(polyline)
+        osector = sector;
+    else
+        osector = sector == li->frontsector ? li->backsector : li->frontsector;
+    fixed_t slope;
 
     for(surf_e surf : SURFS)
     {
         const surface_t &surface      = sector->srf[surf];
         const surface_t &otherSurface = osector->srf[surf];
-        if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
+
+        if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos2) ||
            (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
         {
             slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
@@ -472,12 +492,10 @@ bool CamContext::checkSight(const camsightparams_t &params, const CamContext::St
             tx -= link->x;
             ty -= link->y;
         }
-        PTDef def;
-        def.flags    = CAM_ADDLINES;
-        def.earlyOut = link ? PTDef::eo_noearlycheck : PTDef::eo_always;
-        def.trav     = CamContext::sightTraverse;
-        PathTraverser traverser(def, &context);
-        result = traverser.traverse(params.cx, params.cy, tx, ty);
+        divline_t outTrace = {};
+        result             = P_PathTraverse({ params.cx, params.cy }, { tx, ty },
+                                            PT_ADDLINES | (link ? PT_EARLY_OUT_IN_SCAN : PT_ANY_EARLY_OUT), sightTraverse, &context,
+                                            &outTrace);
 
         if(context.portalexit)
             result = context.portalresult;
@@ -487,7 +505,7 @@ bool CamContext::checkSight(const camsightparams_t &params, const CamContext::St
             if(link)
             {
                 tsec = R_PointInSubsector(tx, ty)->sector;
-                if(context.checkPortalSector(tsec, FRACUNIT, FRACUNIT, traverser.trace))
+                if(context.checkPortalSector(tsec, FRACUNIT, FRACUNIT, outTrace))
                 {
                     result = true;
                 }

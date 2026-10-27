@@ -890,19 +890,19 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             auto &si  = sectorinterps[i];
             auto &sec = sectors[i];
 
-            if(si.prevfloorheight != sec.srf.floor.height || si.prevceilingheight != sec.srf.ceiling.height)
+            if(si.prevheight.floor != sec.srf.floor.height || si.prevheight.ceiling != sec.srf.ceiling.height)
             {
                 si.interpolated = true;
 
                 // backup heights
-                si.backfloorheight    = sec.srf.floor.height;
-                si.backfloorheightf   = sec.srf.floor.heightf;
-                si.backceilingheight  = sec.srf.ceiling.height;
-                si.backceilingheightf = sec.srf.ceiling.heightf;
+                si.backheight.floor    = sec.srf.floor.height;
+                si.backheightf.floor   = sec.srf.floor.heightf;
+                si.backheight.ceiling  = sec.srf.ceiling.height;
+                si.backheightf.ceiling = sec.srf.ceiling.heightf;
 
                 // set interpolated heights
-                sec.srf.floor.height    = lerpCoord(view.lerp, si.prevfloorheight, sec.srf.floor.height);
-                sec.srf.ceiling.height  = lerpCoord(view.lerp, si.prevceilingheight, sec.srf.ceiling.height);
+                sec.srf.floor.height    = lerpCoord(view.lerp, si.prevheight.floor, sec.srf.floor.height);
+                sec.srf.ceiling.height  = lerpCoord(view.lerp, si.prevheight.ceiling, sec.srf.ceiling.height);
                 sec.srf.floor.heightf   = M_FixedToFloat(sec.srf.floor.height);
                 sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
 
@@ -910,14 +910,14 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
                 pslope_t *slope = sec.srf.floor.slope;
                 if(slope)
                 {
-                    si.backfloorslopezf = slope->of.z;
-                    slope->of.z         = lerpCoordf(view.lerp, si.prevfloorslopezf, slope->of.z);
+                    si.backslopezf.floor = slope->of.z;
+                    slope->of.z          = lerpCoordf(view.lerp, si.prevslopezf.floor, slope->of.z);
                 }
                 slope = sec.srf.ceiling.slope;
                 if(slope)
                 {
-                    si.backceilingslopezf = slope->of.z;
-                    slope->of.z           = lerpCoordf(view.lerp, si.prevceilingslopezf, slope->of.z);
+                    si.backslopezf.ceiling = slope->of.z;
+                    slope->of.z            = lerpCoordf(view.lerp, si.prevslopezf.ceiling, slope->of.z);
                 }
             }
             else
@@ -933,15 +933,15 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             // restore backed up heights
             if(si.interpolated)
             {
-                sec.srf.floor.height    = si.backfloorheight;
-                sec.srf.floor.heightf   = si.backfloorheightf;
-                sec.srf.ceiling.height  = si.backceilingheight;
-                sec.srf.ceiling.heightf = si.backceilingheightf;
+                sec.srf.floor.height    = si.backheight.floor;
+                sec.srf.floor.heightf   = si.backheightf.floor;
+                sec.srf.ceiling.height  = si.backheight.ceiling;
+                sec.srf.ceiling.heightf = si.backheightf.ceiling;
 
                 if(pslope_t *slope = sec.srf.floor.slope; slope)
-                    slope->of.z = si.backfloorslopezf;
+                    slope->of.z = si.backslopezf.floor;
                 if(pslope_t *slope = sec.srf.ceiling.slope; slope)
-                    slope->of.z = si.backceilingslopezf;
+                    slope->of.z = si.backslopezf.ceiling;
             }
         }
         break;
@@ -1028,8 +1028,16 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
                 return;
             dynaseg.validcount = dvcount;
 
-            R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
-            R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+            if(seg->dyv1->validcount != dvcount)
+            {
+                seg->dyv1->validcount = dvcount;
+                R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
+            }
+            if(seg->dyv2->validcount != dvcount)
+            {
+                seg->dyv2->validcount = dvcount;
+                R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+            }
 
             dynaseg.prev.len    = seg->len;
             dynaseg.prev.offset = seg->offset;
@@ -1049,14 +1057,24 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
 
             seg->offset = prev.offset;
             seg->len    = prev.len;
-            seg->v1->x  = prev.org[0].x;
-            seg->v1->y  = prev.org[0].y;
-            seg->v2->x  = prev.org[1].x;
-            seg->v2->y  = prev.org[1].y;
-            seg->v1->fx = prev.forg[0].x;
-            seg->v1->fy = prev.forg[0].y;
-            seg->v2->fx = prev.forg[1].x;
-            seg->v2->fy = prev.forg[1].y;
+            if(seg->dyv1->validcount != dvcount)
+            {
+                seg->dyv1->validcount = dvcount;
+
+                seg->v1->x  = prev.org[0].x;
+                seg->v1->y  = prev.org[0].y;
+                seg->v1->fx = prev.forg[0].x;
+                seg->v1->fy = prev.forg[0].y;
+            }
+            if(seg->dyv2->validcount != dvcount)
+            {
+                seg->dyv2->validcount = dvcount;
+
+                seg->v2->x  = prev.org[1].x;
+                seg->v2->y  = prev.org[1].y;
+                seg->v2->fx = prev.forg[1].x;
+                seg->v2->fy = prev.forg[1].y;
+            }
         });
         break;
     }
@@ -1135,16 +1153,20 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
     viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
 
     // SoM: Cardboard
-    cb_viewpoint.x     = M_FixedToFloat(viewpoint.x);
-    cb_viewpoint.y     = M_FixedToFloat(viewpoint.y);
-    cb_viewpoint.z     = M_FixedToFloat(viewpoint.z);
-    cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
-    cb_viewpoint.sin   = sinf(cb_viewpoint.angle);
-    cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
-    view.pitch         = (ANG90 - viewpitch) * PI / ANG180;
-    view.lerp          = lerp;
-    view.sector        = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
-    viewpoint.sector   = view.sector;
+    cb_viewpoint.x       = M_FixedToFloat(viewpoint.x);
+    cb_viewpoint.y       = M_FixedToFloat(viewpoint.y);
+    cb_viewpoint.z       = M_FixedToFloat(viewpoint.z);
+    cb_viewpoint.angle   = cb_fixedAngleToFloat(viewpoint.angle);
+    cb_viewpoint.sin     = sinf(cb_viewpoint.angle);
+    cb_viewpoint.cos     = cosf(cb_viewpoint.angle);
+    view.pitch           = (ANG90 - viewpitch) * PI / ANG180;
+    view.lerp            = lerp;
+    view.boomcolorsector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+
+    view.boomcolorviewpoint.x = viewpoint.x;
+    view.boomcolorviewpoint.y = viewpoint.y;
+
+    viewpoint.sector = view.boomcolorsector;
 
     R_SetupSolidSegs();
     R_PreRenderBSP();
@@ -1229,9 +1251,10 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
     // haleyjd: Under BOOM logic, the view sector determines the colormap of all sectors in view.
     // This is supported for backward compatibility.
     if(r_boomcolormaps || demo_version <= 203 || LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
-        s = view.sector;
-    else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && view.sector->heightsec != -1 &&
-            (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & COLORMAP_BOOMKIND)
+        s = view.boomcolorsector;
+    else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && view.boomcolorsector->heightsec != -1 &&
+            (view.boomcolorsector->topmap | view.boomcolorsector->midmap | view.boomcolorsector->bottommap) &
+                COLORMAP_BOOMKIND)
     {
         // Boom colormap compatibility disabled from both console and EMAPINFO and game mode is modern
         // Eternity.
@@ -1240,21 +1263,21 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         // still have Boom-style global colormap changing (as opposed to direct ExtraData/UDMF
         // setting). We're in a fake-surfaces sector which has Boom-style colormaps set on some of the
         // layers. Check each area.
-        const sector_t &heightSector = sectors[view.sector->heightsec];
+        const sector_t &heightSector = sectors[view.boomcolorsector->heightsec];
 
         // Pick area ID the viewer is in
-        if(viewz < heightSector.srf.floor.getZAt(viewpoint.x, viewpoint.y))
+        if(viewz < heightSector.srf.floor.getZAt(view.boomcolorviewpoint.x, view.boomcolorviewpoint.y))
             area = ViewArea::below;
-        else if(viewz > heightSector.srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
+        else if(viewz > heightSector.srf.ceiling.getZAt(view.boomcolorviewpoint.x, view.boomcolorviewpoint.y))
             area = ViewArea::above;
         else
             area = ViewArea::normal;
 
-        colormapIndex = R_getSectorColormap(*view.sector, area);
+        colormapIndex = R_getSectorColormap(*view.boomcolorsector, area);
         if(colormapIndex & COLORMAP_BOOMKIND) // is it one of those set via the Boom method?
         {
             boomStyleOverride = true;
-            s                 = view.sector;
+            s                 = view.boomcolorsector;
         }
     }
 
@@ -1285,7 +1308,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         // sector's colormap. Needed to prevent Boom-coloured sectors from showing up when seen from
         // non-coloured sectors.
         if(!r_boomcolormaps && !boomStyleOverride && LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
-            colormapIndex = R_getSectorColormap(*view.sector, area);
+            colormapIndex = R_getSectorColormap(*view.boomcolorsector, area);
 
         colormapIndex &= ~COLORMAP_BOOMKIND;
     }
@@ -1346,13 +1369,14 @@ void R_RenderViewContext(rendercontext_t &context)
     R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
     // Push the first element on the Post-BSP stack
-    R_PushPost(context.view, context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
+    R_PushPost(context.view, context.cb_view, context.bspcontext, context.spritecontext, *context.heap, context.bounds,
+               true, nullptr);
 
     // SoM 12/9/03: render the portals.
     R_RenderPortals(context);
 
     R_DrawPlanes(context.cmapcontext, *context.heap, context.planecontext.mainhash, context.planecontext.spanstart,
-                 context.view.angle, nullptr);
+                 nullptr);
 
     // Check for new console commands.
     // NetUpdate();

@@ -268,11 +268,11 @@ static void R_contextThreadFunc(renderdata_t *data)
 void R_AllocateContextLevelData(rendercontext_t &context)
 {
     context.spritecontext.sectorvisited =
-        zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+        context.heap->calloc<bool>(numsectors, sizeof(bool), PU_LEVEL, nullptr);
 
     context.portalcontext.numportalstates = R_GetNumPortals();
     context.portalcontext.portalstates =
-        zhstructalloctag(*context.heap, portalstate_t, context.portalcontext.numportalstates, PU_LEVEL);
+        context.heap->structAlloc<portalstate_t>(context.portalcontext.numportalstates, PU_LEVEL);
     for(int i = 0; i < context.portalcontext.numportalstates; i++)
         context.portalcontext.portalstates[i].poverlay = R_NewPlaneHash(*context.heap, 131);
 }

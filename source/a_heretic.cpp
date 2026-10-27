@@ -1842,4 +1842,3 @@ void A_Feathers(actionargs_t *actionargs)
 }
 
 // EOF
-

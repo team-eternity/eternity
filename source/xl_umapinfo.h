@@ -34,7 +34,8 @@ enum
     // Use the minimum extreme values for special meanings
     XL_UMAPINFO_SPECVAL_CLEAR = INT_MIN,
     XL_UMAPINFO_SPECVAL_FALSE,
-    XL_UMAPINFO_SPECVAL_TRUE,
+    XL_UMAPINFO_SPECVAL_TRUE,             // means "allow" if "require" is also an option
+    XL_UMAPINFO_SPECVAL_TRUE_STRONG,      // means "require"
     XL_UMAPINFO_SPECVAL_NOT_SET = INT_MAX // this is the default when querying the meta table.
 };
 

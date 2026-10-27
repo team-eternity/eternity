@@ -444,7 +444,7 @@ CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
 VARIABLE_BOOLEAN(showendoom, nullptr, yesno);
 CONSOLE_VARIABLE(i_showendoom, showendoom, 0) {}
 
-VARIABLE_INT(endoomdelay, nullptr, 35, 3500, nullptr);
+VARIABLE_INT(endoomdelay, nullptr, TICRATE, TICRATE * 100, nullptr);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 

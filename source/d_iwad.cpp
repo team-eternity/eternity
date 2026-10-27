@@ -824,6 +824,9 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
 
     header.numlumps = SwapLong(header.numlumps);
 
+    // NOTE: no need to sanitize here. If infotableofs fails, fseek will just fail with error.
+    // If numlumps is negative or too large, the loop will break on EOF
+
     for(; header.numlumps; header.numlumps--)
     {
         if(!fread(&lump, sizeof(lump), 1, fp))

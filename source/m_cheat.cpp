@@ -66,6 +66,7 @@
 #include "w_levels.h"
 #include "w_wad.h"
 #include "dhticstr.h"
+#include "am_map.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
@@ -124,6 +125,9 @@ static void cheat_pushers(const void *);
 static void cheat_tran(const void *);
 static void cheat_hom(const void *);
 static void cheat_nuke(const void *);
+static void cheat_reveal_kill(const void *);
+static void cheat_reveal_item(const void *);
+static void cheat_reveal_secret(const void *);
 
 #ifdef INSTRUMENTED
 static void cheat_printstats(const void *); // killough 8/23/98
@@ -169,6 +173,9 @@ cheat_s cheat[CHEAT_NUMCHEATS] = {
     { "idclev",         Game_DOOM,    not_sync, cheat_clev,           -2                     },
     { "idmypos",        Game_DOOM,    always,   cheat_mypos,          0                      },
     { "iddt",           Game_DOOM,    not_dm,   cheat_ddt,            0                      }, // killough 2/07/98: moved from am_map.c
+    { "iddkt",          Game_DOOM,    not_dm,   cheat_reveal_kill,    0                      },
+    { "iddit",          Game_DOOM,    not_dm,   cheat_reveal_item,    0                      },
+    { "iddst",          Game_DOOM,    always,   cheat_reveal_secret,  0                      },
     { "key",            Game_DOOM,    not_sync, cheat_key,            0                      }, // killough 2/16/98: generalized key cheats
     { "keyr",           Game_DOOM,    not_sync, cheat_keyx,           0                      },
     { "keyy",           Game_DOOM,    not_sync, cheat_keyx,           0                      },
@@ -195,6 +202,9 @@ cheat_s cheat[CHEAT_NUMCHEATS] = {
     { "kitty",          Game_Heretic, not_sync, cheat_hticnoclip,     0                      },
     { "engage",         Game_Heretic, not_sync, cheat_hticwarp,       -2                     },
     { "ravmap",         Game_Heretic, not_dm,   cheat_ddt,            0                      },
+    { "ravkmap",        Game_Heretic, not_dm,   cheat_reveal_kill,    0                      },
+    { "ravimap",        Game_Heretic, not_dm,   cheat_reveal_item,    0                      },
+    { "ravsmap",        Game_Heretic, always,   cheat_reveal_secret,  0                      },
     { "ravpowerv",      Game_Heretic, not_sync, cheat_pw,             pw_invulnerability     },
     { "ravpowerg",      Game_Heretic, not_sync, cheat_pw,             pw_ghost               },
     { "ravpowera",      Game_Heretic, not_sync, cheat_pw,             pw_allmap              },
@@ -344,22 +354,23 @@ static void cheat_pw(const void *arg)
     int pw = *(const int *)arg;
 
     if(plyr->powers[pw].isActive())
-        plyr->powers[pw] = { pw != pw_strength && pw != pw_allmap && pw != pw_silencer, false }; // killough
+        plyr->powers[pw] = { pw != pw_strength, false }; // killough
     else
     {
-        static const int tics[NUMPOWERS] = {
+        static const GiveAmount tics[NUMPOWERS] = {
             INVULNTICS,
-            1, // strength
-            INVISTICS,  IRONTICS,
-            1, // allmap
+            1, // strength: note, this counts up
+            INVISTICS,
+            IRONTICS,
+            SpecialAmount::maximum, // allmap
             INFRATICS,
-            INVISTICS,  // haleyjd: totalinvis
-            INVISTICS,  // haleyjd: ghost
-            1,          // haleyjd: silencer
-            FLIGHTTICS, // haleyjd: flight
-            INFRATICS,  // haleyjd: torch
+            INVISTICS,              // haleyjd: totalinvis
+            INVISTICS,              // haleyjd: ghost
+            SpecialAmount::maximum, // haleyjd: silencer
+            FLIGHTTICS,             // haleyjd: flight
+            INFRATICS,              // haleyjd: torch
         };
-        P_GivePower(*plyr, pw, tics[pw], false, false);
+        P_GivePower(*plyr, pw, tics[pw], false);
         if(!getComp(comp_infcheat))
             plyr->powers[pw] = { 0, true };
     }
@@ -507,6 +518,24 @@ static void cheat_ddt(const void *arg)
     extern bool automapactive;
     if(automapactive)
         ddt_cheating = (ddt_cheating + 1) % 3;
+}
+
+// Reveal monster on automap
+static void cheat_reveal_kill(const void *arg)
+{
+    am_mobjLookupCheat.showNext(MobjLookupCheat::kills);
+}
+
+// Reveal item on automap
+static void cheat_reveal_item(const void *arg)
+{
+    am_mobjLookupCheat.showNext(MobjLookupCheat::items);
+}
+
+// Reveal secret on automap
+static void cheat_reveal_secret(const void *arg)
+{
+    am_secretSectorLookupCheat.showNext();
 }
 
 // killough 2/7/98: HOM autodetection

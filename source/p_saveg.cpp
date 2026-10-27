@@ -40,6 +40,7 @@
 #include "p_spec.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "p_slopes.h"
 #include "p_enemy.h"
 #include "p_portal.h"
 #include "p_hubs.h"
@@ -69,6 +70,93 @@
 // save files from causing excessive memory allocation
 static constexpr int SAVEGAME_ALLOC_THRESHOLD = 10000000;
 
+static_assert(sizeof(int64_t) >= sizeof(intptr_t));
+
+//=============================================================================
+//
+// Private methods
+//
+
+SaveArchive::SurfaceRef SaveArchive::getSurfaceIdentifier(const pslope_t *slope)
+{
+    if(!mSlopeRefs.isInitialized())
+    {
+        mSlopeRefs.initialize(127);
+        for(int i = 0; i < numsectors; ++i)
+        {
+            for(surf_e surf : SURFS)
+            {
+                auto *slope = sectors[i].srf[surf].slope;
+                if(!slope)
+                    continue;
+                auto surfaceRef    = estructalloc(SurfaceRef, 1);
+                surfaceRef->type   = SurfaceRef::Type::sector;
+                surfaceRef->index  = i;
+                surfaceRef->surf   = surf;
+                surfaceRef->ptrval = reinterpret_cast<int64_t>(slope);
+                mSlopeRefs.addObject(surfaceRef);
+            }
+        }
+        for(int i = 0; i < numlines; ++i)
+        {
+            const Surfaces<pslope_t *> *slopes = P_Get3DMidTexSlopes(lines[i]);
+            if(!slopes)
+                continue;
+            for(surf_e surf : SURFS)
+            {
+                if(!(*slopes)[surf])
+                    continue;
+                auto surfaceRef    = estructalloc(SurfaceRef, 1);
+                surfaceRef->type   = SurfaceRef::Type::midtex;
+                surfaceRef->index  = i;
+                surfaceRef->surf   = surf;
+                surfaceRef->ptrval = reinterpret_cast<int64_t>((*slopes)[surf]);
+                mSlopeRefs.addObject(surfaceRef);
+            }
+        }
+    }
+    const auto *ref = mSlopeRefs.objectForKey(reinterpret_cast<int64_t>(slope));
+    if(ref)
+    {
+        return *ref;
+    }
+    return SurfaceRef{ .index = -1 };
+}
+
+const pslope_t *SaveArchive::getSlopeIdentifier(const SurfaceRef &ref)
+{
+    if(ref.index == -1)
+    {
+        return nullptr;
+    }
+    if(ref.surf != surf_floor && ref.surf != surf_ceil)
+        throw std::runtime_error(qstring::Format("Invalid surface identifier for %d", ref.surf).constPtr());
+    switch(ref.type)
+    {
+    case SurfaceRef::Type::sector:
+        if(ref.index < 0 || ref.index >= numsectors)
+        {
+            throw std::runtime_error(
+                qstring::Format("Invalid sector index %d when loading zref slope", ref.index).constPtr());
+        }
+        return sectors[ref.index].srf[ref.surf].slope;
+    case SurfaceRef::Type::midtex:
+    {
+        if(ref.index < 0 || ref.index >= numlines)
+        {
+            throw std::runtime_error(
+                qstring::Format("Invalid line index %d when loading zref slope", ref.index).constPtr());
+        }
+        auto slopes = P_Get3DMidTexSlopes(lines[ref.index]);
+        if(!slopes)
+            throw std::runtime_error("Null midtex slope");
+
+        return (*slopes)[ref.surf];
+    }
+    default: throw std::runtime_error(qstring::Format("Invalid slope type %d", (int)ref.type).constPtr());
+    }
+}
+
 //=============================================================================
 //
 // Basic IO
@@ -90,6 +178,20 @@ SaveArchive::SaveArchive(IInBuffer *pLoadFile) : savefile(nullptr), loadfile(pLo
 {
     if(!pLoadFile)
         I_Error("SaveArchive: created a load file without a valid InBuffer\n");
+}
+
+SaveArchive::~SaveArchive()
+{
+    for(CachedString *string : mCacheStringHolder)
+        delete string;
+
+    SurfaceRef *ref = nullptr;
+    while((ref = mSlopeRefs.tableIterator((SurfaceRef *)nullptr)))
+    {
+        mSlopeRefs.removeObject(ref);
+        efree(ref);
+    }
+    mSlopeRefs.destroy();
 }
 
 //
@@ -527,6 +629,47 @@ SaveArchive &SaveArchive::operator<<(zrefs_t &zref)
         if(isLoading())
             zref.sector.ceiling = val >= 0 ? sectors + val : nullptr;
     }
+    if(saveVersion() >= 25)
+    {
+        int8_t  type;
+        int32_t index;
+        int8_t  surfvar;
+        if(isSaving())
+        {
+            SurfaceRef ref;
+
+            ref     = getSurfaceIdentifier(zref.slope.floor);
+            type    = (int8_t)ref.type;
+            index   = (int32_t)ref.index;
+            surfvar = (int8_t)ref.surf;
+            *this << type << index << surfvar;
+            ref     = getSurfaceIdentifier(zref.slope.ceiling);
+            type    = (int8_t)ref.type;
+            index   = (int32_t)ref.index;
+            surfvar = (int8_t)ref.surf;
+            *this << type << index << surfvar;
+        }
+        else // loading
+        {
+            SurfaceRef ref;
+
+            *this << type << index << surfvar;
+            ref              = { .type = (SurfaceRef::Type)type, .index = index, .surf = (surf_e)surfvar };
+            zref.slope.floor = getSlopeIdentifier(ref);
+            *this << type << index << surfvar;
+            ref                = { .type = (SurfaceRef::Type)type, .index = index, .surf = (surf_e)surfvar };
+            zref.slope.ceiling = getSlopeIdentifier(ref);
+        }
+    }
+    if(saveVersion() >= 26)
+    {
+        int32_t index;
+        if(isSaving())
+            index = zref.floorline ? eindex(zref.floorline - lines) : -1;
+        *this << index;
+        if(isLoading())
+            zref.floorline = index == -1 ? nullptr : &lines[index];
+    }
     return *this;
 }
 
@@ -794,8 +937,23 @@ static void P_ArchivePlayers(SaveArchive &arc)
                 P_loadWeaponCounters(arc, p);
             }
             P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
-            if(arc.saveVersion() >= 22)
-                P_ArchiveArray<inventoryslot_t>(arc, p.unmorphInventory, inventorySize);
+            if(arc.saveVersion() >= 22 && arc.saveVersion() <= 23)
+            {
+                PODCollection<inventoryslot_t> unmorphInventory;
+                unmorphInventory.resize(inventorySize);
+                P_ArchiveArray<inventoryslot_t>(arc, &unmorphInventory[0], inventorySize);
+
+                if(arc.isLoading())
+                {
+                    for(const inventoryslot_t &slot : unmorphInventory)
+                    {
+                        if(!slot.amount)
+                            break; // reached end
+
+                        E_GiveInventoryItem(p, E_EffectForInventoryItemID(slot.item));
+                    }
+                }
+            }
 
             for(powerduration_t &power : p.powers)
             {
@@ -858,6 +1016,17 @@ static void P_ArchiveWorld(SaveArchive &arc)
     sector_t *sec;
     line_t   *li;
     side_t   *si;
+
+    // Global world variables here
+    if(arc.saveVersion() >= 23)
+        arc << totalKilledMonsters << totalmonsters;
+    else if(arc.isLoading())
+    {
+        totalKilledMonsters = 0;
+        for(int i = 0; i < MAXPLAYERS; ++i)
+            if(playeringame[i])
+                totalKilledMonsters += players[i].killcount;
+    }
 
     // do sectors
     for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)

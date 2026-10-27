@@ -1416,7 +1416,7 @@ struct teleparms_t
     teleangle_e teleangle;
 };
 
-bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag);
+int P_Teleport(Mobj *thing, v2fixed_t landingpos, angle_t landingangle, bool alwaysfrag);
 
 int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag);
 
@@ -1534,7 +1534,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag);
 
 int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, line_t *triggerLine);
 
 // p_things
 
@@ -1653,11 +1653,11 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual = false);
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachLines(const line_t *cline, bool ceiling);
+void P_AttachLines(const line_t *cline, surf_e surf);
 bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, int crush, bool nointerp);
 void P_AttachSectors(const line_t *line, int staticFn);
 
-bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int crush);
+bool P_Scroll3DSides(const sector_t *sector, surf_e surf, fixed_t delta, int crush);
 
 void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
@@ -1676,7 +1676,7 @@ void P_ZeroSectorSpecial(sector_t *);
 
 void P_SetLineID(line_t *line, int id);
 
-v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
+v3fixed_t P_GetArrivalTelefogLocation(const Mobj &thing, v3fixed_t landing, angle_t angle);
 
 // haleyjd: parameterized lines
 

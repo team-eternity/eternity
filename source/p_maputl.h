@@ -37,6 +37,7 @@ class Mobj;
 struct mobjinfo_t;
 struct polyobj_t; // ioanch 20160114
 struct sector_t;
+struct side_t;
 struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
@@ -48,9 +49,13 @@ static constexpr int     MAPBTOFRAC    = MAPBLOCKSHIFT - FRACBITS;
 
 enum
 {
-    PT_ADDLINES  = 1,
-    PT_ADDTHINGS = 2,
-    PT_EARLYOUT  = 4,
+    PT_ADDLINES             = 1,
+    PT_ADDTHINGS            = 2,
+    PT_COMPATIBILITY        = 4, // classic compatibility (globals, "anywhere moo", lower robustness)
+    PT_EARLY_OUT_OF_BOUNDS  = 8,
+    PT_EARLY_OUT_IN_SCAN    = 0x10, // don't early out asap, but during scanning
+    PT_ANY_EARLY_OUT        = PT_EARLY_OUT_OF_BOUNDS | PT_EARLY_OUT_IN_SCAN,
+    PT_REQUIRE_LINE_PORTALS = 0x20,
 };
 
 struct divline_t
@@ -112,9 +117,8 @@ struct intercept_t
 class VisitList
 {
 public:
-    //
-    // Must be explicitly initialized, because we don't always want to use it
-    //
+    VisitList() = default;
+    explicit VisitList(size_t size) { init(size); }
     void init(size_t size) { bitset.resize(size); }
 
     bool get(size_t index) const { return bitset[index]; }
@@ -135,7 +139,7 @@ public:
     VisitList polys;
 };
 
-using traverser_t = bool (*)(intercept_t *in, void *context);
+using traverser_t = bool (*)(intercept_t *in, void *context, const divline_t &);
 
 fixed_t               P_AproxDistance(fixed_t dx, fixed_t dy);
 inline static fixed_t P_AproxDistance(v2fixed_t dv)
@@ -166,6 +170,9 @@ int       P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t d
 // SoM 9/2/02: added mo parameter for 3dside clipping
 //  ioanch 20150113: added optional portal detection
 
+void P_Get3DMidTexHeights(const line_t &line, const side_t &side, fixed_t &texbot, fixed_t &textop,
+                          const v2fixed_t *point);
+
 lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed_t *ppoint = nullptr,
                             bool portaldetect = false, uint32_t *lineclipflags = nullptr);
 lineopening_t P_SlopeOpening(v2fixed_t pos);
@@ -190,8 +197,8 @@ inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *)
 void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i1, v2fixed_t &i2);
 
 bool ThingIsOnLine(const Mobj *t, const line_t *l); // killough 3/15/98
-bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, traverser_t trav,
-                    void *context = nullptr);
+bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context = nullptr,
+                    divline_t *outTrace = nullptr);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 angle_t P_DoubleToAngle(double a);

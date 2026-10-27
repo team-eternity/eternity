@@ -33,7 +33,33 @@ enum
     AM_MSGEXITED
 };
 
+class Mobj;
 struct event_t;
+
+class MobjLookupCheat
+{
+public:
+    enum type_e
+    {
+        kills,
+        items,
+    };
+    void showNext(type_e type);
+    void levelInit() { current = nullptr; }
+
+private:
+    Mobj *current;
+};
+
+class SecretSectorLookupCheat
+{
+public:
+    void showNext();
+    void levelInit() { current = -1; }
+
+private:
+    int current;
+};
 
 // Called by main loop.
 bool AM_Responder(const event_t *ev);
@@ -59,8 +85,9 @@ void AM_UpdateWindowHeight(bool fullscreen);
 
 void AM_clearMarks(void);
 
-class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
+
+struct sector_t;
 
 struct mpoint_t
 {
@@ -119,6 +146,9 @@ extern int mapportal_overlay; // julian: changed to int
                               // (size problem, could lead to memory error)
 
 extern bool map_antialias; // do antialiased line drawing
+
+extern MobjLookupCheat         am_mobjLookupCheat;
+extern SecretSectorLookupCheat am_secretSectorLookupCheat;
 
 #endif
 

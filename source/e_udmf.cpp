@@ -349,6 +349,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
                 ld->extflags |= EX_ML_ZONEBOUNDARY;
             if(uld.clipmidtex)
                 ld->extflags |= EX_ML_CLIPMIDTEX;
+            if(uld.wrapmidtex)
+                ld->extflags |= EX_ML_WRAPMIDTEX;
             if(uld.midtex3dimpassible)
                 ld->extflags |= EX_ML_3DMTPASSPROJ;
             if(uld.lowerportal)
@@ -456,6 +458,13 @@ bool UDMFParser::loadSidedefs2()
             sd->offset_mid_y    = usd.offsety_mid;
             sd->offset_top_x    = usd.offsetx_top;
             sd->offset_top_y    = usd.offsety_top;
+
+            sd->scale_bottom_x = usd.scalex_bottom;
+            sd->scale_bottom_y = usd.scaley_bottom;
+            sd->scale_mid_x    = usd.scalex_mid;
+            sd->scale_mid_y    = usd.scaley_mid;
+            sd->scale_top_x    = usd.scalex_top;
+            sd->scale_top_y    = usd.scaley_top;
 
             sd->light_base    = usd.light;
             sd->light_top     = usd.light_top;
@@ -736,6 +745,7 @@ void UDMFParser::readLinedefToken(ULinedef *linedef, const keytoken_t *kt) const
         READ_BOOL(linedef,   blockeverything);
         READ_BOOL(linedef,   zoneboundary);
         READ_BOOL(linedef,   clipmidtex);
+        READ_BOOL(linedef,   wrapmidtex);
         READ_BOOL(linedef,   lowerportal);
         READ_BOOL(linedef,   upperportal);
 
@@ -777,6 +787,13 @@ void UDMFParser::readSidedefToken(USidedef *sidedef, const keytoken_t *kt) const
             READ_FIXED(sidedef, offsety_mid);
             READ_FIXED(sidedef, offsetx_top);
             READ_FIXED(sidedef, offsety_top);
+
+            READ_FIXED(sidedef, scalex_bottom);
+            READ_FIXED(sidedef, scaley_bottom);
+            READ_FIXED(sidedef, scalex_mid);
+            READ_FIXED(sidedef, scaley_mid);
+            READ_FIXED(sidedef, scalex_top);
+            READ_FIXED(sidedef, scaley_top);
 
             READ_NUMBER(sidedef, light);
             READ_NUMBER(sidedef, light_top);

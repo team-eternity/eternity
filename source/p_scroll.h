@@ -95,4 +95,3 @@ void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fi
 #endif
 
 // EOF
-

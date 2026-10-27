@@ -58,6 +58,7 @@
 // haleyjd: C++ headers
 #include <new>
 #include <type_traits>
+#include <source_location>
 
 // haleyjd: portable replacement function headers
 #include "m_ctype.h"
@@ -103,66 +104,37 @@ void *Z_SysRealloc(void *ptr, size_t size);
 void  Z_SysFree(void *p);
 
 //
-// Context-specific Heap alloc Macros
-//
-#define zhmalloc(zoneheap, type, n) \
-    static_cast<type>((zoneheap).malloc(n, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define zhmalloctag(zoneheap, type, n1, tag, user) \
-    static_cast<type>((zoneheap).malloc(n1, tag, user, __FILE__, __LINE__))
-
-#define zhcalloc(zoneheap, type, n1, n2) \
-    static_cast<type>((zoneheap).calloc(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define zhcalloctag(zoneheap, type, n1, n2, tag, user) \
-    static_cast<type>((zoneheap).calloc(n1, n2, tag, user, __FILE__, __LINE__))
-
-#define zhrealloc(zoneheap, type, p, n) \
-    static_cast<type>((zoneheap).realloc(p, n, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define zhrealloctag(zoneheap, type, p, n, tag, user) \
-    static_cast<type>((zoneheap).realloc(p, n, tag, user, __FILE__, __LINE__))
-
-#define zhstructalloc(zoneheap, type, n) \
-    static_cast<type *>((zoneheap).calloc(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
-
-#define zhstructalloctag(zoneheap, type, n, tag) \
-    static_cast<type *>((zoneheap).calloc(n, sizeof(type), tag, 0, __FILE__, __LINE__))
-
-#define zhstrdup(zoneheap, s) (zoneheap).strdup(s, PU_STATIC, 0, __FILE__, __LINE__)
-
-#define zhfree(zoneheap, p)   (zoneheap).free(p, __FILE__, __LINE__)
-
 // Global Heap alloc Macros
+//
 
 // clang-format off
 
-#define Z_Free(a)          z_globalheap.free       (a,      __FILE__,__LINE__)
-#define Z_FreeTags(a,b)    z_globalheap.freeTags   (a,b,    __FILE__,__LINE__)
-#define Z_ChangeTag(a,b)   z_globalheap.changeTag  (a,b,    __FILE__,__LINE__)
-#define Z_Malloc(a,b,c)    z_globalheap.malloc     (a,b,c,  __FILE__,__LINE__)
-#define Z_Strdup(a,b,c)    z_globalheap.strdup     (a,b,c,  __FILE__,__LINE__)
-#define Z_Calloc(a,b,c,d)  z_globalheap.calloc     (a,b,c,d,__FILE__,__LINE__)
-#define Z_Realloc(a,b,c,d) z_globalheap.realloc    (a,b,c,d,__FILE__,__LINE__)
+#define Z_Free(a)          z_globalheap.free       (a)
+#define Z_FreeTags(a,b)    z_globalheap.freeTags   (a,b)
+#define Z_ChangeTag(a,b)   z_globalheap.changeTag  (a,b)
+#define Z_Malloc(a,b,c)    z_globalheap.malloc     (a,b,c)
+#define Z_Strdup(a,b,c)    z_globalheap.strdup     (a,b,c)
+#define Z_Calloc(a,b,c,d)  z_globalheap.calloc     (a,b,c,d)
+#define Z_Realloc(a,b,c,d) z_globalheap.realloc    (a,b,c,d)
 #define Z_FreeAlloca       z_globalheap.freeAllocAuto
-#define Z_Alloca(a)        z_globalheap.allocAuto  (a,      __FILE__,__LINE__)
-#define Z_Realloca(a,b)    z_globalheap.reallocAuto(a,b,    __FILE__,__LINE__)
-#define Z_Strdupa(a)       z_globalheap.strdupAuto (a,      __FILE__,__LINE__)
-#define Z_CheckHeap()      z_globalheap.checkHeap  (        __FILE__,__LINE__)
-#define Z_CheckTag(a)      z_globalheap.checkTag   (a,      __FILE__,__LINE__)
+#define Z_Alloca(a)        z_globalheap.allocAuto  (a)
+#define Z_Realloca(a,b)    z_globalheap.reallocAuto(a,b)
+#define Z_Strdupa(a)       z_globalheap.strdupAuto (a)
+#define Z_CheckHeap()      z_globalheap.checkHeap  ()
+#define Z_CheckTag(a)      z_globalheap.checkTag   (a)
 
 // clang-format on
 
-#define emalloc(type, n)                    zhmalloc(z_globalheap, type, n)
-#define emalloctag(type, n1, tag, user)     zhmalloctag(z_globalheap, type, n1, tag, user)
-#define ecalloc(type, n1, n2)               zhcalloc(z_globalheap, type, n1, n2)
-#define ecalloctag(type, n1, n2, tag, user) zhcalloctag(z_globalheap, type, n1, n2, tag, user)
-#define erealloc(type, p, n)                zhrealloc(z_globalheap, type, p, n)
-#define erealloctag(type, p, n, tag, user)  zhrealloctag(z_globalheap, type, p, n, tag, user)
-#define estructalloc(type, n)               zhstructalloc(z_globalheap, type, n)
-#define estructalloctag(type, n, tag)       zhstructalloctag(z_globalheap, type, n, tag)
-#define estrdup(s)                          zhstrdup(z_globalheap, s)
-#define efree(p)                            zhfree(z_globalheap, p)
+#define emalloc(type, n)                    static_cast<type>(z_globalheap.malloc(n, PU_STATIC, 0))
+#define emalloctag(type, n1, tag, user)     static_cast<type>(z_globalheap.malloc(n1, tag, user))
+#define ecalloc(type, n1, n2)               static_cast<type>(z_globalheap.calloc(n1, n2, PU_STATIC, 0))
+#define ecalloctag(type, n1, n2, tag, user) static_cast<type>(z_globalheap.calloc(n1, n2, tag, user))
+#define erealloc(type, p, n)                static_cast<type>(z_globalheap.realloc(p, n, PU_STATIC, 0))
+#define erealloctag(type, p, n, tag, user)  static_cast<type>(z_globalheap.realloc(p, n, tag, user))
+#define estructalloc(type, n)               static_cast<type *>(z_globalheap.calloc(n, sizeof(type), PU_STATIC, 0))
+#define estructalloctag(type, n, tag)       static_cast<type *>(z_globalheap.calloc(n, sizeof(type), tag, 0))
+#define estrdup(s)                          z_globalheap.strdup(s, PU_STATIC, 0)
+#define efree(p)                            z_globalheap.free(p)
 
 //
 // Globally useful macros
@@ -209,19 +181,19 @@ protected:
 #endif
 
 public:
-    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
-    virtual void  free(void *ptr, const char *, int);
-    virtual void  freeTags(int lowtag, int hightag, const char *, int);
-    virtual void  changeTag(void *ptr, int tag, const char *, int);
-    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int);
-    virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int);
-    virtual char *strdup(const char *s, int tag, void **user, const char *, int);
+    virtual void *malloc(size_t size, int tag, void **ptr, const std::source_location loc = std::source_location::current());
+    virtual void  free(void *ptr, const std::source_location loc = std::source_location::current());
+    virtual void  freeTags(int lowtag, int hightag, const std::source_location loc = std::source_location::current());
+    virtual void  changeTag(void *ptr, int tag, const std::source_location loc = std::source_location::current());
+    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const std::source_location loc = std::source_location::current());
+    virtual void *realloc(void *p, size_t n, int tag, void **user, const std::source_location loc = std::source_location::current());
+    virtual char *strdup(const char *s, int tag, void **user, const std::source_location loc = std::source_location::current());
     virtual void  freeAllocAuto();
-    virtual void *allocAuto(size_t n, const char *file, int line); // Not alloca because defines
-    virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line);
-    virtual char *strdupAuto(const char *s, const char *file, int line);
-    virtual void  checkHeap(const char *, int);
-    virtual int   checkTag(void *, const char *, int);
+    virtual void *allocAuto(size_t n, const std::source_location loc = std::source_location::current()); // Not alloca because defines
+    virtual void *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current());
+    virtual char *strdupAuto(const char *s, const std::source_location loc = std::source_location::current());
+    virtual void  checkHeap(const std::source_location loc = std::source_location::current());
+    virtual int   checkTag(void *, const std::source_location loc = std::source_location::current());
 
     void print(const char *filename);
     void dumpCore(const char *filename);
@@ -237,38 +209,43 @@ public:
 class ZoneHeap final : public ZoneHeapBase
 {
 public:
-    ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); };
+    ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE); };
 
-    // TODO: Re-enable when C++20 is a thing and kill the zh macros
     // THREAD_FIXME: Guard against any and all PU_STATIC (and maybe PU_PERMANENT) allocations?
-    // template <typename T>
-    // inline T *malloc(const size_t size, const int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *calloc(size_t n, size_t n2, int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *realloc(void *p, size_t n, int tag, void **user = nullptr,
-    //   const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc.file_name(), loc.line()));
-    //}
-    // template <typename T>
-    // inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
-    //{
-    //   return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc.file_name(), loc.line()));
-    //}
+    template<typename T>
+    inline T *malloc(const size_t size, const int tag = PU_STATIC, void **user = nullptr,
+                     const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc));
+    }
+    template<typename T>
+    inline T *calloc(size_t n, size_t n2, int tag = PU_STATIC, void **user = nullptr,
+                     const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc));
+    }
+    template<typename T>
+    inline T *realloc(void *p, size_t n, int tag = PU_STATIC, void **user = nullptr,
+                      const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc));
+    }
+    template<typename T>
+    inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc));
+    }
+    template<typename T>
+    inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, loc));
+    }
+    template<typename T>
+    inline T *structAlloc(size_t n, int tag = PU_STATIC,
+                          const std::source_location loc = std::source_location::current())
+    {
+        return static_cast<T *>(ZoneHeapBase::calloc(n, sizeof(T), tag, nullptr, loc));
+    }
 };
 
 //
@@ -283,19 +260,19 @@ public:
     ZoneHeapThreadSafe();
     ~ZoneHeapThreadSafe();
 
-    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int) override;
-    virtual void  free(void *ptr, const char *, int) override;
-    virtual void  freeTags(int lowtag, int hightag, const char *, int) override;
-    virtual void  changeTag(void *ptr, int tag, const char *, int) override;
-    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int) override;
-    virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int) override;
-    virtual char *strdup(const char *s, int tag, void **user, const char *, int) override;
+    virtual void *malloc(size_t size, int tag, void **ptr, const std::source_location loc = std::source_location::current()) override;
+    virtual void  free(void *ptr, const std::source_location loc = std::source_location::current()) override;
+    virtual void  freeTags(int lowtag, int hightag, const std::source_location loc = std::source_location::current()) override;
+    virtual void  changeTag(void *ptr, int tag, const std::source_location loc = std::source_location::current()) override;
+    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const std::source_location loc = std::source_location::current()) override;
+    virtual void *realloc(void *p, size_t n, int tag, void **user, const std::source_location loc = std::source_location::current()) override;
+    virtual char *strdup(const char *s, int tag, void **user, const std::source_location loc = std::source_location::current()) override;
     virtual void  freeAllocAuto() override;
-    virtual void *allocAuto(size_t n, const char *file, int line) override; // Not alloca because defines
-    virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line) override;
-    virtual char *strdupAuto(const char *s, const char *file, int line) override;
-    virtual void  checkHeap(const char *, int) override;
-    virtual int   checkTag(void *, const char *, int) override;
+    virtual void *allocAuto(size_t n, const std::source_location loc = std::source_location::current()) override; // Not alloca because defines
+    virtual void *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current()) override;
+    virtual char *strdupAuto(const char *s, const std::source_location loc = std::source_location::current()) override;
+    virtual void  checkHeap(const std::source_location loc = std::source_location::current()) override;
+    virtual int   checkTag(void *, const std::source_location loc = std::source_location::current()) override;
 };
 
 //

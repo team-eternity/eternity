@@ -25,6 +25,7 @@
 #define F_FINALE_H__
 
 #include "info.h"
+#include "p_info.h"
 
 struct event_t;
 
@@ -82,7 +83,7 @@ void F_Ticker();
 // Called by main loop.
 void F_Drawer();
 
-void F_StartFinale(bool secret);
+void F_StartFinale(ExitType type);
 
 #endif
 

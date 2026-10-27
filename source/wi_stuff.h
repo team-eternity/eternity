@@ -36,6 +36,11 @@ enum stateenum_t
     IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
 };
 
+enum
+{
+    SUCK_TIME = 60 * 60,
+};
+
 // haleyjd: DOOM intermission object
 extern interfns_t DoomIntermission;
 

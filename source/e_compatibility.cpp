@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley, Max Waine, Ioan Chera et al.
+// Copyright (C) 2026 James Haley, Max Waine, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,13 @@ constexpr const char ITEM_COMPATIBILITY_DISABLE[] = "off";
 // The EDF-set table
 static MetaTable ontable;
 static MetaTable offtable;
+
+enum
+{
+    compatHack_heartland_2021_map02 = 1,
+};
+
+static unsigned e_internal_compatHacks;
 
 // clang-format off
 
@@ -138,6 +145,7 @@ void E_RestoreCompatibilities()
     memset(level_compat_compactive, 0, sizeof(level_compat_compactive));
     memset(s_overridden, 0, sizeof(s_overridden));
     memset(s_overrideEnabled, 0, sizeof(s_overrideEnabled));
+    e_internal_compatHacks = 0;
 }
 
 //
@@ -190,6 +198,13 @@ void E_ApplyCompatibility(const char *digest)
     metaSetting = nullptr;
     while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, digest)))
         E_setItem(metaSetting->getValue(), false);
+
+    // Now handle internal hardcoded hashes, not exposed into EDF
+
+    if(demo_version >= 407 && !strcasecmp(digest, "540d8f22cd9ad37ab5af04f6f231930e")) // heartland map02
+    {
+        e_internal_compatHacks |= compatHack_heartland_2021_map02;
+    }
 }
 
 //
@@ -198,6 +213,20 @@ void E_ApplyCompatibility(const char *digest)
 int E_Get(overridableSetting_e setting)
 {
     return s_overrideEnabled[setting] ? s_overridden[setting] : *sk_overrideTarget[setting];
+}
+
+bool E_CompatHackAllowMobjDeathSpecialReset(const Mobj &mo)
+{
+    if(e_internal_compatHacks & compatHack_heartland_2021_map02)
+    {
+        // Solve map error in Heartland MAP02: raised revenant must keep its death special on death, because it may be
+        // resurrected, lose its special, and fail calling the script which counts living monsters with TID 39
+        if(mo.info->doomednum == 66 && gameskill == sk_medium && mo.special == 80 && mo.args[0] == 9 && mo.tid == 39)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 // EOF

@@ -842,7 +842,7 @@ int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed, in
         waggle->scale          = 0;
         waggle->targetScale    = height << 10;
         waggle->scaleDelta     = waggle->targetScale / (35 + ((3 * 35) * height) / 255);
-        waggle->ticker         = timer ? timer * 35 : -1;
+        waggle->ticker         = timer ? timer * TICRATE : -1;
         waggle->state          = WGLSTATE_EXPAND;
 
         if(manual)

@@ -450,6 +450,7 @@ bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl, Mobj *shooter,
                   const MetaTable *pufftype = nullptr, const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
+void  P_IncrementCountKill(const Mobj &mobj);
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);                                                               // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec, const zrefs_t *slopebumpz = nullptr); // killough
@@ -617,9 +618,68 @@ inline static fixed_t getTargetZ(Mobj *mo)
     return getThingZ(mo, mo->target);
 }
 
-bool P_CheckFloorCeilingForSpawning(const Mobj &mobj);
-bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
-void P_NeutralizeForRemoval(Mobj &mobj);
+bool    P_CheckFloorCeilingForSpawning(const Mobj &mobj);
+bool    P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
+void    P_NeutralizeForRemoval(Mobj &mobj);
+fixed_t P_GetMeleeRange(const Mobj &mobj);
+
+class MobjReference : public ZoneObject
+{
+public:
+    MobjReference() = default;
+    explicit MobjReference(Mobj *mobj) { P_SetTarget(&this->mobj, mobj); }
+    MobjReference(const MobjReference &other) { P_SetTarget(&mobj, other.mobj); }
+    MobjReference(MobjReference &&other) noexcept : mobj(other.mobj) { other.mobj = nullptr; }
+    ~MobjReference() { P_ClearTarget(mobj); }
+
+    MobjReference &operator=(const MobjReference &other)
+    {
+        if(this == &other)
+        {
+            return *this;
+        }
+        P_SetTarget(&mobj, other.mobj);
+        return *this;
+    }
+
+    MobjReference &operator=(MobjReference &&other) noexcept
+    {
+        if(this == &other)
+        {
+            return *this;
+        }
+        if(mobj)
+        {
+            P_ClearTarget(mobj);
+        }
+        mobj       = other.mobj;
+        other.mobj = nullptr;
+        return *this;
+    }
+
+    MobjReference &operator=(Mobj *mobj)
+    {
+        P_SetTarget(&this->mobj, mobj);
+        return *this;
+    }
+
+    Mobj *operator->() const { return mobj; }
+
+    bool operator==(const Mobj *mobj) const { return this->mobj == mobj; }
+    bool operator==(const Mobj &mobj) const { return this->mobj == &mobj; }
+
+    Mobj *get() const { return mobj; }
+
+private:
+    Mobj *mobj = nullptr;
+};
+
+struct MobileCrossLineActivation
+{
+    line_t       *line;
+    MobjReference reference;
+    int           side;
+};
 
 //=============================================================================
 //
@@ -820,6 +880,7 @@ enum
     MIF_SKULLFLYSEE           = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
 
     MIF_NOSPEEDCAP = 0x00100000, // Don't apply MAXMOVE speed limit when thrusted
+    MIF_SCROLLING  = 0x00200000, // Object is affected by scroller / pusher / puller
 
     // these should be cleared when a thing is being raised
     MIF_CLEARRAISED = (MIF_DIEDFALLING | MIF_SCREAMED | MIF_CRASHED | MIF_SKULLFLYSEE | MIF_WIMPYDEATH),
@@ -845,6 +906,11 @@ inline static bool P_mobjOnSurface(const Mobj &mobj)
 inline static void P_transferFriendship(Mobj &target, const Mobj &source)
 {
     target.flags = (target.flags & ~MF_FRIEND) | (source.flags & MF_FRIEND);
+}
+
+inline static bool P_allowTeleport(const Mobj &thing)
+{
+    return !(thing.flags & MF_MISSILE) || thing.flags3 & MF3_TELESTOMP;
 }
 
 #endif

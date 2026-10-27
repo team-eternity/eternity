@@ -357,13 +357,20 @@ static bool P_checkUnmorph(Mobj &mobj)
 //
 bool P_SetMobjState(Mobj *mobj, statenum_t state)
 {
-    static int recursion;
-    ++recursion;
-
-    if(recursion >= 10000)
+    static int recursionValue;
+    class ScopedStackIncrement
     {
-        doom_printf(FC_ERROR "Warning: State Recursion Detected from %s", mobj->info->name);
-        --recursion;
+    public:
+        ScopedStackIncrement() { ++recursionValue; }
+        ~ScopedStackIncrement() { --recursionValue; }
+
+        int get() const { return recursionValue; }
+
+    } recursion;
+
+    if(recursion.get() >= 2500) // NOTE: this may need to be reduced
+    {
+        doom_printf(FC_ERROR "Warning: State Recursion Suspected from %s", mobj->info->name);
         return true;
     }
 
@@ -445,7 +452,6 @@ bool P_SetMobjState(Mobj *mobj, statenum_t state)
     if(seenstates)
         P_FreeSeenStates(seenstates);
 
-    --recursion;
     return ret;
 }
 
@@ -633,13 +639,13 @@ inline static fixed_t P_getMBFBouncerGravity(const Mobj &thing, int multiplier)
 
 static void P_applySlopeGravity(Mobj &thing)
 {
-    if(!thing.zref.sector.floor || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
+    if(!thing.zref.slope.floor || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
        thing.flags & (MF_NOGRAVITY | MF_NOCLIP | MF_TELEPORT))
     {
         return;
     }
-    const pslope_t *slope = thing.zref.sector.floor->srf.floor.slope;
-    if(!slope || D_abs(slope->zdelta) < FRACUNIT)
+    const pslope_t *slope = thing.zref.slope.floor;
+    if(D_abs(slope->zdelta) < FRACUNIT)
         return;
 
     fixed_t gravity;
@@ -658,15 +664,15 @@ static void P_reduceVelocityBySlope(Mobj &thing)
     // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
     // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
-    if(!thing.zref.sector.floor)
+    if(!thing.zref.slope.floor)
         return;
 
-    const pslope_t *slope = thing.zref.sector.floor->srf.floor.slope;
-    if(!slope || !slope->zdelta)
+    const pslope_t *slope = thing.zref.slope.floor;
+    if(!slope->zdelta)
         return;
 
     // Offset to the corner that touches the slope. Also add portal if any
-    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, thing.zref.sector.floor->groupid);
+    const linkoffset_t *link        = P_GetLinkOffset(thing.groupid, *slope->groupid);
     const v2fixed_t     slopeoffset = { ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
                                         ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y };
     const v2fixed_t     source      = { thing.x, thing.y };
@@ -990,7 +996,8 @@ void P_XYMovement(Mobj *mo)
     // moving corresponding player, except in old demos:
 
     if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED && mo->momy > -STOPSPEED && mo->momy < STOPSPEED &&
-       (!player || !(player->cmd.forwardmove | player->cmd.sidemove) || (player->mo != mo && demo_version >= 203)))
+       (!player || !(player->cmd.forwardmove | player->cmd.sidemove)
+           || (player->mo != mo && demo_version >= 203 && (comp[comp_voodooscroller] || !(mo->intflags & MIF_SCROLLING)))))
     {
         // if in a walking frame, stop moving
 
@@ -1115,9 +1122,9 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                    (fixed_t)(FRACUNIT * .45);
     };
 
-    if(thing.zref.sector[surf])
+    if(thing.zref.slope[surf])
     {
-        const pslope_t *slope = thing.zref.sector[surf]->srf[surf].slope;
+        const pslope_t *slope = thing.zref.slope[surf];
 
         // ONLY for no-gravity things, apply bouncing according to slope normal.
         // For falling things it has been noticed it's too wacky and unrealistic.
@@ -1128,7 +1135,7 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                            FixedMul(slope->normal.z, thing.momz);
             v3fixed_t normcomp = { FixedMul(prod, slope->normal.x), FixedMul(prod, slope->normal.y),
                                    FixedMul(prod, slope->normal.z) };
-            if(surf == surf_floor || !(thing.zref.sector[surf]->intflags & SIF_SKY))
+            if(surf == surf_floor || !thing.zref.sector[surf] || !(thing.zref.sector[surf]->intflags & SIF_SKY))
             {
                 // always bounce off non-sky ceiling
                 thing.momx -= 2 * normcomp.x;
@@ -1209,9 +1216,7 @@ static void P_ZMovement(Mobj *mo)
     // killough 8/9/98: added support for non-missile objects bouncing
     // (e.g. grenade, mine, pipebomb)
 
-    bool horizontalBounceOnSlope =
-        !mo->momz && ((mo->zref.sector.floor && mo->zref.sector.floor->srf.floor.slope) ||
-                      (mo->zref.sector.ceiling && mo->zref.sector.ceiling->srf.ceiling.slope));
+    bool horizontalBounceOnSlope = !mo->momz && (mo->zref.slope.floor || mo->zref.slope.ceiling);
 
     if(mo->flags & MF_BOUNCES && (mo->momz || horizontalBounceOnSlope))
     {
@@ -1835,6 +1840,7 @@ void Mobj::Think()
     if(momx | momy || flags & MF_SKULLFLY)
     {
         P_XYMovement(this);
+        intflags &= ~MIF_SCROLLING;
         if(removed) // killough: mobj was removed
             return;
     }
@@ -2492,9 +2498,11 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, bool nolastl
     mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
     mobj->zref.floorgroupid               = extremesector->groupid;
     mobj->zref.sector.floor               = extremesector;
+    mobj->zref.slope.floor                = extremesector->srf.floor.slope;
     extremesector                         = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
     mobj->zref.ceiling                    = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
     mobj->zref.sector.ceiling             = extremesector;
+    mobj->zref.slope.ceiling              = extremesector->srf.ceiling.slope;
 
     mobj->z = (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
 
@@ -2704,7 +2712,7 @@ void P_RespawnSpecials()
 
     if(!(dmflags & DM_ITEMRESPAWN) ||                   // only respawn items in deathmatch
        iquehead == iquetail ||                          // nothing left to respawn?
-       leveltime - itemrespawntime[iquetail] < 30 * 35) // wait 30 seconds
+       leveltime - itemrespawntime[iquetail] < 30 * TICRATE) // wait 30 seconds
         return;
 
     mthing = &itemrespawnque[iquetail];
@@ -2843,6 +2851,13 @@ void P_SpawnUnknownThings()
     }
 
     UnknownThings.clear();
+}
+
+void P_IncrementCountKill(const Mobj &mobj)
+{
+    // killough 7/20/98: exclude friends
+    if(!((mobj.flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
+        totalmonsters++;
 }
 
 //
@@ -3101,9 +3116,7 @@ spawnit:
         mobj->updateThinker();    // transfer friendliness flag
     }
 
-    // killough 7/20/98: exclude friends
-    if(!((mobj->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
-        totalkills++;
+    P_IncrementCountKill(*mobj);
 
     if(mobj->flags & MF_COUNTITEM)
         totalitems++;
@@ -4071,10 +4084,12 @@ void P_AdjustFloorClip(Mobj *thing)
     // involved (it does its own clipping)
     for(m = thing->touching_sectorlist; m; m = m->m_tnext)
     {
+        if(m->flags & MSN_POLYLINE)
+            continue;
         if(m->m_sector->heightsec == -1 &&
            ((!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height) ||
             (m->m_sector->srf.floor.slope && P_SlopesEqual(thing->zref.sector.floor, m->m_sector, surf_floor) &&
-             thing->z == thing->zref.floor)))
+             thing->z <= thing->zref.floor)))
         {
             fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
@@ -4421,6 +4436,11 @@ void P_NeutralizeForRemoval(Mobj &mobj)
     mobj.flags3                       &= ~(MF3_PASSMOBJ);
     mobj.player                        = nullptr;
     mobj.health                        = -1000;
+}
+
+fixed_t P_GetMeleeRange(const Mobj &mobj)
+{
+    return mbf21_demo ? mobj.info->meleerange : MELEERANGE;
 }
 
 #if 0
@@ -5172,4 +5192,3 @@ AMX_NATIVE_INFO mobj_Natives[] = {
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

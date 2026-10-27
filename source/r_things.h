@@ -60,8 +60,10 @@ struct maskedrange_t
     float *ceilingclip;
 
     // for rotated portals and sprite rendering
-    fixed_t viewsin, viewcos;
-    int     heightsec;
+    fixed_t   viewsin, viewcos;
+    v3fixed_t viewpos;    // can't just use viewpoint_t due to circular inclusions
+    float     viewzfloat; // some code uses cb_viewpoint_t data
+    int       heightsec;
 
     // for unused head
     struct maskedrange_t *next;
@@ -73,8 +75,9 @@ struct poststack_t
     maskedrange_t *masked;
 };
 
-void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
+void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, bspcontext_t &bspcontext,
+                spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds, bool pushmasked,
+                pwindow_t *window);
 
 void R_ClearBadSpritesAndFrames();
 
@@ -85,9 +88,13 @@ struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
+void R_DrawNewWrappedMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                  const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                  const texcol_t *const tcolumn, const float mfloorclip, const float mceilingclip,
+                                  const float skew);
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *tex, const texcol_t *tcolumn, const float *const mfloorclip,
-                           const float *const mceilingclip, const float skew);
+                           const texture_t *tex, const texcol_t *const tcolumn, const float mfloorclip,
+                           const float mceilingclip, const float skew);
 void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                   const portalrender_t &portalrender, sector_t *sec, int); // killough 9/18/98

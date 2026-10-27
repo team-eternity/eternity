@@ -245,13 +245,13 @@ VALLOCATION(pstack)
             {
                 if(pstack[i].masked)
                 {
-                    zhfree(heap, pstack[i].masked->ceilingclip);
-                    zhfree(heap, pstack[i].masked);
+                    heap.free(pstack[i].masked->ceilingclip);
+                    heap.free(pstack[i].masked);
                 }
             }
 
             // free the pstack
-            zhfree(heap, pstack);
+            heap.free(pstack);
         }
 
         // free the maskedrange freelist
@@ -259,8 +259,8 @@ VALLOCATION(pstack)
         while(mr)
         {
             maskedrange_t *next = mr->next;
-            zhfree(heap, mr->ceilingclip);
-            zhfree(heap, mr);
+            heap.free(mr->ceilingclip);
+            heap.free(mr);
             mr = next;
         }
 
@@ -607,7 +607,7 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
         while(mark)
         {
             drawnsprite_t *next = mark->next;
-            zhfree(heap, mark);
+            heap.free(mark);
             mark = next;
         }
         chain = nullptr;
@@ -617,8 +617,9 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
+void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, bspcontext_t &bspcontext,
+                spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds, bool pushmasked,
+                pwindow_t *window)
 {
     drawseg_t     *&drawsegs     = bspcontext.drawsegs;
     drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -632,7 +633,7 @@ void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spriteco
     if(pstacksize == pstackmax)
     {
         pstackmax += 10;
-        pstack     = zhrealloc(heap, poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
+        pstack     = heap.realloc<poststack_t>(pstack, sizeof(poststack_t) * pstackmax);
     }
 
     post = pstack + pstacksize;
@@ -660,12 +661,12 @@ void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spriteco
         }
         else
         {
-            post->masked = zhstructalloc(heap, maskedrange_t, 1);
+            post->masked = heap.structAlloc<maskedrange_t>(1);
 
             // Need to allocate it by video.width, because it will only be managed by VALLOCATION when
             // video width changes.
-            float *buf                = zhmalloc(heap, float *,
-                                                 2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
+            float *buf =
+                heap.malloc<float>(2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
             post->masked->ceilingclip = buf;
             post->masked->floorclip   = buf + video.width;
         }
@@ -690,9 +691,13 @@ void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spriteco
         memcpy(post->masked->ceilingclip, portaltop + bounds.startcolumn, sizeof(*portaltop) * bounds.numcolumns);
         memcpy(post->masked->floorclip, portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
 
-        post->masked->viewsin   = viewpoint.sin;
-        post->masked->viewcos   = viewpoint.cos;
-        post->masked->heightsec = viewpoint.sector->heightsec;
+        post->masked->viewsin    = viewpoint.sin;
+        post->masked->viewcos    = viewpoint.cos;
+        post->masked->viewpos.x  = viewpoint.x;
+        post->masked->viewpos.y  = viewpoint.y;
+        post->masked->viewpos.z  = viewpoint.z;
+        post->masked->viewzfloat = cb_viewpoint.z;
+        post->masked->heightsec  = viewpoint.sector->heightsec;
     }
     else
         post->masked = nullptr;
@@ -712,7 +717,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
     if(num_vissprite >= num_vissprite_alloc) // killough
     {
         num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc * 2 : 128;
-        vissprites          = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc * sizeof(*vissprites));
+        vissprites          = heap.realloc<vissprite_t>(vissprites, num_vissprite_alloc * sizeof(*vissprites));
     }
 
     return vissprites + num_vissprite++;
@@ -771,10 +776,11 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
     const byte *const localstart = tex->bufferdata + tcol->ptroff;
     const byte *const last       = localstart + tcol->len;
 
-    const fixed_t     srcfrac  = column.texmid + int((column.y1 - view.ycenter + 1) * column.step);
-    const int         count    = column.y2 - column.y1 + 1;
-    const fixed_t     lastfrac = srcfrac + column.step * count;
-    const byte *const lastdraw = localstart + (lastfrac >> FRACBITS);
+    const fixed_t     srcfrac    = column.texmid + int((column.y1 - view.ycenter + 1) * column.step);
+    const int         count      = column.y2 - column.y1 + 1;
+    const fixed_t     lastfrac   = srcfrac + column.step * count;
+    const byte *const lastdraw   = localstart + (lastfrac >> FRACBITS);
+    const int         origheight = column.texheight;
 
     if(lastdraw == last && last < texend && last > tex->bufferdata && column.y2)
     {
@@ -787,7 +793,7 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
 
         column.y1        = orig;
         column.source    = localstart;
-        column.texheight = 0;
+        column.texheight = origheight;
 
         column.y2 -= 1;
     }
@@ -803,7 +809,7 @@ inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
 
         column.y2        = orig;
         column.source    = localstart;
-        column.texheight = 0;
+        column.texheight = origheight;
 
         column.y1 += 1;
     }
@@ -846,29 +852,31 @@ inline static void R_drawNewMaskedColumnSingleThread(
 #endif
 
 //
-// R_DrawNewMaskedColumn
+// The heart of R_DrawNewMaskedColumn, split out as wrapped columns iterate over this function multiple times.
 //
-void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *const tex, const texcol_t *tcol, const float *const mfloorclip,
-                           const float *const mceilingclip, const float skew)
+static void R_drawSingleMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                     const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                     const texcol_t *tcol, const float mfloorclip, const float mceilingclip,
+                                     const float skew, const float offset)
 {
-    float         y1, y2;
-    const fixed_t basetexturemid = column.texmid;
 
-    column.texheight = 0; // killough 11/98
+    const fixed_t basetexturemid = column.texmid;
 
     while(tcol)
     {
         // calculate unclipped screen coordinates for post
-        y1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew));
-        y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
+        const float ty1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew)) - offset;
+        const float ty2 = ty1 + (maskedcolumn.scale * tcol->len);
 
-        column.y1 = (int)((y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1));
-        column.y2 = (int)((y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2));
+        const float y1 = emin(ty1, ty2);
+        const float y2 = emax(ty1, ty2) - 1;
+
+        column.y1 = (int)((y1 < mceilingclip ? mceilingclip : y1));
+        column.y2 = (int)((y2 > mfloorclip ? mfloorclip : y2));
 
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-        // ioanch 20250719: prevent columns just above screen (but still not supposed to be seen) from trying to render.
-        // This might fix occasional crashes.
+        // ioanch 20250719: prevent columns just above screen (but still not supposed to be seen) from trying to
+        // render. This might fix occasional crashes.
         if(column.y1 <= column.y2 && (column.y2 != 0 || y2 >= 0) && column.y2 < viewwindow.height)
         {
             column.source = tex->bufferdata + tcol->ptroff;
@@ -881,6 +889,48 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, cons
     }
 
     column.texmid = basetexturemid;
+}
+
+//
+// Draws a wrapped masked column, iterating as many times as is necessary.
+//
+void R_DrawNewWrappedMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column,
+                                  const cb_maskedcolumn_t &maskedcolumn, const texture_t *const tex,
+                                  const texcol_t *const tcol, const float mfloorclip, const float mceilingclip,
+                                  const float skew)
+{
+    const float scaledtexheight = fabsf(maskedcolumn.scale * column.texheight);
+
+    // Make sure that for negative scales the basey1 is adjusted by texture height. Needed because for negative it draws
+    // up, and the mfloorclip comparison would skip the bottom-most tile.
+    const float basey1 =
+        maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew)) - (maskedcolumn.scale < 0 ? scaledtexheight : 0);
+    float texy1 = fmodf(basey1, scaledtexheight);
+
+    // Make sure it starts from above the screen (also needed for negative scales when unpegged; this is in addition
+    // to the basey1 adjustment for negative scales.
+    if(texy1 > 0)
+        texy1 -= scaledtexheight;
+
+    while(texy1 <= mfloorclip)
+    {
+        R_drawSingleMaskedColumn(colfunc, column, maskedcolumn, tex, tcol, mfloorclip, mceilingclip, skew,
+                                 basey1 - texy1);
+
+        texy1 += scaledtexheight;
+    }
+}
+
+//
+// R_DrawNewMaskedColumn
+//
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *const tex, const texcol_t *const tcol, const float mfloorclip,
+                           const float mceilingclip, const float skew)
+{
+    column.texheight = 0; // killough 11/98
+
+    R_drawSingleMaskedColumn(colfunc, column, maskedcolumn, tex, tcol, mfloorclip, mceilingclip, skew, 0.0f);
 }
 
 //
@@ -1042,8 +1092,6 @@ inline static byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
             return VS_DRAWSTYLE_SUB;
         else if(uint16_t(thing->translucency - 1) < FRACUNIT - 1)
             return VS_DRAWSTYLE_ALPHA;
-        else if(thing->flags & MF_TRANSLUCENT)
-            return VS_DRAWSTYLE_TRANMAP;
         else if(thing->flags3 & MF3_GHOST)
         {
             if(rTintTableIndex != -1)
@@ -1055,6 +1103,8 @@ inline static byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
             else
                 return VS_DRAWSTYLE_ALPHA;
         }
+        else if(thing->flags & MF_TRANSLUCENT)
+            return VS_DRAWSTYLE_TRANMAP;
     }
 
     return VS_DRAWSTYLE_NORMAL;
@@ -1420,6 +1470,10 @@ static void R_projectSprite(cmapcontext_t &cmapcontext, spritecontext_t &spritec
     // This needs to be scaled down (?) I don't get why this works...
     vis->texturemid = (fixed_t)((gzt - viewpoint.z - vis->footclip) / thing->yscale);
 
+    // printz: disable footclip on slopes because it doesn't match the slope
+    if(thing->zref.sector.floor && thing->zref.sector.floor->srf.floor.slope)
+        vis->footclip = 0;
+
     vis->patch = lump;
 
     // get light level
@@ -1482,12 +1536,12 @@ inline static bool R_checkAndMarkSprite(spritecontext_t &spritecontext, ZoneHeap
             return true;
 
         I_Assert(prevSprite != nullptr, "prevSprite should have been set");
-        prevSprite->next        = zhstructalloc(heap, drawnsprite_t, 1);
+        prevSprite->next        = heap.structAlloc<drawnsprite_t>(1);
         prevSprite->next->thing = thing;
     }
     else
     {
-        spritecontext.drawnSpriteHash[thing_hash]        = zhstructalloc(heap, drawnsprite_t, 1);
+        spritecontext.drawnSpriteHash[thing_hash]        = heap.structAlloc<drawnsprite_t>(1);
         spritecontext.drawnSpriteHash[thing_hash]->thing = thing;
     }
 
@@ -1516,8 +1570,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
     spritecontext.sectorvisited[sec - sectors] = true;
 
     // Only use the MBF average light when the compatibility flag is set by user.
-    const int mobjlightlevel = comp[comp_thingsectorlight] ? lightlevel : sec->lightlevel;
-    const int lightnum       = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+    const int lightnum = (lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
         spritelights = cmapcontext.scalelight[0];
@@ -1543,6 +1596,8 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
         for(const msecnode_t *sectorNode = sec->touching_thinglist_by_sprites; sectorNode;
             sectorNode                   = sectorNode->m_snext)
         {
+            if(sectorNode->flags & MSN_POLYLINE)
+                continue;
             const Mobj *const thing = sectorNode->m_thing;
 
             if(R_checkAndMarkSprite(spritecontext, heap, thing))
@@ -1552,9 +1607,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
             // otherwise the lighting behaviour will look incorrect
             const lighttable_t *const *mobjspritelights;
             {
-                const int mobjlightlevel = comp[comp_thingsectorlight] ?
-                                               R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector) :
-                                               thing->subsector->sector->lightlevel;
+                const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector);
                 const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
                 if(mobjlightnum < 0)
@@ -1689,7 +1742,7 @@ static void R_drawPSprite(const pspdef_t *psp, const lighttable_t *const *const 
     vis->scale        = view.pspriteyscale;
     vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
     vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
-    vis->sector       = int(view.sector - sectors);
+    vis->sector       = int(view.boomcolorsector - sectors);
 
     // haleyjd 07/01/07: use actual pixel range to scale graphic
     if(flip)
@@ -1760,23 +1813,21 @@ void R_DrawPlayerSprites()
     const pspdef_t            *psp;
     sector_t                   tmpsec;
     Surfaces<pslope_t>         tempslopes;
-    int                        floorlightlevel, ceilinglightlevel;
+    transferredLights_t        transferredLights;
     const lighttable_t *const *spritelights;
 
     // sf: psprite switch
     if(!showpsprites || viewcamera)
         return;
 
-    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.sector);
+    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.boomcolorsector);
 
     // get light level
     // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
     // (see r_bsp.c for similar calculations for non-player sprites)
 
-    R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, 0);
-    lightnum = (comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) :
-                                              (view.sector->lightlevel) >> (LIGHTSEGSHIFT + 1)) +
-               (extralight * LIGHTBRIGHT);
+    R_FakeFlat(r_globalcontext.view, view.boomcolorsector, &tmpsec, tempslopes, &transferredLights, 0);
+    lightnum = (transferredLights.sprite >> LIGHTSEGSHIFT) + extralight * LIGHTBRIGHT;
 
     if(lightnum < 0)
         spritelights = r_globalcontext.cmapcontext.scalelight[0];
@@ -1863,9 +1914,9 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 
         if(num_vissprite_ptrs < numsprites * 2)
         {
-            zhfree(heap, vissprite_ptrs); // better than realloc -- no preserving needed
+            heap.free(vissprite_ptrs); // better than realloc -- no preserving needed
             num_vissprite_ptrs = num_vissprite_alloc * 2;
-            vissprite_ptrs     = zhmalloc(heap, vissprite_t **, num_vissprite_ptrs * sizeof *vissprite_ptrs);
+            vissprite_ptrs     = heap.malloc<vissprite_t *>(num_vissprite_ptrs * sizeof *vissprite_ptrs);
         }
 
         while(--i >= 0)
@@ -1900,10 +1951,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
                                   int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
-                                  const fixed_t viewcos, const int heightsec)
+                                  const fixed_t viewcos, const v3fixed_t &viewpos, float viewzfloat,
+                                  const int heightsec)
 {
     drawseg_t *ds;
     int        x;
@@ -1914,8 +1965,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     //
     // Common handler both for the optimized and basic loops
     //
-    auto handleOverlappingDrawSeg = [viewsin, viewcos](cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint,
-                                                       drawseg_t *ds, const vissprite_t *spr) {
+    auto handleOverlappingDrawSeg = [viewsin, viewcos, &viewpos, heightsec](cmapcontext_t &cmapcontext, drawseg_t *ds,
+                                                                            const vissprite_t *spr) {
         // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
         uint32_t     s1, s2;
         divline_t    sprite_clip;
@@ -1939,7 +1990,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             {
                 r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                 r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-                R_RenderMaskedSegRange(cmapcontext, viewpoint, ds, r1, r2);
+                R_RenderMaskedSegRange(cmapcontext, viewpos, ds, r1, r2, heightsec);
             }
             return; // seg is behind sprite
         }
@@ -1989,7 +2040,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             }
             ++dsx;
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
     else
@@ -2003,7 +2054,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             if(ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && !ds->maskedtexturecol))
                 continue; // does not cover sprite
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
 
@@ -2016,12 +2067,16 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         const int phs = heightsec;
 
         fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
-        fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) : 0;
+        fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
-        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        // Don't use the sprite scale as it will give erroneous results if scaled in EDF. Recalculate it without the EDF
+        // component.
+        const float distyscale = spr->dist * view.yfoc;
+
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
+        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
-            if(mh <= 0.0 || (phs != -1 && viewpoint.z > phsheight))
+            if(mh <= 0.0 || (phs != -1 && viewpos.z > phsheight))
             {
                 // clip bottom
                 for(x = spr->x1; x <= spr->x2; x++)
@@ -2032,7 +2087,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             }
             else // clip top
             {
-                if(phs != -1 && viewpoint.z <= phsheight) // killough 11/98
+                if(phs != -1 && viewpos.z <= phsheight) // killough 11/98
                 {
                     for(x = spr->x1; x <= spr->x2; x++)
                     {
@@ -2044,12 +2099,12 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         }
 
         heightsecheight = sectors[spr->heightsec].srf.ceiling.getZAt(spr->gx, spr->gy);
-        phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) : 0;
+        phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
-        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
+        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
-            if(phs != -1 && viewpoint.z >= phsheight)
+            if(phs != -1 && viewpos.z >= phsheight)
             {
                 // clip bottom
                 for(x = spr->x1; x <= spr->x2; x++)
@@ -2083,7 +2138,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         // component.
         float distyscale = spr->dist * view.yfoc;
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
         {
             h = eclamp(view.ycenter - (mh * distyscale), 0.0f, view.height - 1);
@@ -2097,7 +2152,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         sectorheight = sector->srf.ceiling.getZAt(spr->gx, spr->gy);
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
         {
             // Add +1 to avoid overdrawing with the bottomclip of the above part
@@ -2179,8 +2234,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                     {
                         // haleyjd: fix reallocation to track 2x size
                         drawsegs_xrange_size = 2 * (maxdrawsegs + 1);
-                        drawsegs_xrange      = zhrealloc(heap, drawsegs_xrange_t *, drawsegs_xrange,
-                                                         drawsegs_xrange_size * sizeof(*drawsegs_xrange));
+                        drawsegs_xrange      = heap.realloc<drawsegs_xrange_t>(
+                            drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                     }
                     for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;)
                     {
@@ -2198,10 +2253,10 @@ void R_DrawPostBSP(rendercontext_t &context)
 
                 for(int i = lastsprite - firstsprite; --i >= 0;)
                 {
-                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.cb_view,
-                                          context.bounds, drawsegs, spritecontext.vissprite_ptrs[i], firstds, lastds,
-                                          masked->ceilingclip, masked->floorclip, masked->viewsin, masked->viewcos,
-                                          masked->heightsec); // killough
+                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.bounds, drawsegs,
+                                          spritecontext.vissprite_ptrs[i], firstds, lastds, masked->ceilingclip,
+                                          masked->floorclip, masked->viewsin, masked->viewcos, masked->viewpos,
+                                          masked->viewzfloat, masked->heightsec); // killough
                 }
             }
 
@@ -2214,7 +2269,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;) // new -- killough
             {
                 if(ds->maskedtexturecol)
-                    R_RenderMaskedSegRange(context.cmapcontext, context.view, ds, ds->x1, ds->x2);
+                    R_RenderMaskedSegRange(context.cmapcontext, masked->viewpos, ds, ds->x1, ds->x2, masked->heightsec);
             }
 
             // Done with the masked range
@@ -2232,7 +2287,7 @@ void R_DrawPostBSP(rendercontext_t &context)
                 r_column_engine->ResetBuffer();
 
             R_DrawPlanes(context.cmapcontext, *context.heap, planecontext.mainhash, planecontext.spanstart,
-                         context.view.angle, pstack[pstacksize].overlay);
+                         pstack[pstacksize].overlay);
             R_FreeOverlaySet(planecontext.r_overlayfreesets, pstack[pstacksize].overlay);
         }
     }
@@ -2776,12 +2831,13 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
             const lighttable_t *const             *ltable;
             static thread_local rendersector_t     tmpsec;
             static thread_local Surfaces<pslope_t> tempslopes;
-            int                                    floorlightlevel, ceilinglightlevel, lightnum, index;
+            transferredLights_t                    transferredLights;
+            int                                    lightnum, index;
 
-            R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
+            R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &transferredLights, false);
 
-            lightnum = comp[comp_thingsectorlight] ? ((floorlightlevel + ceilinglightlevel) / 2) : sector->lightlevel;
-            lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+            lightnum = transferredLights.sprite;
+            lightnum = (lightnum >> LIGHTSEGSHIFT) + extralight * LIGHTBRIGHT;
 
             if(lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap)
                 ltable = cmapcontext.scalelight[LIGHTLEVELS - 1];

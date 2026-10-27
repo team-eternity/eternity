@@ -214,7 +214,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_shoot.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_sight.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/cam_sight.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/cam_use.cpp"
       SOURCE_GROUP "Source Files\\\\Confuse"
       "${CMAKE_CURRENT_SOURCE_DIR}/Confuse/confuse.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/Confuse/confuse.h"
@@ -767,7 +766,7 @@ add_executable(eternity)
 
 set_target_properties(eternity
    PROPERTIES
-   CXX_STANDARD          17
+   CXX_STANDARD          20
    CXX_STANDARD_REQUIRED ON
    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity"
 )
@@ -822,7 +821,7 @@ if(MSVC)
                        "$<$<CONFIG:Release>:/DEBUG>")
 
    if(NOT MSVC_VERSION LESS  "1914")
-      target_compile_options(eternity PUBLIC "/std:c++17")
+      target_compile_options(eternity PUBLIC "/std:c++20")
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
    target_link_libraries(eternity stdc++fs pthread)

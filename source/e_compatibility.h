@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley, Max Waine, Ioan Chera et al.
+// Copyright (C) 2026 James Haley, Max Waine, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 
 constexpr const char EDF_SEC_COMPATIBILITY[] = "compatibilityhacks";
 
+class Mobj;
 struct cfg_opt_t;
 struct cfg_t;
 
@@ -49,6 +50,8 @@ void E_RestoreCompatibilities();
 void E_ApplyCompatibility(const char *digest);
 
 int E_Get(overridableSetting_e setting);
+
+bool E_CompatHackAllowMobjDeathSpecialReset(const Mobj &mo);
 
 #endif
 

@@ -54,6 +54,7 @@
 #include "w_wad.h"
 #include "wi_stuff.h"
 
+extern vfont_t *in_font;
 extern vfont_t *in_bigfont;
 
 extern char gamemapname[9];
@@ -376,6 +377,9 @@ static bool fade_applied = false;
 static const char *mapName;
 static const char *nextMapName;
 
+static const char *wi_creator;
+static const char *wi_nextCreator;
+
 // globals
 
 // haleyjd 02/02/05: intermission pause time -- see EDF
@@ -424,12 +428,16 @@ static void WI_drawLF()
 
     if(patch || mapName)
     {
+        auto drawTextAndCarriageReturn = [&y](vfont_t *font, const char *text) {
+            V_FontWriteText(font, text, (SCREENWIDTH - V_FontStringWidth(font, text)) / 2, y, &subscreen43);
+            y += (5 * V_FontStringHeight(font, text)) / 4;
+        };
         // draw <LevelName>
         if(mapName)
         {
-            V_FontWriteText(in_bigfont, mapName, (SCREENWIDTH - V_FontStringWidth(in_bigfont, mapName)) / 2, y,
-                            &subscreen43);
-            y += (5 * V_FontStringHeight(in_bigfont, mapName)) / 4;
+            drawTextAndCarriageReturn(in_bigfont, mapName);
+            if(estrnonempty(wi_creator))
+                drawTextAndCarriageReturn(in_font, wi_creator);
         }
         else
         {
@@ -518,11 +526,15 @@ static void WI_drawEL()
         {
             V_FontWriteText(in_bigfont, nextMapName, (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName)) / 2, y,
                             &subscreen43);
+            if(estrnonempty(wi_nextCreator))
+            {
+                y += (5 * V_FontStringHeight(in_bigfont, nextMapName)) / 4;
+                V_FontWriteText(in_font, wi_nextCreator, (SCREENWIDTH - V_FontStringWidth(in_font, wi_nextCreator)) / 2,
+                                y, &subscreen43);
+            }
         }
         else
-        {
             V_DrawPatch((SCREENWIDTH - patch->width) / 2, y, &subscreen43, patch);
-        }
     }
 
     // haleyjd 06/17/06: set any loaded MapInfo patch to PU_CACHE here
@@ -809,7 +821,7 @@ static void WI_drawTime(int x, int y, int t)
     if(t < 0)
         return;
 
-    if(t <= 61 * 59) // otherwise known as 60*60 -1 == 3599
+    if(t <= SUCK_TIME - 1)
     {
         div = 1;
 
@@ -2122,8 +2134,10 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
     }
 
     // haleyjd 03/27/05: EDF-defined intermission map names
-    mapName     = nullptr;
-    nextMapName = nullptr;
+    mapName        = nullptr;
+    nextMapName    = nullptr;
+    wi_creator     = nullptr;
+    wi_nextCreator = nullptr;
 
     // NOTE: in UMAPINFO, level-pic has priority
     if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) && wbs->li_lastlevelname && *wbs->li_lastlevelname)
@@ -2134,6 +2148,10 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
     {
         nextMapName = wbs->li_nextlevelname;
     }
+    if(estrnonempty(wbs->li_lastlevelcreator))
+        wi_creator = wbs->li_lastlevelcreator;
+    if(estrnonempty(wbs->li_nextlevelcreator))
+        wi_nextCreator = wbs->li_nextlevelcreator;
 
     if(LevelInfo.useEDFInterName || inmanageddir)
     {

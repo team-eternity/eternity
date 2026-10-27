@@ -163,6 +163,7 @@ enum
     comp_jump,       // Disable jumping and air control
     comp_aircontrol = comp_jump,
     comp_thingsectorlight,
+    comp_voodooscroller, // mbf21
     COMP_TOTAL,  // counts the used comps. MUST BE LAST ONE + 1.
     MBF_COMP_TOTAL = 32 // limit on the MBF demo format
 };
@@ -273,9 +274,11 @@ extern int displayplayer;
 // Scores, rating.
 // Statistics on a given map, for intermission.
 //
-extern int totalkills;
+extern int totalmonsters;
 extern int totalitems;
 extern int totalsecret;
+
+extern int totalKilledMonsters;
 
 // Timer, for scores.
 extern int levelstarttic; // gametic at level start

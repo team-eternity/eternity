@@ -78,6 +78,7 @@ struct polyobj_t
     vertex_t  *origVerts;        // original positions relative to spawn spot
     vertex_t  *tmpVerts;         // temporary vertex backups for rotation
     vertex_t **vertices;         // vertices this polyobject must move
+    int        lastBackupTic;
 
     int      numLines;      // number of linedefs
     int      numLinesAlloc; // number of linedefs allocated
@@ -294,6 +295,8 @@ bool       Polyobj_IsSpawnSpot(const Mobj &mo);
 void       Polyobj_InitLevel(void);
 void       Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 void       Polyobj_MoveToXY(polyobj_t *po, fixed_t x, fixed_t y);
+
+bool Polyobj_IsLine(const line_t &line);
 
 int EV_DoPolyDoor(const polydoordata_t *);
 int EV_DoPolyObjMove(const polymovedata_t *);

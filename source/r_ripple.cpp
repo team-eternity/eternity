@@ -107,8 +107,8 @@ byte *R_DistortedFlat(ZoneHeap &heap, int texnum, bool usegametic)
     if(cursize * 2 > offsetSize)
     {
         offsetSize    = cursize * 4;
-        offset        = zhrealloc(heap, int *, offset, offsetSize * sizeof(*offset));
-        distortedflat = zhrealloc(heap, byte *, distortedflat, offsetSize * sizeof(*distortedflat));
+        offset        = heap.realloc<int>(offset, offsetSize * sizeof(*offset));
+        distortedflat = heap.realloc<byte>(distortedflat, offsetSize * sizeof(*distortedflat));
     }
     // Already swirled this one?
     if(reftime == swirltic && lasttex == texnum)

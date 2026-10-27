@@ -301,9 +301,9 @@ static void P_LightningFlash()
             else
             {
                 if(M_Random() < 128 && !(leveltime & 32))
-                    NextLightningFlash = ((M_Random() & 7) + 2) * 35;
+                    NextLightningFlash = ((M_Random() & 7) + 2) * TICRATE;
                 else
-                    NextLightningFlash = ((M_Random() & 15) + 5) * 35;
+                    NextLightningFlash = ((M_Random() & 15) + 5) * TICRATE;
             }
         }
     }

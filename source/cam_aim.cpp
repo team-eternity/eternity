@@ -31,8 +31,10 @@
 #include "d_player.h"
 #include "e_exdata.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_mobj.h"
 #include "p_portal.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -64,7 +66,7 @@ public:
 
 private:
     AimContext(const Mobj *t1, angle_t angle, fixed_t distance, bool mask, const State *state);
-    static bool aimTraverse(const intercept_t *in, void *data, const divline_t &trace);
+    static bool aimTraverse(intercept_t *in, void *data, const divline_t &trace);
     bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac, const divline_t &trace);
     void checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace, fixed_t frac, v2fixed_t edgepos);
     fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, Mobj **outTarget, fixed_t *outDist,
@@ -267,7 +269,7 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
 //
 // Called when hitting a line or object
 //
-bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t &trace)
+bool AimContext::aimTraverse(intercept_t *in, void *vdata, const divline_t &trace)
 {
     auto &context = *static_cast<AimContext *>(vdata);
 
@@ -275,8 +277,18 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
     const sector_t *sector;
     const line_t   *li = in->d.line;
     Mobj           *th = in->d.thing;
+
+    v2fixed_t edgepos{};
+    bool      polyline = false; // silence stupid warnings
     if(in->isaline)
-        sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    {
+        edgepos  = trace.v + trace.dv.fixedMul(in->frac);
+        polyline = Polyobj_IsLine(*li);
+        if(polyline)
+            sector = R_PointInSubsector(edgepos)->sector;
+        else
+            sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+    }
     else
         sector = th->subsector->sector;
     if(sector && totaldist > 0)
@@ -292,22 +304,35 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
         if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
             return false;
 
-        v2fixed_t          edgepos = trace.v + trace.dv.fixedMul(in->frac);
-        tracelineopening_t lo      = { 0 };
+        tracelineopening_t lo = { 0 };
         lo.calculateAtPoint(*li, edgepos);
 
         if(lo.openrange <= 0)
             return false;
 
-        const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
-        fixed_t         slope;
+        const sector_t *osector;
+        v2fixed_t       edgepos2 = edgepos;
+        if(li->intflags & MLI_1SPORTALLINE && li->beyondportalline)
+        {
+            osector = li->beyondportalline->frontsector;
+            if(li->portal && li->portal->type == R_LINKED)
+            {
+                edgepos2.x += li->portal->data.link.delta.x;
+                edgepos2.y += li->portal->data.link.delta.y;
+            }
+        }
+        else if(polyline)
+            osector = sector;
+        else
+            osector = sector == li->frontsector ? li->backsector : li->frontsector;
+        fixed_t slope;
 
         for(surf_e surf : SURFS)
         {
             const surface_t &surface      = sector->srf[surf];
             const surface_t &otherSurface = osector->srf[surf];
 
-            if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
+            if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos2) ||
                (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
             {
                 slope = FixedDiv(lo.open[surf] - context.state.c.z, totaldist);
@@ -364,19 +389,16 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distanc
 {
     AimContext context(t1, angle, distance, mask, state);
 
-    PTDef def;
-    def.flags    = CAM_ADDLINES | CAM_ADDTHINGS;
-    def.earlyOut = PTDef::eo_no;
-    def.trav     = aimTraverse;
-    PathTraverser traverser(def, &context);
-
     fixed_t tx = context.state.c.x + (distance >> FRACBITS) * finecosine[angle >> ANGLETOFINESHIFT];
     fixed_t ty = context.state.c.y + (distance >> FRACBITS) * finesine[angle >> ANGLETOFINESHIFT];
 
-    if(traverser.traverse(context.state.c.x, context.state.c.y, tx, ty))
+    divline_t outTrace = {};
+    if(P_PathTraverse({ context.state.c.x, context.state.c.y }, { tx, ty }, PT_ADDLINES | PT_ADDTHINGS, aimTraverse,
+                      &context, &outTrace))
     {
         const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
-        if(context.checkPortalSector(endsector, distance, FRACUNIT, traverser.trace))
+
+        if(context.checkPortalSector(endsector, distance, FRACUNIT, outTrace))
         {
             if(outTarget)
                 *outTarget = context.linetarget;
@@ -406,4 +428,3 @@ fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, bool 
 }
 
 // EOF
-

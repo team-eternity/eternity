@@ -27,7 +27,7 @@
 #ifndef P_INFO_ZDMAP_H_
 #define P_INFO_ZDMAP_H_
 
-void P_ApplyHexenMapInfo();
+bool P_ApplyHexenMapInfo();
 
 #endif
 

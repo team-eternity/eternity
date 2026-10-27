@@ -26,6 +26,13 @@
 
 #include "d_keywds.h"
 #include "doomtype.h"
+#include <variant>
+
+template<typename T, typename... Types>
+inline static bool equals(const std::variant<Types...> &variant, const T &operand)
+{
+    return std::holds_alternative<T>(variant) && std::get<T>(variant) == operand;
+}
 
 // File IO utilities
 

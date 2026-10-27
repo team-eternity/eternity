@@ -833,4 +833,3 @@ void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
 }
 
 // EOF
-

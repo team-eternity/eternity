@@ -27,15 +27,9 @@
 class Mobj;
 struct sector_t;
 
-enum ssurftype_e
-{
-    ssurf_floor,
-    ssurf_ceiling,
-};
-
 void P_SaveSectorPositions();
 void P_SaveSectorPosition(const sector_t &sec);
-void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf);
+void P_SaveSectorPosition(const sector_t &sec, surf_e surf);
 void P_NewSectorActionFromMobj(Mobj *actor);
 void P_SetSectorZoneFromMobj(Mobj *actor);
 

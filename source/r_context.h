@@ -82,6 +82,13 @@ struct cmapcontext_t
     const lighttable_t *fixedcolormap;
 };
 
+struct renderbuffer_t
+{
+    float          *buffer; // dynamically sized
+    const float    *bufferEnd;
+    renderbuffer_t *next; // more may be needed on extreme maps
+};
+
 struct planecontext_t
 {
     visplane_t  *floorplane, *ceilingplane;
@@ -96,8 +103,12 @@ struct planecontext_t
     // Free list of overlay portals. Used by portal windows and the post-BSP stack.
     planehash_t *r_overlayfreesets;
 
-    float *openings, *lastopening;
-    float *skews, *lastskew;
+    renderbuffer_t  openings;
+    renderbuffer_t  skews;
+    renderbuffer_t *curOpenings; // pointer to current list in case we need to allocate more
+    renderbuffer_t *curSkews;
+    float          *lastopening;
+    float          *lastskew;
 
     // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
     // to the clipping arrays of portals.
@@ -190,7 +201,7 @@ struct rendercontext_t
 inline rendercontext_t r_globalcontext;
 
 inline int  r_numcontexts;
-inline bool r_hascontexts;
+inline bool r_hascontexts = false; // Remains false if running in a scenario with no window.
 
 rendercontext_t &R_GetContext(int context);
 void             R_FreeContexts();

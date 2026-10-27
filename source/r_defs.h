@@ -187,14 +187,16 @@ struct pslope_t
     //
     // IMPORTANT
     //
-    // The following are references to the containing sector. They work simply because we follow the
-    // rule that each sector may have its own slope, no slopes are shared. If we decide to share
-    // slopes, we MUST make sure to decouple the following fields from pslope_t
+    // The following are references to the containing item. They work simply because we follow the
+    // rule that each item may have its own slope, no slopes are shared. If we decide to share
+    // slopes, we MUST make sure to decouple the following fields from pslope_t.
+    // An 'item' is a sector or 3dmidtex line.
     //
 
     // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
-    fixed_t surfaceZOffset;
-    float   surfaceZOffsetF; // floating-point variant
+    fixed_t    surfaceZOffset;
+    float      surfaceZOffsetF; // floating-point variant
+    const int *groupid;         // so we don't need to look up the containing 'item'.
 };
 
 //
@@ -227,22 +229,18 @@ struct sectorinterp_t
 {
     bool interpolated; // if true, interpolated
 
-    fixed_t prevfloorheight; // previous values, stored for interpolation
-    fixed_t prevceilingheight;
-    float   prevfloorheightf;
-    float   prevceilingheightf;
+    // previous values, stored for interpolation
+    Surfaces<fixed_t> prevheight;
+    Surfaces<float>   prevheightf;
 
-    fixed_t backfloorheight; // backup values, used as cache during rendering
-    fixed_t backceilingheight;
-    float   backfloorheightf;
-    float   backceilingheightf;
+    // backup values, used as cache during rendering
+    Surfaces<fixed_t> backheight;
+    Surfaces<float>   backheightf;
 
     // as the above sets of values, but for slope origin Z
-    float prevfloorslopezf;
-    float prevceilingslopezf;
+    Surfaces<float> prevslopezf;
 
-    float backfloorslopezf;
-    float backceilingslopezf;
+    Surfaces<float> backslopezf;
 };
 
 //
@@ -447,6 +445,13 @@ struct side_t
     fixed_t offset_mid_x;    // x offset for midtexture only
     fixed_t offset_mid_y;    // y offset for midtexture only
 
+    fixed_t scale_top_x;    // x scale for toptexture only
+    fixed_t scale_top_y;    // y scale for toptexture only
+    fixed_t scale_bottom_x; // x scale for bottomtexture only
+    fixed_t scale_bottom_y; // y scale for bottomtexture only
+    fixed_t scale_mid_x;    // x scale for midtexture only
+    fixed_t scale_mid_y;    // y scale for midtexture only
+
     int16_t light_base;   // light offset for sidedef (or overall if flag is set)
     int16_t light_top;    // light offset for top texture (or overall if flag is set)
     int16_t light_mid;    // light offset for mid texture (or overall if flag is set)
@@ -559,6 +564,13 @@ struct subsector_t
 //
 // For the links, nullptr means top or end of list.
 
+// msecnode_t flags
+enum
+{
+    MSN_VISITED  = 1, // killough 4/4/98, 4/7/98: used in search algorithms
+    MSN_POLYLINE = 2,
+};
+
 struct msecnode_t
 {
     sector_t   *m_sector; // a sector containing this object
@@ -567,7 +579,7 @@ struct msecnode_t
     msecnode_t *m_tnext;  // next msecnode_t for this thing
     msecnode_t *m_sprev;  // prev msecnode_t for this sector
     msecnode_t *m_snext;  // next msecnode_t for this sector
-    bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+    unsigned    flags;
 };
 
 //
@@ -736,6 +748,9 @@ struct visplane_t
     int bflags;
     // Opacity of the overlay (255 - opaque, 0 - translucent)
     byte opacity;
+
+    // angle may be rotated by portals: for skies.
+    angle_t viewangle;
 };
 
 struct planehash_t

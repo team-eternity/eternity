@@ -49,7 +49,7 @@ extern float *overlayfclip, *overlaycclip;
 void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
 void R_ClearOverlayClips(const contextbounds_t &bounds);
 void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash, int *const spanstart,
-                  const angle_t viewangle, planehash_t *table);
+                  planehash_t *table);
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount);

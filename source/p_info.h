@@ -68,6 +68,19 @@ enum
     SKYROWOFFSET_DEFAULT = INT_MIN,
 };
 
+enum class UMapInfoAllow : int // similar to UMAPINFO specs, with allow as zero default
+{
+    allow,
+    disallow,
+    require
+};
+
+enum class ExitType
+{
+    normal,
+    secret
+};
+
 // levelaction structures
 struct levelaction_t
 {
@@ -123,6 +136,7 @@ struct LevelInfo_t
     bool        endOfGame;        // DOOM II: last map, trigger cast call
     bool        useEDFInterName;  // use an intermission map name from EDF
     const char *endPic;           // pic to use for the "end pic" finale type
+    const char *endPal;           // optional palette to use for the "end pic" finale type
 
     // level transfer stuff
     const char *nextLevel;       // name of next map for normal exit
@@ -156,6 +170,9 @@ struct LevelInfo_t
 
     // gameplay options
     bool disableJump; // if true, jumping is disabled
+    bool requireJump; // if true, jumping is enabled regardless of compatibility setting
+
+    UMapInfoAllow freeAim;
 
     // misc
     int         gravity; // gravity factor
@@ -186,6 +203,8 @@ struct LevelInfo_t
 
     fixed_t airControl;
     fixed_t airFriction;
+
+    bool crouchWarning;
 };
 
 // the one and only LevelInfo object
@@ -210,7 +229,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd);
 
 // ioanch
 bool P_LevelIsVanillaHexen();
-void P_EnsureDefaultStoryText(bool secret);
+void P_EnsureDefaultStoryText(ExitType type);
 
 const finalerule_t *P_DetermineEpisodeFinaleRule(bool checkmap);
 void                P_SetFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText);

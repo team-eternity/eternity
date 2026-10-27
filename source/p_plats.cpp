@@ -358,7 +358,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount)
                 plat->low = sec->srf.floor.height;
 
             plat->high   = sec->srf.floor.height;
-            plat->wait   = 35 * PLATWAIT;
+            plat->wait   = TICRATE * PLATWAIT;
             plat->status = PlatThinker::down;
             P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
             break;
@@ -371,7 +371,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount)
                 plat->low = sec->srf.floor.height;
 
             plat->high   = sec->srf.floor.height;
-            plat->wait   = 35 * PLATWAIT;
+            plat->wait   = TICRATE * PLATWAIT;
             plat->status = PlatThinker::down;
             P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
             break;
@@ -388,7 +388,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount)
             if(plat->high < sec->srf.floor.height)
                 plat->high = sec->srf.floor.height;
 
-            plat->wait   = 35 * PLATWAIT;
+            plat->wait   = TICRATE * PLATWAIT;
             plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
 
             P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
@@ -396,7 +396,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount)
 
         case toggleUpDn:                 // jff 3/14/98 add new type to support instant toggle
             plat->speed = PLATSPEED;     // not used
-            plat->wait  = 35 * PLATWAIT; // not used
+            plat->wait  = TICRATE * PLATWAIT; // not used
             plat->crush = 10;            // jff 3/14/98 crush anything in the way
 
             // set up toggling between ceiling, floor inclusive
@@ -570,7 +570,7 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
         case paramToggleCeiling:
             plat->type   = toggleUpDn;
             plat->speed  = PLATSPEED;     // not used
-            plat->wait   = 35 * PLATWAIT; // not used
+            plat->wait   = TICRATE * PLATWAIT; // not used
             plat->crush  = 10;            // jff 3/14/98 crush anything in the way
             plat->low    = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
             plat->high   = sec->srf.floor.height;

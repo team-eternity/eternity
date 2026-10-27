@@ -24,8 +24,10 @@
 #ifndef R_MAIN_H__
 #define R_MAIN_H__
 
+#if __has_include(<bit>)
 // NEEDED BY R_doubleToUint32 below
-#include "SDL_endian.h"
+#include <bit>
+#endif
 
 #include "tables.h"
 
@@ -178,7 +180,8 @@ struct cb_view_t
 
     // haleyjd: view sector, because of interpolation
     // printz: only used for Boom-kind colormapping
-    const sector_t *sector;
+    const sector_t *boomcolorsector;
+    v2fixed_t       boomcolorviewpoint;
 };
 
 // haleyjd 3/11/10: markflags
@@ -206,10 +209,16 @@ struct cb_seg_t
     int   x1, x2;
     float x1frac, x2frac;
 
+    float toffset_seg_x;
+
     float toffset_base_x, toffset_base_y;
     float toffset_top_x, toffset_top_y;
     float toffset_mid_x, toffset_mid_y;
     float toffset_bottom_x, toffset_bottom_y;
+
+    float tscale_top_x, tscale_top_y;
+    float tscale_mid_x, tscale_mid_y;
+    float tscale_bottom_x, tscale_bottom_y;
 
     float dist, dist2, diststep;
     float len, len2, lenstep;
@@ -285,11 +294,10 @@ uint64_t R_GetVisitID(const rendercontext_t &context);
 //
 inline static uint32_t R_doubleToUint32(double d)
 {
-#ifdef SDL_BYTEORDER
-    // TODO: Use C++ std::endian when C++20 can be used
+#if __has_include(<bit>)
     // This bit (and the ifdef) isn't from SpiderMonkey.
     // Credit goes to Marrub and David Hill
-    return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+    return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[std::endian::native == std::endian::big];
 #else
     int32_t i;
     bool    neg;

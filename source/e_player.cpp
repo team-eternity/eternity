@@ -761,12 +761,14 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
 
     if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)
     {
+        const unsigned oldcount = pc->numrebornitems;
+
         pc->numrebornitems += numitems;
         pc->rebornitems =
             erealloc(reborninventory_t *, pc->rebornitems, pc->numrebornitems * sizeof(reborninventory_t));
 
         for(unsigned int i = 0; i < numitems; i++)
-            E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
+            E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, oldcount + i);
     }
 
     unsigned int numweaponslots;
@@ -1086,12 +1088,23 @@ void E_ApplyTurbo(int ts)
 //
 bool E_CanJump(const playerclass_t &pclass)
 {
-    return demo_version >= 335 && pclass.jumpspeed > 0 &&
-           (pclass.flags & PCF_ALWAYSJUMP || (!getComp(comp_jump) && !LevelInfo.disableJump));
+    if(demo_version < 335 || pclass.jumpspeed <= 0)
+        return false;
+
+    if(demo_version >= 407)
+    {
+        // fixed so EMAPINFO disable-jump or UMAPINFO jumping = disallow take precedence over pclass setting
+        return !LevelInfo.disableJump &&
+               (pclass.flags & PCF_ALWAYSJUMP || !getComp(comp_jump) || LevelInfo.requireJump);
+    }
+
+    // Old behavior: disable-jump does NOT prevent +AlwaysJump from playerclass (which was a wrong
+    // design: map-specific settings should customize/override game-specific settings.
+    return pclass.flags & PCF_ALWAYSJUMP || ((!getComp(comp_jump) || LevelInfo.requireJump) && !LevelInfo.disableJump);
 }
 bool E_MayJumpIfOverriden(const playerclass_t &pclass)
 {
-    return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump;
+    return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump && !LevelInfo.requireJump;
 }
 
 // EOF

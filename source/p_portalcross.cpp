@@ -65,7 +65,7 @@ struct lineportalcrossing_t
 //
 // Traversing callback for P_LinePortalCrossing
 //
-static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata, const divline_t &trace)
+static bool PTR_linePortalCrossing(intercept_t *in, void *vdata, const divline_t &trace)
 {
     const auto   &data = *static_cast<lineportalcrossing_t *>(vdata);
     const line_t *line = in->d.line;
@@ -135,8 +135,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
         data.fin    = &fin;
         data.group  = group;
         data.passed = passed;
-        res         = CAM_PathTraverse(cur.x, cur.y, fin.x, fin.y, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, &data,
-                                       PTR_linePortalCrossing);
+        res         = P_PathTraverse(cur, fin, PT_ADDLINES | PT_REQUIRE_LINE_PORTALS, PTR_linePortalCrossing, &data);
         --recprotection;
 
         // Continue looking for portals after passing through one, from the new
@@ -485,7 +484,8 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
 {
     const int gcount = P_PortalGroupCount();
     if(full_demo_version < make_full_version(340, 48))
-        return P_simpleBlockWalker<fixed_t>(bbox, xfirst, data, func); // Old demos can have blockmap overflows due to data type.
+        return P_simpleBlockWalker<fixed_t>(bbox, xfirst, data,
+                                            func); // Old demos can have blockmap overflows due to data type.
     else if(gcount <= 1 || groupid == R_NOGROUP)
         return P_simpleBlockWalker<int64_t>(bbox, xfirst, data, func);
 
@@ -621,12 +621,15 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
 //
 // P_SectorTouchesThingVertically
 //
-// ioanch 20160115: true if a thing touches a sector vertically
+// ioanch 20160115: true if a thing touches a sector vertically (or is in the same groupid)
 //
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
+    if(!useportalgroups || full_demo_version < make_full_version(340, 48) || sector->groupid == mobj->groupid)
+        return true;
     fixed_t   topz = mobj->z + mobj->height;
-    v2fixed_t mpos = { mobj->x, mobj->y };
+    const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, sector->groupid);
+    v2fixed_t mpos = { mobj->x + link->x, mobj->y + link->y };
     if(topz < sector->srf.floor.getZAt(mpos) || mobj->z > sector->srf.ceiling.getZAt(mpos))
         return false;
     if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(sector->srf.floor, mpos))

@@ -24,7 +24,7 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 406;
+int version = 407;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char subversion = 0;
@@ -33,11 +33,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Nidhogg";
+const char version_name[] = "Agmundr";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Nidhogg\"";
+const char ee_wmCaption[] = "Eternity Engine v4.07.00 \"Agmundr\"";
 #endif
 
 // haleyjd: Eternity release history
@@ -84,7 +84,7 @@ const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Nidhogg\"";
 // 4.04.01 'Glitnir Update 1' -- 10/13/24
 // 4.04.02 'Glitnir Update 2' -- 11/19/25
 // 4.05.04 'Citadel'          -- 08/23/25
-// 4.06.00 'Nidhogg'          -- 02/16/26
+// 4.06.00 'Nidhogg'          -- 06/13/26
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

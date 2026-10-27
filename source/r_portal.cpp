@@ -113,8 +113,8 @@ VALLOCATION(portals)
                 if((hash = child->poverlay))
                     for(int i = 0; i < hash->chaincount; ++i)
                         hash->chains[i] = nullptr;
-                zhfree(heap, child->top);
-                zhfree(heap, child);
+                heap.free(child->top);
+                heap.free(child);
                 child = next;
             }
 
@@ -123,8 +123,8 @@ VALLOCATION(portals)
             if((hash = rover->poverlay))
                 for(int i = 0; i < hash->chaincount; ++i)
                     hash->chains[i] = nullptr;
-            zhfree(heap, rover->top);
-            zhfree(heap, rover);
+            heap.free(rover->top);
+            heap.free(rover);
             rover = next;
         }
 
@@ -136,8 +136,8 @@ VALLOCATION(portals)
             if((hash = rover->poverlay))
                 for(int i = 0; i < hash->chaincount; ++i)
                     hash->chains[i] = nullptr;
-            zhfree(heap, rover->top);
-            zhfree(heap, rover);
+            heap.free(rover->top);
+            heap.free(rover);
             rover = next;
         }
 
@@ -197,9 +197,9 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
     }
     else
     {
-        ret = zhstructalloctag(heap, pwindow_t, 1, PU_LEVEL);
+        ret = heap.structAlloc<pwindow_t>(1, PU_LEVEL);
 
-        float *buf  = zhmalloctag(heap, float *, 2 * video.width * sizeof(float), PU_LEVEL, nullptr);
+        float *buf  = heap.malloc<float>(2 * video.width * sizeof(float), PU_LEVEL, nullptr);
         ret->top    = buf;
         ret->bottom = buf + video.width;
     }
@@ -702,6 +702,8 @@ static void R_produceKaleidoscopePlane(rendercontext_t &context, ZoneHeap &heap,
     cbviewpoint_t         &cb_viewpoint = context.cb_view;
     const contextbounds_t &bounds       = context.bounds;
 
+    R_SectorColormap(context.cmapcontext, viewpoint, sector);
+
     visplane_t *vplane = R_FindPlane(
         context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds,
         sector->srf.ceiling.height + viewpoint.z,
@@ -736,6 +738,8 @@ static void R_produceHorizonPlanes(rendercontext_t &context, ZoneHeap &heap, con
     // haleyjd 01/05/08: angles
     const float angles[surf_NUM] = { sector->srf.floor.baseangle + sector->srf.ceiling.angle,
                                      sector->srf.ceiling.baseangle + sector->srf.ceiling.angle };
+
+    R_SectorColormap(context.cmapcontext, viewpoint, sector);
 
     visplane_t *topplane = R_FindPlane(
         context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
@@ -857,7 +861,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
         R_produceHorizonPlanes(context, heap, window, sector);
 
     if(window->head == window && window->poverlay)
-        R_PushPost(viewpoint, context.bspcontext, spritecontext, *context.heap, bounds, false, window);
+        R_PushPost(viewpoint, cb_viewpoint, context.bspcontext, spritecontext, *context.heap, bounds, false, window);
 
     R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1072,9 +1076,9 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
         viewpoint.y                 = window->vy;
         tr.applyTo(viewpoint.x, viewpoint.y, &cb_viewpoint.x, &cb_viewpoint.y);
         viewpoint.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
-        double vz      = M_FixedToDouble(window->vz) + tr.move.z;
-        viewpoint.z    = M_DoubleToFixed(vz);
-        cb_viewpoint.z = static_cast<float>(vz);
+        double vz        = M_FixedToDouble(window->vz) + tr.move.z;
+        viewpoint.z      = M_DoubleToFixed(vz);
+        cb_viewpoint.z   = static_cast<float>(vz);
         // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
         // at least, it will fail to convert, returning 0xFFFFFFFF instead!
         viewpoint.angle    = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
@@ -1089,7 +1093,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
     R_RenderBSPNode(context, numnodes - 1);
 
     // Only push the overlay if this is the head window
-    R_PushPost(viewpoint, bspcontext, spritecontext, *context.heap, bounds, true,
+    R_PushPost(viewpoint, cb_viewpoint, bspcontext, spritecontext, *context.heap, bounds, true,
                window->head == window ? window : nullptr);
 
     planecontext.floorclip   = floorcliparray;

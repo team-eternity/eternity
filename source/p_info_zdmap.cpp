@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_things.h"
 #include "ev_specials.h"
@@ -43,9 +44,9 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
     //
     // Sets the normal or secret next option. Returns true if it's a finale special
     //
-    auto setNextOrFinale = [](const char *s, bool secret) -> bool {
-        int         &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
-        const char *&nextLevel  = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
+    auto setNextOrFinale = [xlmi](const char *s, const char *cluster, ExitType type) -> bool {
+        int         &finaleType = type == ExitType::secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
+        const char *&nextLevel  = type == ExitType::secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
 
         bool getfinale = true;
 
@@ -68,26 +69,45 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
             nextLevel = s;
             getfinale = false;
         }
-        // FIXME: endpic support (figure out the syntax) and others
+
+        if(estrnonempty(cluster))
+        {
+            MetaTable *clusterdef = XL_ClusterForName(cluster);
+            if(clusterdef)
+            {
+                const char *str;
+                str = clusterdef->getString("flat", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.backDrop = str;
+                str = clusterdef->getString("music", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.interMusic = str;
+                str = clusterdef->getString("exittext", nullptr);
+                if(estrnonempty(str))
+                    LevelInfo.interText = LevelInfo.interTextSecret = str;
+            }
+        }
+
         if(getfinale)
-            P_EnsureDefaultStoryText(secret);
+            P_EnsureDefaultStoryText(type);
         return getfinale;
     };
 
     // Check prior end-of-game
 
-    const char *next       = xlmi->getString("next", nullptr);
-    const char *secretnext = xlmi->getString("secretnext", nullptr);
+    const char *next        = xlmi->getString("next", nullptr);
+    const char *secretnext  = xlmi->getString("secretnext", nullptr);
+    const char *clustername = xlmi->getString("cluster", nullptr);
 
     if(!next && !secretnext) // no next map set
         return;
 
     bool nextfinale = false;
     if(next)
-        nextfinale = setNextOrFinale(next, false);
+        nextfinale = setNextOrFinale(next, clustername, ExitType::normal);
     bool secretnextfinale = false;
     if(secretnext)
-        secretnextfinale = setNextOrFinale(secretnext, true);
+        secretnextfinale = setNextOrFinale(secretnext, clustername, ExitType::secret);
 
     // Disable any previously set restrictions
     if(nextfinale)
@@ -110,6 +130,8 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 //
 static void P_addMapInfoBossAction(const mobjtype_t type, const char *name, int args0, int args1)
 {
+    if(estrempty(name))
+        return;
     auto action                 = estructalloctag(levelaction_t, 1, PU_LEVEL);
     action->flags               = levelaction_t::BOSS_ONLY;
     action->mobjtype            = type;
@@ -146,29 +168,51 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
     };
 
     // Conditions: which monsters to die
-    // NOTE: currently Heretic monsters aren't implemented. We only focus on supporting cross-port
-    // maps which get this treatment, and those usually aim Boom. The cross-port Heretic megawads are
-    // all vanilla.
-    static const bossspecialbinding_t bossspecialbindings[] = {
+    static const bossspecialbinding_t bossspecialbindings_doom[] = {
         { "baronspecial",            BSPEC_E1M8,              MF2_E1M8BOSS                },
         { "cyberdemonspecial",       BSPEC_E2M8 | BSPEC_E4M6, MF2_E2M8BOSS | MF2_E4M6BOSS },
         { "spidermastermindspecial", BSPEC_E3M8 | BSPEC_E4M8, MF2_E3M8BOSS | MF2_E4M8BOSS },
     };
 
+    // Add maulotaur when encountered in mods
+    static const bossspecialbinding_t bossspecialbindings_heretic[] = {
+        { "dsparilspecial", BSPEC_E3M8, MF2_E3M8BOSS },
+    };
+
+    const bossspecialbinding_t *bossspecialbindings =
+        GameModeInfo->type == Game_DOOM ? bossspecialbindings_doom : bossspecialbindings_heretic;
+    const size_t bossspecialbindings_size =
+        GameModeInfo->type == Game_DOOM ? earrlen(bossspecialbindings_doom) : earrlen(bossspecialbindings_heretic);
+
     // Actions: what to do
-    static const specialactionbinding_t specialactionbindings[] = {
+    static const specialactionbinding_t specialactionbindings_doom[] = {
         { "specialaction_lowerfloor", BSPEC_E1M8 | BSPEC_E4M8, "Floor_LowerToLowest", { 666, 8, 0, 0, 0 }  },
         { "specialaction_exitlevel",  BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal",         { 0, 0, 0, 0, 0 }    },
         { "specialaction_opendoor",   BSPEC_E4M6,              "Door_Open",           { 666, 64, 0, 0, 0 } },
     };
 
-    for(const bossspecialbinding_t &monsterBinding : bossspecialbindings)
+    // FIXME: killmonsters doesn't have an action special. Add it if any existing mods depend on it
+    static const specialactionbinding_t specialactionbindings_heretic[] = {
+        { "specialaction_lowerfloor",
+         BSPEC_E1M8 | BSPEC_E2M8 | BSPEC_E3M8 | BSPEC_E4M8 | BSPEC_E5M8,
+         "Floor_LowerToLowest",                                                                { 666, 8, 0, 0, 0 } },
+        { "specialaction_killmonsters", BSPEC_E2M8 | BSPEC_E3M8 | BSPEC_E4M8 | BSPEC_E5M8, "", {}                  }
+    };
+    const specialactionbinding_t *specialactionbindings =
+        GameModeInfo->type == Game_DOOM ? specialactionbindings_doom : specialactionbindings_heretic;
+    const size_t specialactionbindings_size =
+        GameModeInfo->type == Game_DOOM ? earrlen(specialactionbindings_doom) : earrlen(specialactionbindings_heretic);
+
+    for(size_t i = 0; i < bossspecialbindings_size; ++i)
     {
+        const bossspecialbinding_t &monsterBinding = bossspecialbindings[i];
         if(!hasflag(monsterBinding.name))
             continue;
 
-        for(const specialactionbinding_t &actionBinding : specialactionbindings)
+        for(size_t j = 0; j < specialactionbindings_size; ++j)
         {
+            const specialactionbinding_t &actionBinding = specialactionbindings[j];
+
             if(!hasflag(actionBinding.name))
                 continue;
 
@@ -199,20 +243,22 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
 // P_applyHexenMapInfo
 //
 // haleyjd 01/26/14: Applies data from Hexen MAPINFO
+// printz: returns true if an entry exists
 //
-void P_ApplyHexenMapInfo()
+bool P_ApplyHexenMapInfo()
 {
     MetaTable  *xlmi = nullptr;
     const char *s    = nullptr;
     int         i;
 
     if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
-        return;
+        return false;
 
     // Mark if classic demos to avoid changing certain playsim settings
     bool classicDemo = demo_version <= 203;
 
-    LevelInfo.levelName = xlmi->getString("name", "");
+    LevelInfo.levelName      = xlmi->getString("name", "");
+    LevelInfo.interLevelName = LevelInfo.levelName;
 
     // sky textures
     if((s = xlmi->getString("sky1", nullptr)))
@@ -278,11 +324,8 @@ void P_ApplyHexenMapInfo()
 
     /*
     Stuff with "Unfinished Business":
-    qstring name;
-    qstring next;
-    qstring secretnext;
-    qstring titlepatch;
     */
+    return true;
 }
 
 // EOF

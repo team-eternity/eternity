@@ -374,7 +374,7 @@ void HUDMessageWidget::ticker()
 
         if(current_messages)
             --current_messages;
-        scrolltime = leveltime + (message_timer * 35) / 1000;
+        scrolltime = leveltime + (message_timer * TICRATE) / 1000;
     }
 }
 
@@ -463,7 +463,7 @@ void HUDMessageWidget::addMessage(const char *s)
     psnprintf(dest, MAXHUDMSGLEN, "%s", s);
     V_FontFitTextToRect(hud_font, dest, 0, 0, 320, 200);
 
-    scrolltime = leveltime + (message_timer * 35) / 1000;
+    scrolltime = leveltime + (message_timer * TICRATE) / 1000;
 }
 
 //
@@ -846,7 +846,7 @@ void HU_CenterMessage(const char *s)
         qstr.constPtr(), (SCREENWIDTH - V_FontStringWidth(hud_font, s)) / 2,
         (SCREENHEIGHT - V_FontStringHeight(hud_font, s) - ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) /
             2,
-        leveltime + (message_timer * 35) / 1000);
+        leveltime + (message_timer * TICRATE) / 1000);
 
     // print message to console also
     C_Printf("%s\n", s);
@@ -1069,7 +1069,7 @@ void HUDLevelTimeWidget::ticker()
         return;
     }
 
-    seconds    = leveltime / 35;
+    seconds    = leveltime / TICRATE;
     timestr[0] = '\0';
 
     psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", hu_timecolor + 128, seconds / 3600, (seconds % 3600) / 60,
@@ -1512,17 +1512,42 @@ void HUDStatWidget::ticker()
 
     if(statType == STATTYPE_KILLS)
     {
-        snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalkills);
+        if(GameType == gt_coop && plr->killcount != totalKilledMonsters)
+        {
+            // Under coop let player see their own kills on the automap.
+            snprintf(statkillstr, sizeof(statkillstr), "K: %i (%i)/%i", totalKilledMonsters, plr->killcount,
+                     totalmonsters);
+        }
+        else
+            snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalmonsters);
         message = statkillstr;
     }
     else if(statType == STATTYPE_ITEMS)
     {
-        snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+        if(GameType == gt_coop)
+        {
+            const int total = G_TotalFoundItems();
+            if(plr->itemcount != total)
+                snprintf(statitemstr, sizeof(statitemstr), "I: %i (%i)/%i", total, plr->itemcount, totalitems);
+            else
+                snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+        }
+        else
+            snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
         message = statitemstr;
     }
     else if(statType == STATTYPE_SECRETS && !hud_hidesecrets)
     {
-        snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+        if(GameType == gt_coop)
+        {
+            const int total = G_TotalFoundSecrets();
+            if(plr->secretcount != total)
+                snprintf(statsecrstr, sizeof(statsecrstr), "S: %i (%i)/%i", total, plr->secretcount, totalsecret);
+            else
+                snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+        }
+        else
+            snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
         message = statsecrstr;
     }
     else

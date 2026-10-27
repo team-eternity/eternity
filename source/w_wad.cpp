@@ -316,6 +316,53 @@ bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo,
     return true;
 }
 
+void WadDirectory::openWadError(const openwad_t &openData, const wfileadd_t &addInfo, const char *format, ...)
+{
+    char message[256];
+
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(message, sizeof(message), format, ap);
+    va_end(ap);
+
+    if(addInfo.flags & WFA_OPENFAILFATAL)
+        I_Error("%s\n", message);
+    else
+    {
+        if(openData.handle)
+            fclose(openData.handle);
+        if(in_textmode)
+            printf("%s\n", message);
+        else
+            C_Printf(FC_ERROR "%s", message);
+    }
+}
+
+inline static bool W_checkHeader(const wadinfo_t &header, uint64_t size)
+{
+    return header.infotableofs >= 0 && header.numlumps >= 0 &&
+           (!header.numlumps || header.infotableofs + header.numlumps * sizeof(filelump_t) <= size);
+}
+
+bool WadDirectory::validateLumpDirectory(const openwad_t &openData, const wfileadd_t &addInfo, const wadinfo_t &header,
+                                         const filelump_t *fileinfo, long fileLength) const
+{
+    // IMPORTANT: fileinfo must point to a buffer of header.numlumps elements
+    for(int i = 0; i < header.numlumps; ++i, fileinfo++)
+    {
+        int32_t sizeRaw    = SwapLong(fileinfo->size);
+        int32_t filePosRaw = SwapLong(fileinfo->filepos);
+
+        if(sizeRaw < 0 || (sizeRaw > 0 && (long)filePosRaw + (long)sizeRaw > fileLength))
+        {
+            openWadError(openData, addInfo, "Invalid size %d and filepos %d for lump %.8s in %s", sizeRaw, filePosRaw,
+                         fileinfo->name, openData.filename ? openData.filename : "memory");
+            return false;
+        }
+    }
+    return true;
+}
+
 //
 // WadDirectory::addMemoryWad
 //
@@ -337,6 +384,12 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo, 
     header.numlumps     = SwapLong(header.numlumps);
     header.infotableofs = SwapLong(header.infotableofs);
 
+    if(!W_checkHeader(header, openData.size))
+    {
+        openWadError(openData, addInfo, "Failed reading header for memory wad file");
+        return false;
+    }
+
     // allocate enough fileinfo_t's to hold the wad directory
     length = header.numlumps * sizeof(filelump_t);
 
@@ -345,24 +398,12 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo, 
 
     info_offset = static_cast<size_t>(header.infotableofs);
 
-    // seek to the directory
-    if(info_offset + header.numlumps * sizeof(filelump_t) > openData.size)
-    {
-        if(addInfo.flags & WFA_OPENFAILFATAL)
-            I_Error("Failed reading directory for in-memory file\n");
-        else
-        {
-            if(in_textmode)
-                printf("Failed reading directory for in-memory file\n");
-            else
-                C_Printf(FC_ERROR "Failed reading directory for in-memory file\n");
-            return false;
-        }
-    }
-
     // read it in.
     byte *directoryBase = static_cast<byte *>(openData.base) + info_offset;
     memcpy(fileinfo, directoryBase, header.numlumps * sizeof(filelump_t));
+
+    if(!validateLumpDirectory(openData, addInfo, header, fileinfo, openData.size))
+        return false;
 
     // Add lumpinfo_t's for all lumps in the wad file
     lump_p = reAllocLumpInfo(header.numlumps, startlump);
@@ -427,26 +468,30 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo, in
 
     if(fread(&header, sizeof(header), 1, openData.handle) < 1)
     {
-        if(addInfo.flags & WFA_OPENFAILFATAL)
-            I_Error("Failed reading header for wad file %s\n", openData.filename);
-        else
-        {
-            fclose(openData.handle);
-            if(in_textmode)
-                printf("Failed reading header for wad file %s\n", openData.filename);
-            else
-                C_Printf(FC_ERROR "Failed reading header for wad file %s", openData.filename);
-
-            return false;
-        }
+        openWadError(openData, addInfo, "Failed reading header for wad file %s", openData.filename);
+        return false;
     }
 
     // Feed the wad header data into the hash computation
     if(doHacks || showHash)
         wadHash.addData((const uint8_t *)&header, (uint32_t)sizeof(header));
 
+    long fileLength = M_FileLength(openData.handle);
+    if(fileLength == -1L)
+    {
+        openWadError(openData, addInfo, "Couldn't get file size of %s", openData.filename);
+        return false;
+    }
+
     header.numlumps     = SwapLong(header.numlumps);
     header.infotableofs = SwapLong(header.infotableofs);
+
+    if(!W_checkHeader(header, fileLength))
+    {
+        openWadError(openData, addInfo, "Invalid numlumps=%d and infotableofs=%d in %s", header.numlumps,
+                     header.infotableofs, openData.filename);
+        return false;
+    }
 
     // allocate enough fileinfo_t's to hold the wad directory
     length = header.numlumps * sizeof(filelump_t);
@@ -506,6 +551,10 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo, in
         if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
             IWADSource = source;
     }
+
+    // PRINTZ: validate the lump sizes before we go forward
+    if(!validateLumpDirectory(openData, addInfo, header, fileinfo, fileLength))
+        return false;
 
     // Add lumpinfo_t's for all lumps in the wad file
     lump_p = reAllocLumpInfo(header.numlumps, startlump);

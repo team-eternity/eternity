@@ -269,14 +269,12 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
     {
         for(m = mo->touching_sectorlist; m; m = m->m_tnext)
         {
-            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-               !P_SectorTouchesThingVertically(m->m_sector, mo))
-            {
+            if(m->flags & MSN_POLYLINE || !P_SectorTouchesThingVertically(m->m_sector, mo))
                 continue;
-            }
             if((sec = m->m_sector)->flags & SECF_FRICTION && (sec->friction < friction || friction == ORIG_FRICTION))
             {
-                bool onfloor = sec->srf.floor.slope ? mo->zref.sector.floor == sec : mo->z <= sec->srf.floor.height;
+                bool onfloor = sec->srf.floor.slope ? mo->zref.slope.floor == sec->srf.floor.slope :
+                                                      mo->z <= sec->srf.floor.height;
                 if(onfloor || (sec->heightsec != -1 &&
                                mo->z <= sectors[sec->heightsec].srf.floor.getZAt(mo->x, mo->y) && demo_version >= 203))
                 {
@@ -414,12 +412,14 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
         clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
         clip.zref.floorgroupid              = bottomfloorsector->groupid;
         clip.zref.sector.floor              = bottomfloorsector;
+        clip.zref.slope.floor               = bottomfloorsector->srf.floor.slope;
     }
     else
     {
         clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
         clip.zref.floorgroupid              = newsubsec->sector->groupid;
         clip.zref.sector.floor              = newsubsec->sector;
+        clip.zref.slope.floor               = newsubsec->sector->srf.floor.slope;
     }
 
     // newsubsec->sector->ceilingheight + clip.thing->height;
@@ -429,11 +429,13 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
         const sector_t *topceilsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, newsubsec->sector, &totaldelta);
         clip.zref.ceiling             = topceilsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
         clip.zref.sector.ceiling      = topceilsector;
+        clip.zref.slope.ceiling       = topceilsector->srf.ceiling.slope;
     }
     else
     {
         clip.zref.ceiling        = newsubsec->sector->srf.ceiling.getZAt(x, y);
         clip.zref.sector.ceiling = newsubsec->sector;
+        clip.zref.slope.ceiling  = newsubsec->sector->srf.ceiling.slope;
     }
 
     clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
@@ -532,7 +534,8 @@ static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
     // SoM 9/7/02: wow a killoughism... * SoM is scared
     int flags = ML_TWOSIDED | ML_BLOCKING | (mobjinfo[*type]->flags4 & MF4_MONSTERPASS ? 0 : ML_BLOCKMONSTERS);
 
-    if(ld->flags & ML_3DMIDTEX)
+    // printz: if wrap-midtex is also in, then 3dmidtex is effectively like an impassable line for the monster
+    if(ld->flags & ML_3DMIDTEX && !(ld->extflags & EX_ML_WRAPMIDTEX))
         flags &= ~ML_BLOCKMONSTERS;
 
     return !((ld->flags ^ ML_TWOSIDED) & flags) || clip.bbox[BOXLEFT] > ld->bbox[BOXRIGHT] ||
@@ -675,15 +678,17 @@ bool P_BlockedAsMonster(const Mobj &mo)
 //
 // Given a line opening structure and a linedef, update a clip structure
 //
-void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, bool underportal,
-                         bool aboveportal, uint32_t lineclipflags, bool samegroupid, fixed_t linetop)
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, unsigned flags,
+                         uint32_t lineclipflags, fixed_t linetop)
 {
     // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
     // decrease the opening
-    if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) && open.height.ceiling < inter.zref.ceiling)
+    if((!(flags & UO_UNDERPORTAL) || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) &&
+       open.height.ceiling < inter.zref.ceiling)
     {
         inter.zref.ceiling        = open.height.ceiling;
         inter.zref.sector.ceiling = open.ceilsector;
+        inter.zref.slope.ceiling  = open.ceilsector ? open.ceilsector->srf.ceiling.slope : open.midtexslopes.ceiling;
         if(ld)
         {
             inter.ceilingline = ld;
@@ -691,16 +696,17 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         }
     }
 
-    if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) && open.height.floor > inter.zref.floor)
+    if((!(flags & UO_ABOVEPORTAL) || (lineclipflags & LINECLIP_OVER3DMIDTEX)) && open.height.floor > inter.zref.floor)
     {
         inter.zref.floor        = open.height.floor;
         inter.zref.floorgroupid = open.bottomgroupid;
         inter.zref.sector.floor = open.floorsector;
+        inter.zref.slope.floor  = open.floorsector ? open.floorsector->srf.floor.slope : open.midtexslopes.floor;
 
         if(ld)
         {
-            inter.floorline = ld; // killough 8/1/98: remember floor linedef
-            inter.blockline = ld;
+            inter.zref.floorline = ld; // killough 8/1/98: remember floor linedef
+            inter.blockline      = ld;
         }
     }
 
@@ -708,10 +714,12 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     if(open.height.floor == inter.zref.floor && open.floorsector && !open.floorsector->srf.floor.slope)
     {
         inter.zref.sector.floor = open.floorsector;
+        inter.zref.slope.floor  = nullptr;
     }
     if(open.height.ceiling == inter.zref.ceiling && open.ceilsector && !open.ceilsector->srf.ceiling.slope)
     {
         inter.zref.sector.ceiling = open.ceilsector;
+        inter.zref.slope.ceiling  = nullptr;
     }
 
     // ioanch 20160116: this is crazy. If the lines belong in separate groups,
@@ -721,7 +729,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     // as each layer is explored, if there really is a gap, and accidental
     // detail downstairs will not count, considering the linetop would always
     // be below any dropfloorz upstairs.
-    if(open.lowfloor < inter.zref.dropoff && (samegroupid || linetop >= inter.zref.dropoff))
+    if(open.lowfloor < inter.zref.dropoff && (flags & UO_SAMEGROUPID || linetop >= inter.zref.dropoff))
         inter.zref.dropoff = open.lowfloor;
 
     // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
@@ -729,9 +737,9 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
     if(demo_version >= 331 && open.touch3dside)
         inter.zref.dropoff = inter.zref.floor;
 
-    if(!aboveportal && open.sec.floor > inter.zref.secfloor)
+    if(!(flags & UO_ABOVEPORTAL) && open.sec.floor > inter.zref.secfloor)
         inter.zref.secfloor = open.sec.floor;
-    if(!underportal && open.sec.ceiling < inter.zref.secceil)
+    if(!(flags & UO_UNDERPORTAL) && open.sec.ceiling < inter.zref.secceil)
         inter.zref.secceil = open.sec.ceiling;
 
     // SoM 11/6/02: AGHAH
@@ -739,6 +747,13 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
         inter.zref.passfloor = inter.zref.floor;
     if(inter.zref.ceiling < inter.zref.passceil)
         inter.zref.passceil = inter.zref.ceiling;
+}
+
+bool P_CheckWrap3DMidTexBlock(const line_t &line, const Mobj &mobj)
+{
+    return demo_version >= 406 && line.flags & ML_3DMIDTEX && line.extflags & EX_ML_WRAPMIDTEX &&
+           sides[line.sidenum[0]].midtexture &&
+           (!(line.extflags & EX_ML_3DMTPASSPROJ) || !(mobj.flags & (MF_MISSILE | MF_BOUNCES)));
 }
 
 //
@@ -765,28 +780,32 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
         return true;
     }
 
+    auto handleImpassable = [ld, link, &output, pushhit]() {
+        bool result = clip.unstuck && !untouched(ld, link);
+        if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
+        {
+            pushhit->add(ld);
+        }
+        output = result;
+        return true;
+    };
+
     // killough 8/10/98: allow bouncing objects to pass through as missiles
     if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
     {
+        // explicitly blocking everything
+        // or blocking player
         if((ld->flags & ML_BLOCKING) ||
            (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
         {
-            // explicitly blocking everything
-            // or blocking player
-            bool result = clip.unstuck && !untouched(ld, link);
-            if(!result && pushhit && ld->special && full_demo_version >= make_full_version(401, 0))
-            {
-                pushhit->add(ld);
-            }
-            output = result;
-            return true;
+            return handleImpassable();
         }
         // killough 8/1/98: allow escape
 
         // killough 8/9/98: monster-blockers don't affect friends
         // SoM 9/7/02: block monsters standing on 3dmidtex only
         // MaxW: Land-monster blockers gotta be factored in, too
-        if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+        if((!(ld->flags & ML_3DMIDTEX) || ld->extflags & EX_ML_WRAPMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
            (ld->flags & ML_BLOCKMONSTERS ||
             (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))))
         {
@@ -794,6 +813,12 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<
             return true; // block monsters only
         }
     }
+
+    // Also handle 3dmidtex+wrapmidtex properly here, before we go into line-opening, as the behavior is closer to that
+    // of classic impassable, only that it may also block projectiles.
+    if(P_CheckWrap3DMidTexBlock(*ld, *clip.thing))
+        return handleImpassable();
+
     return false; // not returning
 }
 
@@ -833,7 +858,9 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
     // At this point we have backsector
 
-    if(P_AnySlope(*ld))
+    bool anyslope = P_AnySlope(*ld);
+
+    if(anyslope || Polyobj_IsLine(*ld))
     {
         // Find the two intersections with the bounding box
         v2fixed_t i1, i2;
@@ -843,15 +870,16 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
         lineopening_t lo = P_LineOpening(ld, clip.thing, &i1);
         lo.intersect(P_LineOpening(ld, clip.thing, &i2));
 
-        P_UpdateFromOpening(lo, ld, clip, false, false, 0, true, 0);
+        P_UpdateFromOpening(lo, ld, clip, UO_SAMEGROUPID, 0, 0);
 
-        pcl->haveslopes = true;
+        if(anyslope)
+            pcl->haveslopes = true;
     }
     else
     {
         // Assign to "clip" for compatibility
         clip.open = P_LineOpening(ld, clip.thing);
-        P_UpdateFromOpening(clip.open, ld, clip, false, false, 0, true, 0);
+        P_UpdateFromOpening(clip.open, ld, clip, UO_SAMEGROUPID, 0, 0);
     }
 
     P_CollectSpechits(ld, pushhit);
@@ -1242,7 +1270,7 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 // P_CheckPosition basics. Returns the sector in the designated area.
 //
 void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
-                     const sector_t *&topsector)
+                     const sector_t *&topsector, UnstuckCheck unstuckCheck)
 {
     inter.thing = &thing;
 
@@ -1254,12 +1282,17 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
     inter.bbox[BOXRIGHT]  = x + thing.radius;
     inter.bbox[BOXLEFT]   = x - thing.radius;
 
-    inter.floorline = inter.blockline = inter.ceilingline = nullptr; // killough 8/1/98
+    inter.zref.floorline = inter.blockline = inter.ceilingline = nullptr; // killough 8/1/98
 
-    // Whether object can get out of a sticky situation:
-    inter.unstuck = thing.player &&               // only players
-                    thing.player->mo == &thing && // not voodoo dolls
-                    demo_version >= 203;          // not under old demos
+    if(unstuckCheck == UnstuckCheck::escape)
+    {
+        // Whether object can get out of a sticky situation:
+        inter.unstuck = thing.player &&               // only players
+                        thing.player->mo == &thing && // not voodoo dolls
+                        demo_version >= 203;          // not under old demos
+    }
+    else
+        clip.unstuck = false;
 
     sector_t &sector = *R_PointInSubsector(x, y)->sector;
 
@@ -1277,12 +1310,14 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
         inter.zref.floor = inter.zref.dropoff = bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
         inter.zref.floorgroupid               = bottomsector->groupid;
         inter.zref.sector.floor               = bottomsector;
+        inter.zref.slope.floor                = bottomsector->srf.floor.slope;
     }
     else
     {
         inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
         inter.zref.floorgroupid               = sector.groupid;
         inter.zref.sector.floor               = &sector;
+        inter.zref.slope.floor                = sector.srf.floor.slope;
     }
 
     topsector = &sector;
@@ -1292,11 +1327,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
         topsector                 = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
         inter.zref.ceiling        = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
         inter.zref.sector.ceiling = topsector;
+        inter.zref.slope.ceiling  = topsector->srf.ceiling.slope;
     }
     else
     {
         inter.zref.ceiling        = sector.srf.ceiling.getZAt(x, y);
         inter.zref.sector.ceiling = &sector;
+        inter.zref.slope.ceiling  = sector.srf.ceiling.slope;
     }
 
     inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
@@ -1335,16 +1372,16 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, 
 //  speciallines[]
 //  numspeciallines
 //
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit)
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit, UnstuckCheck unstuckCheck)
 {
     int xl, xh, yl, yh, bx, by;
 
     // haleyjd: OVER_UNDER
     if(P_Use3DClipping())
-        return P_CheckPosition3D(thing, x, y, pushhit);
+        return P_CheckPosition3D(thing, x, y, pushhit, unstuckCheck);
 
     const sector_t *sector;
-    P_GetClipBasics(*thing, x, y, clip, sector, sector);
+    P_GetClipBasics(*thing, x, y, clip, sector, sector, unstuckCheck);
 
     if(clip.thing->flags & MF_NOCLIP)
         return true;
@@ -1410,7 +1447,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
         open.intersect(P_SlopeOpening(corners[1]));
         open.intersect(P_SlopeOpening(corners[2]));
         open.intersect(P_SlopeOpening(corners[3]));
-        P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
+        P_UpdateFromOpening(open, nullptr, clip, UO_SAMEGROUPID, 0, 0);
     }
 
     return true;
@@ -1644,6 +1681,24 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
     return true;
 }
 
+bool P_CheckSpaceToStepUp(Mobj &thing)
+{
+    // haleyjd: OVER_UNDER:
+    // [RH] Check to make sure there's nothing in the way for the step up
+    fixed_t savedz = thing.z;
+    thing.z        = clip.zref.floor;
+    bool good      = vanilla_heretic || P_TestMobjZ(&thing, clip);
+    thing.z        = savedz;
+    return good || P_checkCarryUp(thing, clip.zref.floor);
+}
+
+bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ)
+{
+    // killough 8/13/98
+    return !(thing.flags & MF_BOUNCES) || thing.flags & (MF_MISSILE | MF_NOGRAVITY) || sentient(&thing) ||
+           candidateFloorZ - thing.z <= 16 * FRACUNIT;
+}
+
 //
 // P_TryMove
 //
@@ -1652,7 +1707,7 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 //
 // killough 3/15/98: allow dropoff as option
 //
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, const int dropoff)
 {
     fixed_t        oldx, oldy, oldz;
     int            oldgroupid;
@@ -1660,7 +1715,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
     const pslope_t *downslope;
     if(!(thing->flags & MF_NOGRAVITY) && thing->z <= thing->zref.floor)
-        downslope = thing->zref.sector.floor ? thing->zref.sector.floor->srf.floor.slope : nullptr;
+        downslope = thing->zref.slope.floor;
     else
         downslope = nullptr;
 
@@ -1800,7 +1855,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
     if(!(thing->flags & MF_NOCLIP))
     {
         bool ret = clip.unstuck && !(clip.ceilingline && untouched(clip.ceilingline)) &&
-                   !(clip.floorline && untouched(clip.floorline));
+                   !(clip.zref.floorline && untouched(clip.zref.floorline));
 
         // killough 7/26/98: reformatted slightly
         // killough 8/1/98: Possibly allow escape if otherwise stuck
@@ -1854,14 +1909,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             else if(P_Use3DClipping() && thing->z < clip.zref.floor)
             {
                 // TODO: make sure to add projectile impact checking if MISSILE
-                // haleyjd: OVER_UNDER:
-                // [RH] Check to make sure there's nothing in the way for the step up
-                fixed_t savedz = thing->z;
-                bool    good;
-                thing->z = clip.zref.floor;
-                good     = vanilla_heretic || P_TestMobjZ(thing, clip);
-                thing->z = savedz;
-                if(!good && !P_checkCarryUp(*thing, clip.zref.floor))
+                if(!P_CheckSpaceToStepUp(*thing))
                 {
                     P_RunPushSpechits(*thing, pushhit);
                     return false;
@@ -1884,9 +1932,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
         if(!dropofffunc(thing, dropoff))
             return false; // don't stand over a dropoff
 
-        if(thing->flags & MF_BOUNCES && // killough 8/13/98
-           !(thing->flags & (MF_MISSILE | MF_NOGRAVITY)) && !sentient(thing) &&
-           clip.zref.floor - thing->z > 16 * FRACUNIT)
+        if(!P_BouncerCanStepUp(*thing, clip.zref.floor))
         {
             P_RunPushSpechits(*thing, pushhit);
             return false; // too big a step up for bouncers under gravity
@@ -1945,8 +1991,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
     // If going down slope while still having some distance, stick to it to avoid sliding off it
     // endlessly.
-    if(downslope && downslope->zdelta && thing->zref.sector.floor && thing->zref.sector.floor->srf.floor.slope &&
-       thing->z > thing->zref.floor && thing->z <= thing->zref.floor + STEPSIZE)
+    // If going up slope, also adjust z to never be below zref floor, because otherwise we get bad interpolation with
+    // monsters.
+    if(downslope && downslope->zdelta && thing->zref.slope.floor && thing->z <= thing->zref.floor + STEPSIZE)
     {
         thing->z = thing->zref.floor;
     }
@@ -1982,7 +2029,15 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
                 int oldside;
                 if((oldside = P_PointOnLineSide(ox, oy, line)) != P_PointOnLineSide(tx, ty, line))
-                    P_CrossSpecialLine(line, oldside, thing, nullptr);
+                {
+                    if(demo_version >= 406 && !P_LevelIsVanillaHexen() && line->intflags & MLI_DYNASEGLINE &&
+                       line->flags & ML_TWOSIDED && line->backsector)
+                    {
+                        Thinker::AddMobileCrossLine(line, oldside, thing);
+                    }
+                    else
+                        P_CrossSpecialLine(line, oldside, thing, nullptr);
+                }
             }
         }
 
@@ -2009,15 +2064,30 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 //
 static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 {
+    const sector_t *frontsector, *backsector;
+    int             linegroupid = ld->frontsector->groupid;
+    if(Polyobj_IsLine(*ld))
+    {
+        if(ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline)
+            frontsector = nullptr; // determine it later by exact box line points
+        else
+            return true; // ignore polyobject lines (1-sided already ignored, 2-sided also to ignore)
+    }
+    else
+        frontsector = ld->frontsector;
+    if(ld->intflags & MLI_1SPORTALLINE && ld->beyondportalline)
+        backsector = ld->beyondportalline->frontsector;
+    else
+        backsector = ld->backsector;
     // ioanch 20160116: portal aware
-    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, ld->frontsector->groupid);
+    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, linegroupid);
     fixed_t             bbox[4];
     bbox[BOXRIGHT]  = clip.bbox[BOXRIGHT] + link->x;
     bbox[BOXLEFT]   = clip.bbox[BOXLEFT] + link->x;
     bbox[BOXTOP]    = clip.bbox[BOXTOP] + link->y;
     bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
 
-    if(ld->backsector && // If thing touches two-sided pivot linedef
+    if(backsector && // If thing touches two-sided pivot linedef
        bbox[BOXRIGHT] > ld->bbox[BOXLEFT] && bbox[BOXLEFT] < ld->bbox[BOXRIGHT] && bbox[BOXTOP] > ld->bbox[BOXBOTTOM] &&
        bbox[BOXBOTTOM] < ld->bbox[BOXTOP] && P_BoxOnLineSide(bbox, ld) == -1)
     {
@@ -2034,21 +2104,26 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
         bool    cond;
         fixed_t frontfloor, backfloor;
         fixed_t mocheckz;
-        if(ld->frontsector->srf.floor.slope || ld->backsector->srf.floor.slope)
+        if(!frontsector) // if the line is a polyobject portal, the frontsector will need to be local to the actor
         {
-            if(ld->frontsector->srf.floor.slope && ld->backsector->srf.floor.slope &&
-               P_SlopesEqual(*ld->frontsector->srf.floor.slope, *ld->backsector->srf.floor.slope))
+            const v2fixed_t point = P_BoxLinePoint(bbox, ld);
+            frontsector           = R_PointInSubsector(point)->sector;
+        }
+        if(frontsector->srf.floor.slope || backsector->srf.floor.slope)
+        {
+            if(frontsector->srf.floor.slope && backsector->srf.floor.slope &&
+               P_SlopesEqual(*frontsector->srf.floor.slope, *backsector->srf.floor.slope))
             {
                 return true;
             }
-            if(mo->zref.sector.floor == ld->frontsector)
+            if(mo->zref.slope.floor == frontsector->srf.floor.slope)
             {
                 frontfloor = mocheckz = mo->zref.floor;
-                backfloor             = ld->backsector->srf.floor.getZAt(mox, moy);
+                backfloor             = backsector->srf.floor.getZAt(mox, moy);
             }
-            else if(mo->zref.sector.floor == ld->backsector)
+            else if(mo->zref.slope.floor == backsector->srf.floor.slope)
             {
-                frontfloor = ld->frontsector->srf.floor.getZAt(mox, moy);
+                frontfloor = frontsector->srf.floor.getZAt(mox, moy);
                 backfloor = mocheckz = mo->zref.floor;
             }
             else
@@ -2056,8 +2131,8 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
         }
         else
         {
-            frontfloor = ld->frontsector->srf.floor.height;
-            backfloor  = ld->backsector->srf.floor.height;
+            frontfloor = frontsector->srf.floor.height;
+            backfloor  = backsector->srf.floor.height;
             mocheckz   = mo->z;
         }
 
@@ -2073,10 +2148,10 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
             // if one side has portals. Require equal floor height though
             // dropoff direction
             cond = dist < 0 ? (frontfloor < mocheckz ||
-                               (frontfloor == mocheckz && ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
+                               (frontfloor == mocheckz && frontsector->srf.floor.pflags & PS_PASSABLE)) &&
                                   backfloor == mocheckz :
                               (backfloor < mocheckz ||
-                               (backfloor == mocheckz && ld->backsector->srf.floor.pflags & PS_PASSABLE)) &&
+                               (backfloor == mocheckz && backsector->srf.floor.pflags & PS_PASSABLE)) &&
                                   frontfloor == mocheckz;
         }
 
@@ -2326,7 +2401,7 @@ static void P_HitSlideLine(line_t *ld)
 
     // This also no longer works in modern demos due to there no longer being rounding errors,
     // so must be disabled for Eternity versions 4.05.00 and later.
-   
+
     if(!demo_compatibility && demo_version < 405)
         moveangle += 10;
     // ^ prevents sudden path reversal due to rounding error // phares
@@ -2364,7 +2439,7 @@ static void P_HitSlideLine(line_t *ld)
 //
 // PTR_SlideTraverse
 //
-static bool PTR_SlideTraverse(intercept_t *in, void *context)
+static bool PTR_SlideTraverse(intercept_t *in, void *context, const divline_t &)
 {
     line_t *li;
 
@@ -2375,6 +2450,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
 
     li = in->d.line;
 
+    v2fixed_t edgepos;
     if(!(li->flags & ML_TWOSIDED))
     {
         if(P_PointOnLineSide(slidemo->x, slidemo->y, li))
@@ -2389,7 +2465,8 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
     // set openrange, opentop, openbottom.
     // These define a 'window' from one sector to another across a line
 
-    clip.open = P_LineOpening(li, slidemo);
+    edgepos   = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+    clip.open = P_LineOpening(li, slidemo, &edgepos);
 
     if(clip.open.range < slidemo->height)
         goto isblocking; // doesn't fit
@@ -2401,6 +2478,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
         goto isblocking;                                              // too big a step up
     else if(P_Use3DClipping() && slidemo->z < clip.open.height.floor) // haleyjd: OVER_UNDER
     {
+        // NOTE: safe here, clip.open.height.floor will never be -infinite here.
         // [RH] Check to make sure there's nothing in the way for the step up
         bool    good;
         fixed_t savedz = slidemo->z;
@@ -2480,9 +2558,12 @@ void P_SlideMove(Mobj *mo)
 
         bestslidefrac = FRACUNIT + 1;
 
-        P_PathTraverse(leadx, leady, leadx + mo->momx, leady + mo->momy, PT_ADDLINES, PTR_SlideTraverse);
-        P_PathTraverse(trailx, leady, trailx + mo->momx, leady + mo->momy, PT_ADDLINES, PTR_SlideTraverse);
-        P_PathTraverse(leadx, traily, leadx + mo->momx, traily + mo->momy, PT_ADDLINES, PTR_SlideTraverse);
+        P_PathTraverse({ leadx, leady }, { leadx + mo->momx, leady + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
+        P_PathTraverse({ trailx, leady }, { trailx + mo->momx, leady + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
+        P_PathTraverse({ leadx, traily }, { leadx + mo->momx, traily + mo->momy }, PT_ADDLINES | PT_COMPATIBILITY,
+                       PTR_SlideTraverse);
 
         // move up to the wall
 
@@ -2873,21 +2954,18 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane
 
     // Mark all things invalid
     for(n = sector->touching_thinglist; n; n = n->m_snext)
-        n->visited = false;
+        n->flags &= ~MSN_VISITED;
 
     do
     {
         for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
         {
             // ioanch 20160115: portal aware
-            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-               !P_SectorTouchesThingVertically(sector, n->m_thing))
-            {
+            if(!P_SectorTouchesThingVertically(sector, n->m_thing))
                 continue;
-            }
-            if(!n->visited) // unprocessed thing found
+            if(!(n->flags & MSN_VISITED)) // unprocessed thing found
             {
-                n->visited = true;                         // mark thing as processed
+                n->flags |= MSN_VISITED;                   // mark thing as processed
                 if(!(n->m_thing->flags & MF_NOBLOCKMAP))   // jff 4/7/98 don't do these
                     PIT_ChangeSector(n->m_thing, nullptr); // process it
                 break;                                     // exit and start over
@@ -2961,6 +3039,12 @@ static void P_PutSecnode(msecnode_t *node)
     headsecnode   = node;
 }
 
+enum class SecnodeType
+{
+    normal,
+    polyline
+};
+
 //
 // P_AddSecnode
 //
@@ -2972,15 +3056,24 @@ static void P_PutSecnode(msecnode_t *node)
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thinglist, Mobj *thing, msecnode_t *nextnode)
+static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thinglist, Mobj *thing, msecnode_t *nextnode,
+                                SecnodeType type)
 {
     msecnode_t *node;
 
+    bool foundNormalNode = false;
     for(node = nextnode; node; node = node->m_tnext)
     {
         if(node->m_sector == s) // Already have a node for this sector?
         {
+            if(node->m_thing == thing && !(node->flags & MSN_POLYLINE))
+                foundNormalNode = true;
             node->m_thing = thing; // Yes. Setting m_thing says 'keep it'.
+
+            if(type == SecnodeType::normal)
+                node->flags &= ~MSN_POLYLINE;
+            else if(type == SecnodeType::polyline && !foundNormalNode)
+                node->flags |= MSN_POLYLINE;
             return nextnode;
         }
     }
@@ -2990,7 +3083,8 @@ static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thingl
 
     node = P_GetSecnode();
 
-    node->visited = 0; // killough 4/4/98, 4/7/98: mark new nodes unvisited.
+    // killough 4/4/98, 4/7/98: mark new nodes unvisited.
+    node->flags = type == SecnodeType::polyline ? MSN_POLYLINE : 0;
 
     node->m_sector = s;        // sector
     node->m_thing  = thing;    // mobj
@@ -3072,9 +3166,22 @@ void P_DelSeclist(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 //
 // Context for the like-named function
 //
+struct transPortalGetSectors_t
+{
+    int              curgroupid;
+    doom_mapinter_t *clip;
+    msecnode_t *sector_t::*which_thinglist;
+    LineIteratorVisiting  *visit;
+    bool                  *linegroups;
+};
+
+//
+// Context for the like-named function
+//
 struct getSectors_t
 {
-    msecnode_t *sector_t::*which_thinglist;
+    msecnode_t *sector_t::  *which_thinglist;
+    transPortalGetSectors_t *master;
 };
 
 //
@@ -3095,6 +3202,10 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
     bbox[BOXLEFT]            = pClip->bbox[BOXLEFT] + link->x;
     bbox[BOXTOP]             = pClip->bbox[BOXTOP] + link->y;
     bbox[BOXBOTTOM]          = pClip->bbox[BOXBOTTOM] + link->y;
+
+    const bool        polyline = Polyobj_IsLine(*ld);
+    const SecnodeType type =
+        polyline && !(ld->intflags & MLI_1SPORTALLINE) ? SecnodeType::polyline : SecnodeType::normal;
 
     if(bbox[BOXRIGHT] <= ld->bbox[BOXLEFT] || bbox[BOXLEFT] >= ld->bbox[BOXRIGHT] ||
        bbox[BOXTOP] <= ld->bbox[BOXBOTTOM] || bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
@@ -3124,14 +3235,18 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
         i2.x          += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
         i2.y          += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-        if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.getZAt(i2), ld->frontsector->groupid,
-                                         pClip->thing->groupid, ld->frontsector, pClip->thing->z))
+        sector_t *const frontsector =
+            polyline && ld->intflags & MLI_1SPORTALLINE ? R_PointInSubsector(inters)->sector : ld->frontsector;
+
+        if(P_PointReachesGroupVertically(i2.x, i2.y, frontsector->srf.floor.getZAt(i2), ld->frontsector->groupid,
+                                         pClip->thing->groupid, frontsector, pClip->thing->z) ||
+           (context->master->linegroups && context->master->linegroups[ld->frontsector->groupid]))
         {
             pClip->sector_list =
-                P_AddSecnode(ld->frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+                P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
         }
 
-        if(ld->backsector && ld->backsector != ld->frontsector)
+        if(!(ld->pflags & PS_PASSABLE) && ld->backsector && ld->backsector != frontsector)
         {
             angle += ANG180;
             i2     = inters;
@@ -3141,13 +3256,29 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
                                              pClip->thing->groupid, ld->backsector, pClip->thing->z))
             {
                 pClip->sector_list =
-                    P_AddSecnode(ld->backsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+                    P_AddSecnode(ld->backsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
             }
         }
     }
     else
     {
-        pClip->sector_list = P_AddSecnode(ld->frontsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+        sector_t *frontsector;
+        if(polyline && ld->intflags & MLI_1SPORTALLINE)
+        {
+            const v2fixed_t inters = P_BoxLinePoint(bbox, ld);
+            frontsector            = R_PointInSubsector(inters)->sector;
+        }
+        else
+            frontsector = ld->frontsector;
+        pClip->sector_list =
+            P_AddSecnode(frontsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
+
+        if(ld->pflags & PS_PASSABLE && context->master)
+        {
+            if(!context->master->linegroups)
+                context->master->linegroups = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
+            context->master->linegroups[ld->portal->data.link.toid] = true;
+        }
 
         // Don't assume all lines are 2-sided, since some Things
         // like teleport fog are allowed regardless of whether their
@@ -3157,24 +3288,13 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
         // Use sidedefs instead of 2s flag to determine two-sidedness.
         // killough 8/1/98: avoid duplicate if same sector on both sides
 
-        if(ld->backsector && ld->backsector != ld->frontsector)
+        if(!(ld->pflags & PS_PASSABLE) && ld->backsector && ld->backsector != frontsector)
             pClip->sector_list =
-                P_AddSecnode(ld->backsector, context->which_thinglist, pClip->thing, pClip->sector_list);
+                P_AddSecnode(ld->backsector, context->which_thinglist, pClip->thing, pClip->sector_list, type);
     }
 
     return true;
 }
-
-//
-// State for the function below
-//
-struct transPortalGetSectors_t
-{
-    int              curgroupid;
-    doom_mapinter_t *clip;
-    msecnode_t *sector_t::*which_thinglist;
-    LineIteratorVisiting  *visit;
-};
 
 //
 // Trans-portal support for the usual msecnode PIT_GetSector gatherer
@@ -3192,8 +3312,8 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
         // Get the offset from thing's position to the PREVIOUS groupid
         if(groupid == inter.thing->groupid)
         {
-            inter.sector_list =
-                P_AddSecnode(inter.thing->subsector->sector, context->which_thinglist, inter.thing, inter.sector_list);
+            inter.sector_list = P_AddSecnode(inter.thing->subsector->sector, context->which_thinglist, inter.thing,
+                                             inter.sector_list, SecnodeType::normal);
         }
         else
         {
@@ -3202,12 +3322,14 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
             if(sector)
             {
                 // Add it
-                inter.sector_list = P_AddSecnode(sector, context->which_thinglist, inter.thing, inter.sector_list);
+                inter.sector_list =
+                    P_AddSecnode(sector, context->which_thinglist, inter.thing, inter.sector_list, SecnodeType::normal);
             }
         }
     }
     getSectors_t getSectorsContext    = {};
     getSectorsContext.which_thinglist = context->which_thinglist;
+    getSectorsContext.master          = context;
     P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext, context->visit);
     return true;
 }
@@ -3276,6 +3398,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
         context.which_thinglist = which_thinglist;
         context.visit           = nonDemo ? &visit : nullptr;
         P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &context, PIT_transPortalGetSectors);
+        efree(context.linegroups);
         list = pClip->sector_list;
     }
     else
@@ -3298,7 +3421,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
         }
 
         // Add the sector of the (x,y) point to sector_list.
-        list = P_AddSecnode(thing->subsector->sector, which_thinglist, thing, pClip->sector_list);
+        list = P_AddSecnode(thing->subsector->sector, which_thinglist, thing, pClip->sector_list, SecnodeType::normal);
     }
 
     // Now delete any nodes that won't be used. These are the ones where
@@ -3337,13 +3460,19 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
 //
 void P_ClearGlobalLevelReferences()
 {
+    Thinker::ClearLevelData();
     clip.thing       = nullptr; // this isn't reference-counted
-    clip.ceilingline = clip.blockline = clip.floorline = nullptr;
-    clip.numspechit                                    = 0;
-    clip.BlockingMobj                                  = nullptr; // also not ref-counted
-    clip.numportalhit                                  = 0;
-    clip.zref.sector                                   = {};
+    clip.ceilingline = clip.blockline = clip.zref.floorline = nullptr;
+    clip.numspechit                                         = 0;
+    clip.BlockingMobj                                       = nullptr; // also not ref-counted
+    clip.numportalhit                                       = 0;
+    clip.zref.sector                                        = {};
+    clip.zref.slope                                         = {};
+    clip.open.midtexslopes                                  = {};
+    clip.open.floorsector                                   = nullptr;
+    clip.open.ceilsector                                    = nullptr;
     P_ClearTarget(clip.linetarget);
+    P_PreZoneFreeMidTexExtras();
 }
 
 //
@@ -3352,8 +3481,8 @@ void P_ClearGlobalLevelReferences()
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
     // Steep slopes are falling areas
-    if(mobj.zref.sector.floor && mobj.zref.sector.floor->srf.floor.slope &&
-       D_abs(mobj.zref.sector.floor->srf.floor.slope->zdelta) >= FRACUNIT && mobj.z > mobj.zref.dropoff + STEPSIZE)
+    if(mobj.zref.slope.floor && D_abs(mobj.zref.slope.floor->zdelta) >= FRACUNIT &&
+       mobj.z > mobj.zref.dropoff + STEPSIZE)
     {
         return false;
     }
@@ -3469,4 +3598,3 @@ bool P_OnGroundOrThing(const Mobj &mobj)
 //
 //
 //----------------------------------------------------------------------------
-

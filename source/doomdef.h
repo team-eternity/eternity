@@ -215,7 +215,10 @@ using ammotype_t = int;
 enum powertype_t
 {
     pw_invulnerability,
+
+    // printz: counted differently per tic than the rest, that's why it has special handling in many places
     pw_strength,
+
     pw_invisibility,
     pw_ironfeet,
     pw_allmap,

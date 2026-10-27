@@ -57,9 +57,16 @@
 #include "z_auto.h"
 
 // Stage of animation:
-//  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
-static int finalestage;
-static int finalecount;
+enum class FinaleStage
+{
+    text,
+    artScreen,
+    characterCast,
+    artScreenPaletted,
+    artScreenPalettedFinished,
+};
+static FinaleStage finalestage;
+static int         finalecount;
 
 // defines for the end mission display text                     // phares
 
@@ -94,15 +101,16 @@ char    *f_titlefontname;
 
 static const char *finaletext;
 static int         finaletype;
+static const char *finalepal;
 
 //
 // F_setupFinale
 //
 // haleyjd 01/26/14: Determine finale parameters to use.
 //
-static void F_setupFinale(bool secret)
+static void F_setupFinale(ExitType type)
 {
-    if(secret)
+    if(type == ExitType::secret)
     {
         if(LevelInfo.finaleSecretType != FINALE_UNSPECIFIED)
             finaletype = LevelInfo.finaleSecretType;
@@ -119,6 +127,7 @@ static void F_setupFinale(bool secret)
         finaletype = LevelInfo.finaleType;
         finaletext = LevelInfo.interText;
     }
+    finalepal = estrnonempty(LevelInfo.endPal) ? LevelInfo.endPal : "PLAYPAL";
 }
 
 //
@@ -138,7 +147,7 @@ void F_Init()
 //
 // F_StartFinale
 //
-void F_StartFinale(bool secret)
+void F_StartFinale(ExitType type)
 {
     gameaction    = ga_nothing;
     gamestate     = GS_FINALE;
@@ -151,10 +160,10 @@ void F_StartFinale(bool secret)
 
     S_ChangeMusicName(LevelInfo.interMusic, true);
 
-    finalestage = 0;
+    finalestage = FinaleStage::text;
     finalecount = 0;
 
-    F_setupFinale(secret);
+    F_setupFinale(type);
 }
 
 //
@@ -162,14 +171,14 @@ void F_StartFinale(bool secret)
 //
 bool F_Responder(const event_t *event)
 {
-    if(finalestage == 2)
+    if(finalestage == FinaleStage::characterCast)
         return F_CastResponder(event);
 
-    // haleyjd: Heretic underwater hack for E2 end
-    if(finalestage == 3 && event->type == ev_keydown)
+    // haleyjd: Heretic underwater hack for E2 end (+ generalized for UMAPINFO)
+    if(finalestage == FinaleStage::artScreenPaletted && event->type == ev_keydown)
     {
         // restore normal palette and kick out to title screen
-        finalestage = 4;
+        finalestage = FinaleStage::artScreenPalettedFinished;
         I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
         return true;
     }
@@ -232,10 +241,10 @@ void F_Ticker()
     // advance animation
     finalecount++;
 
-    if(finalestage == 2)
+    if(finalestage == FinaleStage::characterCast)
         F_CastTicker();
 
-    if(!finalestage)
+    if(finalestage == FinaleStage::text)
     {
         float speed = demo_compatibility ? TEXTSPEED : Get_TextSpeed();
 
@@ -248,11 +257,14 @@ void F_Ticker()
             if(finaletype != FINALE_TEXT)
             {
                 finalecount = 0;
-                finalestage = 1;
+                finalestage = FinaleStage::artScreen;
 
                 // no wipe before Heretic E2 or E3 finales
-                if(finaletype != FINALE_HTIC_WATER && finaletype != FINALE_HTIC_DEMON)
+                if(finaletype != FINALE_HTIC_WATER && finaletype != FINALE_HTIC_DEMON &&
+                   !strcasecmp(finalepal, "PLAYPAL"))
+                {
                     wipegamestate = GS_NOSTATE; // force a wipe
+                }
 
                 // special actions
                 switch(finaletype)
@@ -395,7 +407,7 @@ static void F_StartCast()
     casttics      = caststate->tics;
     castrot       = 0;
     castdeath     = false;
-    finalestage   = 2;
+    finalestage   = FinaleStage::characterCast;
     castframes    = 0;
     castonmelee   = 0;
     castattacking = false;
@@ -641,10 +653,42 @@ static void F_CastDrawer()
     V_DrawPatchTranslated(160, 170, &subscreen43, patch, translate, flip);
 }
 
+static void F_preventPalettedGUI()
+{
+    Console.enabled = false; // let console key fall through
+    paused          = 0;
+    menuactive      = false;
+}
+
+static void F_restoreControlWithTitleScreen()
+{
+    Console.enabled = true;
+    V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(GameModeInfo->consoleBack));
+}
+
+static bool F_managePalettedScrolling(const char *palette)
+{
+    if(estrnonempty(palette) && strcasecmp(palette, "PLAYPAL") && finalestage == FinaleStage::artScreen)
+    {
+        C_InstaPopup(); // put away console if down
+        byte *paletteb = (byte *)wGlobalDir.cacheLumpName(palette, PU_CACHE);
+        I_SetPalette(paletteb);
+        finalestage = FinaleStage::artScreenPaletted;
+    }
+    if(finalestage == FinaleStage::artScreenPaletted)
+        F_preventPalettedGUI();
+    else if(finalestage == FinaleStage::artScreenPalettedFinished)
+    {
+        F_restoreControlWithTitleScreen();
+        return false;
+    }
+    return true;
+}
+
 //
 // F_BunnyScroll
 //
-static void F_BunnyScroll()
+static void F_BunnyScroll(const char *palette)
 {
     int        scrolled;
     patch_t   *p1;
@@ -652,6 +696,9 @@ static void F_BunnyScroll()
     char       name[10];
     int        stage;
     static int laststage;
+
+    if(!F_managePalettedScrolling(palette))
+        return;
 
     p1 = PatchLoader::CacheName(wGlobalDir, "PFUB2", PU_LEVEL);
     p2 = PatchLoader::CacheName(wGlobalDir, "PFUB1", PU_LEVEL);
@@ -704,15 +751,14 @@ static void F_BunnyScroll()
 }
 
 //
-// F_DrawE2End
+// Helper function to draw a paletted image, optionally setting the palette as parameter.
+// Based on the Heretic episode 2 ending using E2END.
 //
-// Helper function to draw the E2END image, optionally setting the palette.
-//
-static void F_drawE2End(bool setPalette)
+static void F_drawPalettedEnd(const char *picname, const char *palname, bool setPalette)
 {
-    int e2end = wGlobalDir.checkNumForName("E2END");
+    int       e2end = wGlobalDir.checkNumForName(picname);
     VPNGImage png;
-    bool havePNGBlock = false;
+    bool      havePNGBlock = false;
 
     if(e2end >= 0)
     {
@@ -742,7 +788,7 @@ static void F_drawE2End(bool setPalette)
     {
         if(setPalette)
         {
-            byte *palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
+            byte *palette = (byte *)wGlobalDir.cacheLumpName(palname, PU_CACHE);
             I_SetPalette(palette);
         }
         V_DrawFSBackground(&vbscreenyscaled, e2end);
@@ -750,29 +796,27 @@ static void F_drawE2End(bool setPalette)
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
-static void F_DrawUnderwater()
+// printz: generalized for UMAPINFO
+static void F_DrawPalettedEnd(const char *endpic, const char *endpal)
 {
-    int initialstage = finalestage;
+    FinaleStage initialstage = finalestage;
     switch(finalestage)
     {
-    case 1:
-        C_InstaPopup(); // put away console if down
-        F_drawE2End(true); // set palette and draw
-        finalestage = 3;
+    case FinaleStage::artScreen:
+        C_InstaPopup();                          // put away console if down
+        F_drawPalettedEnd(endpic, endpal, true); // set palette and draw
+        finalestage = FinaleStage::artScreenPaletted;
         [[fallthrough]];
-    case 3:
-        Console.enabled = false; // let console key fall through
-        paused          = 0;
-        menuactive      = false;
+    case FinaleStage::artScreenPaletted:
+        F_preventPalettedGUI();
 
         // Redraw to cover possible pillarbox caused by D_Display
-        if(initialstage == 3)
-            F_drawE2End(false); // redraw without changing palette
+        if(initialstage == FinaleStage::artScreenPaletted)
+            F_drawPalettedEnd(endpic, endpal, false); // redraw without changing palette
         break;
 
-    case 4:
-        Console.enabled = true;
-        V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("TITLE"));
+    case FinaleStage::artScreenPalettedFinished: //
+        F_restoreControlWithTitleScreen();
         break;
     }
 }
@@ -822,8 +866,13 @@ static void F_InitDemonScroller()
     VBuffer vbuf;
 
     // get screens
-    lnum1  = W_GetNumForName("FINAL1");
-    lnum2  = W_GetNumForName("FINAL2");
+    lnum1 = W_CheckNumForName("FINAL1");
+    lnum2 = W_CheckNumForName("FINAL2");
+    if(lnum1 < 0 || lnum2 < 0)
+    {
+        C_Printf(FC_ERROR "Missing FINAL1 or FINAL2 lump for demon ending.\n");
+        return;
+    }
     lsize1 = W_LumpLength(lnum1);
     lsize2 = W_LumpLength(lnum2);
     bool     raw1, raw2;
@@ -899,10 +948,13 @@ static void F_InitDemonScroller()
 //
 // haleyjd: Heretic episode 3 demon scroller
 //
-static void F_DemonScroll()
+static void F_DemonScroll(const char *palette)
 {
     static int yval       = 0;
     static int nextscroll = 0;
+
+    if(!F_managePalettedScrolling(palette))
+        return;
 
     // show first screen for a while
     int origin = (vbscreenyscaled.unscaledw - DemonScreen.width) / 2;
@@ -949,28 +1001,53 @@ static void F_FinaleEndDrawer()
     switch(finaletype)
     {
     case FINALE_DOOM_CREDITS: //
-        V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, sw ? "HELP2" : "CREDIT", PU_CACHE));
+    {
+        const char *picname = sw ? "HELP2" : "CREDIT";
+        if(strcasecmp(LevelInfo.endPal, "PLAYPAL"))
+            F_DrawPalettedEnd(picname, LevelInfo.endPal);
+        else
+            V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, picname, PU_CACHE));
         break;
+    }
     case FINALE_DOOM_DEIMOS: //
-        V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "VICTORY2", PU_CACHE));
+    {
+        if(strcasecmp(LevelInfo.endPal, "PLAYPAL"))
+            F_DrawPalettedEnd("VICTORY2", LevelInfo.endPal);
+        else
+            V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "VICTORY2", PU_CACHE));
         break;
+    }
     case FINALE_DOOM_BUNNY: //
-        F_BunnyScroll();
+        F_BunnyScroll(LevelInfo.endPal);
         break;
     case FINALE_DOOM_MARINE: //
-        V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
+    {
+        if(strcasecmp(LevelInfo.endPal, "PLAYPAL"))
+            F_DrawPalettedEnd("ENDPIC", LevelInfo.endPal);
+        else
+            V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
         break;
+    }
     case FINALE_HTIC_CREDITS: //
-        V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(sw ? "ORDER" : "CREDIT"));
+    {
+        const char *picname = sw ? "ORDER" : "CREDIT";
+        if(strcasecmp(LevelInfo.endPal, "PLAYPAL"))
+            F_DrawPalettedEnd(picname, LevelInfo.endPal);
+        else
+            V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(picname));
         break;
+    }
     case FINALE_HTIC_WATER: //
-        F_DrawUnderwater();
+        F_DrawPalettedEnd("E2END", strcasecmp(LevelInfo.endPal, "PLAYPAL") ? LevelInfo.endPal : "E2PAL");
         break;
     case FINALE_HTIC_DEMON: //
-        F_DemonScroll();
+        F_DemonScroll(LevelInfo.endPal);
         break;
     case FINALE_END_PIC: //
-        V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
+        if(strcasecmp(LevelInfo.endPal, "PLAYPAL"))
+            F_DrawPalettedEnd(LevelInfo.endPic, LevelInfo.endPal);
+        else
+            V_DrawPatchFS(&vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
         break;
     default: // ?
         break;
@@ -988,10 +1065,10 @@ void F_Drawer()
 {
     switch(finalestage)
     {
-    case 2: //
+    case FinaleStage::characterCast: //
         F_CastDrawer();
         break;
-    case 0: //
+    case FinaleStage::text: //
         F_TextWrite();
         break;
     default: //

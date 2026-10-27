@@ -267,6 +267,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
                 {
                     if(fd->changeOnStart)
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                         switch(fd->change_type)
@@ -287,6 +288,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
                     }
                     else
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         floor->texture = line->frontsector->srf.floor.pic;
                         switch(fd->change_type)
                         {
@@ -572,6 +574,7 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
                 {
                     if(cd->flags & CDF_CHANGEONSTART)
                     {
+                        // NOTE: polyobject lines will use the control sector texture
                         P_SetSectorCeilingPic(sec, line->frontsector->srf.ceiling.pic);
                         switch(cd->change_type)
                         {
@@ -678,16 +681,16 @@ int EV_DoGenLift(const line_t *line, int special, int tag)
     switch(Dely)
     {
     case 0: //
-        delay = 1 * 35;
+        delay = 1 * TICRATE;
         break;
     case 1: //
-        delay = PLATWAIT * 35;
+        delay = PLATWAIT * TICRATE;
         break;
     case 2: //
-        delay = 5 * 35;
+        delay = 5 * TICRATE;
         break;
     case 3: //
-        delay = 10 * 35;
+        delay = 10 * TICRATE;
         break;
     default: //
         delay = 0;
@@ -1530,7 +1533,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag)
     {
     default:
     case doorWaitOneSec: //
-        dd.delay_value = 35;
+        dd.delay_value = TICRATE;
         break;
     case doorWaitStd: //
         dd.delay_value = VDOORWAIT;
@@ -1564,11 +1567,16 @@ enum
 //
 // EV_ChangeLineTex
 //
-// Sets the indicated texture on all lines of lineid tag (if usetag false) or of
-// the given tag (if usetag true)
+// Sets the indicated texture on all lines of the given tag
 //
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine)
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, line_t *triggerLine)
 {
+    if(side != 0 && side != 1)
+    {
+        doom_warningf("Invalid side %d for SetLineTexture", side);
+        return;
+    }
+
     line_t *l = nullptr;
     int     linenum, texnum;
 
@@ -1596,6 +1604,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
             R_CacheIfSkyTexture(sides[l->sidenum[side]].bottomtexture, texnum);
             sides[l->sidenum[side]].bottomtexture = texnum;
             break;
+        default: doom_warningf("Invalid side part %d for SetLineTexture", pos); break;
         }
     }
 }

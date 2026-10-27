@@ -670,9 +670,21 @@ void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 // the assumption that the graphic is fullscreen, 320x200.
 //
 // If wider than the screen, center align.
-void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
+void V_DrawPatchFS(VBuffer *buffer, patch_t *patch, DrawPatchSettings settings)
 {
-    V_DrawPatchGeneral((buffer->unscaledw - patch->width) / 2, 0, buffer, patch, false);
+    int xOffsetCompensate = 0;
+    int yOffsetCompensate = 0;
+    switch(settings)
+    {
+    case DrawPatchSettings::keepOffsets: break;
+    case DrawPatchSettings::clearOffsets:
+        xOffsetCompensate = patch->leftoffset;
+        yOffsetCompensate = patch->topoffset;
+        break;
+    default: break;
+    }
+    V_DrawPatchGeneral((buffer->unscaledw - patch->width) / 2 + xOffsetCompensate, yOffsetCompensate, buffer, patch,
+                       false);
 }
 
 //
@@ -709,7 +721,8 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
         break;
     default: // anything else is treated like a patch (let god sort it out)
         patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
-        V_DrawPatchFS(dest, patch);
+        V_ColorBlock(dest, GameModeInfo->blackIndex, 0, 0, vbscreen.width, vbscreen.height);
+        V_DrawPatchFS(dest, patch, DrawPatchSettings::clearOffsets);
         break;
     }
 }

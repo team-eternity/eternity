@@ -941,6 +941,7 @@ static void P_InfoDefaultFinale()
     LevelInfo.endOfGame        = false;
     LevelInfo.useEDFInterName  = false;
     LevelInfo.endPic           = GameModeInfo->interPic; // just have a valid default
+    LevelInfo.endPal           = "PLAYPAL";
 
     // set data from the finaledata object
     if(fdata->musicnum != mus_None)
@@ -1261,11 +1262,15 @@ static void P_ClearLevelVars()
 
     // gameplay
     LevelInfo.disableJump = false;
+    LevelInfo.requireJump = false;
+    LevelInfo.freeAim     = UMapInfoAllow::allow;
 
     // air control
     // compatibility setting may override this. To completely disable it, use -1
     LevelInfo.airControl  = 0;
     LevelInfo.airFriction = 0;
+
+    LevelInfo.crouchWarning = false;
 
     // haleyjd: construct defaults
     P_InfoDefaultLevelName();
@@ -1352,10 +1357,10 @@ static void P_InitWeapons()
 //
 // If interText is not set, give it some dummy value
 //
-void P_EnsureDefaultStoryText(bool secret)
+void P_EnsureDefaultStoryText(ExitType type)
 {
     // no text defined? make up something.
-    const char *&interText = secret ? LevelInfo.interTextSecret : LevelInfo.interText;
+    const char *&interText = type == ExitType::secret ? LevelInfo.interTextSecret : LevelInfo.interText;
     if(!interText)
         interText = "You have won.";
 }
@@ -1477,16 +1482,31 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
     }
 
     // additively process any SMMU header information for compatibility
+    bool       levelHeaderInfoHasIgnore = false;
+    MetaTable *levelHeaderInfo          = nullptr;
     if((info = XL_ParseLevelInfo(dir, lumpnum)))
     {
-        P_ProcessEMapInfo(info);
-        foundEEMapInfo = true;
+        if(!strcmp(info->getString("ignore", "0"), "1"))
+        {
+            C_Printf("Found ignored [level info]; if no EMAPINFO, will try MAPINFO if available...\n");
+            levelHeaderInfoHasIgnore = true;
+            levelHeaderInfo          = info;
+        }
+        else
+        {
+            P_ProcessEMapInfo(info);
+            foundEEMapInfo = true;
+        }
     }
 
     // haleyjd 01/26/14: if no EE map information was specified for this map,
     // defer to any defined Hexen MAPINFO data now.
-    if(!foundEEMapInfo)
-        P_ApplyHexenMapInfo();
+    if(!foundEEMapInfo && !P_ApplyHexenMapInfo() && levelHeaderInfo && levelHeaderInfoHasIgnore)
+    {
+        C_Printf("Found no MAPINFO, using ignored [level info].\n");
+        P_ProcessEMapInfo(levelHeaderInfo);
+        foundEEMapInfo = true;
+    }
 
     P_truncateLevelInfoNames();
 

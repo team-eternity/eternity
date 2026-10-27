@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 
+#include "cam_common.h"
 #include "cam_sight.h"
 #include "d_gi.h"
 #include "doomstat.h"
@@ -35,16 +36,20 @@
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_portal.h" // ioanch 20160113
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
 #include "p_spec.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_sky.h"
 #include "r_state.h"
 #include "r_pcheck.h"
 #include "s_sound.h"
+
+static constexpr int RECURSION_LIMIT = 64;
 
 // Globals
 linetracer_t trace;
@@ -112,7 +117,7 @@ bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, l
 //
 // Aim traverse
 //
-static bool PTR_AimTraverse(intercept_t *in, void *context)
+static bool PTR_AimTraverse(intercept_t *in, void *context, const divline_t &tracedl)
 {
     fixed_t slope, dist;
 
@@ -126,7 +131,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
 
         // Crosses a two sided line.
         // A two sided line will restrict the possible target ranges.
-        v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+        v2fixed_t edgepos = tracedl.v + tracedl.dv.fixedMul(in->frac);
         clip.open         = P_LineOpening(li, nullptr, &edgepos);
 
         if(clip.open.height.floor >= clip.open.height.ceiling)
@@ -134,14 +139,18 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
 
         dist = FixedMul(trace.attackrange, in->frac);
 
-        if(li->frontsector->srf.floor.getZAt(edgepos) != li->backsector->srf.floor.getZAt(edgepos))
+        const sector_t *const frontsector = Polyobj_IsLine(*li) ? R_PointInSubsector(edgepos)->sector : li->frontsector;
+        const sector_t *const backsector  = Polyobj_IsLine(*li) ? frontsector : li->backsector;
+        // IMPORTANT: no portals here, no 1sportalline or edgepos2
+
+        if(frontsector->srf.floor.getZAt(edgepos) != backsector->srf.floor.getZAt(edgepos))
         {
             slope = FixedDiv(clip.open.height.floor - trace.z, dist);
             if(slope > trace.bottomslope)
                 trace.bottomslope = slope;
         }
 
-        if(li->frontsector->srf.ceiling.getZAt(edgepos) != li->backsector->srf.ceiling.getZAt(edgepos))
+        if(frontsector->srf.ceiling.getZAt(edgepos) != backsector->srf.ceiling.getZAt(edgepos))
         {
             slope = FixedDiv(clip.open.height.ceiling - trace.z, dist);
             if(slope < trace.topslope)
@@ -234,7 +243,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
     // killough 8/2/98: prevent friends from aiming at friends
     trace.aimflagsmask = mask;
 
-    P_PathTraverse(coords.x, coords.y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, PTR_AimTraverse);
+    P_PathTraverse({ coords.x, coords.y }, { x2, y2 }, PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBILITY, PTR_AimTraverse);
 
     return clip.linetarget ? trace.aimslope : lookslope;
 }
@@ -346,7 +355,7 @@ inline static bool P_shootThing(intercept_t *in, size_t puffidx)
 //
 // Compatibility codepath for shot traversal.
 //
-static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
+static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context, const divline_t &tracedl)
 {
     fixed_t x, y, z, frac;
     auto    puffidx = *static_cast<size_t *>(context);
@@ -363,11 +372,13 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
         if(li->flags & ML_TWOSIDED)
         {
+            // NOTE: no polyobjects in vanilla, no worry there. No Hexen demo support either.
             clip.open    = P_LineOpening(li, nullptr);
             fixed_t dist = FixedMul(trace.attackrange, in->frac);
             fixed_t slope;
 
             // killough 11/98: simplify
+            // printz: don't worry about 3dmidtex polyobjects behind portals here, demo version is <406
             if((li->frontsector->srf.floor.height == li->backsector->srf.floor.height ||
                 (slope = FixedDiv(clip.open.height.floor - trace.z, dist)) <= trace.aimslope) &&
                (li->frontsector->srf.ceiling.height == li->backsector->srf.ceiling.height ||
@@ -381,8 +392,8 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
         // hit line
         // position a bit closer
         frac = in->frac - FixedDiv(4 * FRACUNIT, trace.attackrange);
-        x    = trace.dl.x + FixedMul(trace.dl.dx, frac);
-        y    = trace.dl.y + FixedMul(trace.dl.dy, frac);
+        x    = tracedl.x + FixedMul(tracedl.dx, frac);
+        y    = tracedl.y + FixedMul(tracedl.dy, frac);
         z    = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
 
         if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic))
@@ -432,22 +443,27 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
     // haleyjd: when allowing planes to be shot, we do not care if
     // the sector heights are the same; we must check against the
     // line opening, otherwise lines behind the plane will be activated.
-    sector_t *fs = li->frontsector;
-    sector_t *bs = li->backsector;
+    bool floorsame, ceilingsame;
 
+    // NOTE: MLI_1SPORTALLINE won't be reached here, this is not portal-aware code
     bool becomp = (demo_version < 333 || getComp(comp_planeshoot));
-
-    bool floorsame;
-    if(fs->srf.floor.slope || bs->srf.floor.slope) // don't support this in case of slopes
-        floorsame = false;
+    if(Polyobj_IsLine(*li))
+        floorsame = ceilingsame = becomp;
     else
-        floorsame = becomp && P_SlopesEqual(fs, bs, surf_floor);
+    {
+        sector_t *fs = li->frontsector;
+        sector_t *bs = li->backsector;
 
-    bool ceilingsame;
-    if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
-        ceilingsame = false;
-    else
-        ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
+        if(fs->srf.floor.slope || bs->srf.floor.slope) // don't support this in case of slopes
+            floorsame = false;
+        else
+            floorsame = becomp && P_SlopesEqual(fs, bs, surf_floor);
+
+        if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
+            ceilingsame = false;
+        else
+            ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
+    }
 
     if((floorsame || FixedDiv(clip.open.height.floor - trace.z, dist) <= trace.aimslope) &&
        (ceilingsame || FixedDiv(clip.open.height.ceiling - trace.z, dist) >= trace.aimslope))
@@ -576,17 +592,28 @@ bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
 {
     // don't shoot the sky
     // don't shoot ceiling portals either
-    if(R_IsSkyFlat(li.frontsector->srf.ceiling.pic) || li.frontsector->srf.ceiling.portal)
+    const sector_t *frontsector = Polyobj_IsLine(li) ? R_PointInSubsector(x, y)->sector : li.frontsector;
+    if(R_IsSkyFlat(frontsector->srf.ceiling.pic) || frontsector->srf.ceiling.portal)
     {
         // don't shoot the sky!
-        if(z > li.frontsector->srf.ceiling.getZAt(x, y))
+        if(z > frontsector->srf.ceiling.getZAt(x, y))
             return false;
 
         // it's a sky hack wall
         // fix bullet eaters -- killough
-        if(li.backsector && R_IsSkyFlat(li.backsector->srf.ceiling.pic))
+        const sector_t *backsector;
+        if(Polyobj_IsLine(li))
         {
-            if(li.backsector->srf.ceiling.getZAt(x, y) < z)
+            if(li.intflags & MLI_1SPORTALLINE && li.beyondportalline)
+                backsector = li.beyondportalline->frontsector;
+            else
+                backsector = frontsector;
+        }
+        else
+            backsector = li.backsector;
+        if(backsector && R_IsSkyFlat(backsector->srf.ceiling.pic))
+        {
+            if(backsector->srf.ceiling.getZAt(x, y) < z)
                 return false;
         }
     }
@@ -598,6 +625,9 @@ bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
 //
 bool P_CheckShootSkyLikeEdgePortal(const line_t &li, v2fixed_t edgepos, fixed_t z)
 {
+    // Applicable neither to two-sided polyobject lines, nor to portal lines (no backsector to give edge portal)
+    if(Polyobj_IsLine(li))
+        return true;
     fixed_t frontceilingz = li.frontsector->srf.ceiling.getZAt(edgepos);
     fixed_t frontfloorz   = li.frontsector->srf.floor.getZAt(edgepos);
     fixed_t backceilingz  = li.backsector ? li.backsector->srf.ceiling.getZAt(edgepos) : 0;
@@ -621,7 +651,7 @@ bool P_CheckShootSkyLikeEdgePortal(const line_t &li, v2fixed_t edgepos, fixed_t 
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
+static bool PTR_ShootTraverse(intercept_t *in, void *vcontext, const divline_t &tracedl)
 {
     auto   context = static_cast<shoottraverse_t *>(vcontext);
     size_t puffidx = context->puffidx;
@@ -637,7 +667,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
         // if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
         //   P_ShootSpecialLine(shootthing, li, lineside);
 
-        v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+        v2fixed_t edgepos = tracedl.v + tracedl.dv.fixedMul(in->frac);
 
         if(P_ShotCheck2SLine(in, li, lineside, edgepos))
         {
@@ -649,20 +679,24 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
         // hit line
         // position a bit closer
         fixed_t frac = in->frac - FixedDiv(4 * FRACUNIT, trace.attackrange);
-        fixed_t x    = trace.dl.x + FixedMul(trace.dl.dx, frac);
-        fixed_t y    = trace.dl.y + FixedMul(trace.dl.dy, frac);
+        fixed_t x    = tracedl.x + FixedMul(tracedl.dx, frac);
+        fixed_t y    = tracedl.y + FixedMul(tracedl.dy, frac);
         fixed_t z    = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
 
         // SoM: Check for collision with a plane.
-        sector_t *sidesector = lineside ? li->backsector : li->frontsector;
-        bool      hitplane   = false;
-        int       updown     = 2;
+        sector_t *sidesector;
+        if(Polyobj_IsLine(*li))
+            sidesector = R_PointInSubsector(edgepos)->sector;
+        else
+            sidesector = lineside ? li->backsector : li->frontsector;
+        bool hitplane = false;
+        int  updown   = 2;
 
         // SoM: If we are in no-clip and are shooting on the backside of a
         // 1s line, don't crash!
         if(sidesector && !getComp(comp_planeshoot))
         {
-            if(!P_CheckShootPlane(*sidesector, trace.dl.x, trace.dl.y, trace.z, trace.aimslope, context->prevedgepos,
+            if(!P_CheckShootPlane(*sidesector, tracedl.x, tracedl.y, trace.z, trace.aimslope, context->prevedgepos,
                                   context->prevfrac, trace.attackrange, trace.cos, trace.sin, x, y, z, hitplane,
                                   updown))
             {
@@ -741,7 +775,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, int 
     context.prevfrac        = 0;
     context.prevedgepos     = { t1->x, t1->y };
 
-    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, trav, &context);
+    P_PathTraverse({ t1->x, t1->y }, { x2, y2 }, PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBILITY, trav, &context);
 }
 
 //=============================================================================
@@ -749,34 +783,97 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, int 
 // Use Lines
 //
 
-static bool PTR_UseTraverse(intercept_t *in, void *context)
+struct UseContext
 {
-    if(in->d.line->special)
+    Mobj     *thing;
+    v2fixed_t shiftedthingpos;
+    v2fixed_t portalpos;
+    fixed_t   attackrange;
+    bool      compat;
+    bool      portalhit;
+    int       groupid;
+};
+
+static bool PTR_UseTraverse(intercept_t *in, void *vcontext, const divline_t &tracedl)
+{
+    auto    context = static_cast<UseContext *>(vcontext);
+    line_t &li      = *in->d.line;
+
+    // IMPORTANT: keep reference to trace.thing, not copy of pointer
+    Mobj *&thing = context->compat ? trace.thing : context->thing;
+
+    // ioanch 20160131: don't treat passable lines as portals; another code path
+    // will use them.
+    if(li.special && (context->compat || !(li.pflags & PS_PASSABLE)))
     {
-        P_UseSpecialLine(trace.thing, in->d.line, P_PointOnLineSide(trace.thing->x, trace.thing->y, in->d.line) == 1);
+        v2fixed_t sidepos;
+        if(context->compat)
+        {
+            const linkoffset_t *link = P_GetLinkOffset(thing->groupid, li.frontsector->groupid);
+            sidepos.x                = thing->x + link->x;
+            sidepos.y                = thing->y + link->y;
+        }
+        else
+        {
+            sidepos = context->shiftedthingpos;
+        }
+        auto sidefunc = context->compat ? P_PointOnLineSide : P_PointOnLineSidePrecise;
+        P_UseSpecialLine(thing, &li, sidefunc(sidepos.x, sidepos.y, &li) == 1);
 
         // WAS can't use for than one special line in a row
         // jff 3/21/98 NOW multiple use allowed with enabling line flag
-        return (!demo_compatibility && in->d.line->flags & ML_PASSUSE);
+        return (!demo_compatibility && li.flags & ML_PASSUSE);
+    }
+
+    tracelineopening_t lo = {};
+    if(li.extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+    {
+        if(context->compat)
+            clip.open.range = 0;
+        else
+            lo.openrange = 0;
     }
     else
     {
-        if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
-            clip.open.range = 0;
-        else
+        if(context->compat)
             clip.open = P_LineOpening(in->d.line, nullptr);
-
-        if(clip.open.range <= 0)
-        {
-            // can't use through a wall
-            if(strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
-                S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
-            return false;
-        }
-
-        // not a special line, but keep checking
-        return true;
+        else
+            lo.calculate(&li);
     }
+
+    const fixed_t range = context->compat ? clip.open.range : lo.openrange;
+    if(range <= 0)
+    {
+        // can't use through a wall
+        if(strcasecmp(thing->player->skin->sounds[sk_noway], "none"))
+            S_StartSound(thing, GameModeInfo->playerSounds[sk_noway]);
+        return false;
+    }
+    if(context->compat)
+        return true;
+    // ioanch 20160131: opportunity to pass through portals
+    const portal_t *portal = nullptr;
+    if(li.pflags & PS_PASSABLE)
+        portal = li.portal;
+    else if(li.extflags & EX_ML_LOWERPORTAL && li.backsector && li.backsector->srf.floor.pflags & PS_PASSABLE)
+        portal = li.backsector->srf.floor.portal;
+    if(!portal || P_PointOnLineSidePrecise(tracedl.x, tracedl.y, &li) != 0 || in->frac <= 0)
+        return true; // not a special line, but keep checking
+
+    // got a portal
+    const int newfromid = portal->data.link.toid;
+    if(newfromid == context->groupid)
+        return true;
+
+    context->portalhit          = true;
+    context->attackrange       -= FixedMul(context->attackrange, in->frac);
+    context->groupid            = newfromid;
+    context->portalpos.x        = tracedl.x + FixedMul(tracedl.dx, in->frac) + portal->data.link.delta.x;
+    context->portalpos.y        = tracedl.y + FixedMul(tracedl.dy, in->frac) + portal->data.link.delta.y;
+    context->shiftedthingpos.x += portal->data.link.delta.x;
+    context->shiftedthingpos.y += portal->data.link.delta.y;
+
+    return false;
 }
 
 //
@@ -791,9 +888,10 @@ static bool PTR_UseTraverse(intercept_t *in, void *context)
 //
 // by Lee Killough
 //
-static bool PTR_NoWayTraverse(intercept_t *in, void *context)
+static bool PTR_NoWayTraverse(intercept_t *in, void *vcontext, const divline_t &)
 {
-    line_t *ld = in->d.line; // This linedef
+    auto    context = static_cast<const UseContext *>(vcontext);
+    line_t *ld      = in->d.line; // This linedef
 
     if(ld->special) // Ignore specials
         return true;
@@ -802,11 +900,25 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *context)
         return false;
 
     // Find openings
-    clip.open = P_LineOpening(ld, nullptr);
+    tracelineopening_t lo = {};
+    if(context->compat)
+        clip.open = P_LineOpening(ld, nullptr);
+    else
+    {
+        lo.calculate(ld);
+    }
 
-    return !(clip.open.range <= 0 ||                                           // No opening
-             clip.open.height.floor > trace.thing->z + STEPSIZE ||             // Too high, it blocks
-             clip.open.height.ceiling < trace.thing->z + trace.thing->height); // Too low, it blocks
+    if(context->compat)
+    {
+        return clip.open.range > 0 &&                                            // Open
+               clip.open.height.floor <= trace.thing->z + STEPSIZE &&            // Can be stepped
+               clip.open.height.ceiling >= trace.thing->z + trace.thing->height; // Head can be entered
+    }
+    else
+    {
+        return lo.openrange > 0 && lo.open.floor <= context->thing->z + STEPSIZE &&
+               lo.open.ceiling >= context->thing->z + context->thing->height;
+    }
 }
 
 //
@@ -816,27 +928,35 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *context)
 //
 void P_UseLines(player_t *player)
 {
-    // ioanch 20160131: portal aware codepath
-    if(gMapHasLinePortals && full_demo_version >= make_full_version(340, 48))
-    {
-        trace.attackrange = USERANGE; // for compatibility with revenant mishaps
-        CAM_UseLines(player);
-        return;
-    }
+    UseContext context = {};
+    context.compat     = !gMapHasLinePortals || full_demo_version < make_full_version(340, 48);
 
     fixed_t x1, y1, x2, y2;
-    int     angle;
 
-    trace.thing = player->mo;
+    if(context.compat)
+        trace.thing = player->mo;
+    else
+        context.thing = player->mo;
+    context.groupid           = player->mo->groupid;
+    context.shiftedthingpos.x = player->mo->x;
+    context.shiftedthingpos.y = player->mo->y;
 
-    angle = player->mo->angle >> ANGLETOFINESHIFT;
+    const int angle = player->mo->angle >> ANGLETOFINESHIFT;
 
     x1 = player->mo->x;
     y1 = player->mo->y;
-    x2 = x1 + (USERANGE >> FRACBITS) * (trace.cos = finecosine[angle]);
-    y2 = y1 + (USERANGE >> FRACBITS) * (trace.sin = finesine[angle]);
+    if(context.compat)
+    {
+        trace.cos = finecosine[angle];
+        trace.sin = finesine[angle];
+    }
+    x2 = x1 + (USERANGE >> FRACBITS) * finecosine[angle];
+    y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle];
 
-    trace.attackrange = USERANGE;
+    trace.attackrange   = USERANGE; // change it always, for compatibility with revenant mishaps
+    context.attackrange = USERANGE;
+
+    const int ptflags = context.compat ? PT_ADDLINES | PT_COMPATIBILITY : PT_ADDLINES;
 
     // old code:
     //
@@ -844,12 +964,36 @@ void P_UseLines(player_t *player)
     //
     // This added test makes the "oof" sound work on 2s lines -- killough:
 
-    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
-        if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse) &&
-           strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
+    auto playNoWay = [](const Mobj *thing) {
+        if(strcasecmp(thing->player->skin->sounds[sk_noway], "none"))
         {
-            S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
+            S_StartSound(thing, GameModeInfo->playerSounds[sk_noway]);
         }
+    };
+
+    if(P_PathTraverse({ x1, y1 }, { x2, y2 }, ptflags, PTR_UseTraverse, &context))
+    {
+        const Mobj *thing = context.compat ? trace.thing : context.thing;
+        if(!P_PathTraverse({ x1, y1 }, { x2, y2 }, ptflags, PTR_NoWayTraverse, &context))
+            playNoWay(thing);
+    }
+    else
+    {
+        int reclevel = 0;
+        while(context.portalhit && reclevel < RECURSION_LIMIT)
+        {
+            ++reclevel;
+            context.portalhit = false;
+            v2fixed_t v2      = { context.portalpos.x + (context.attackrange >> FRACBITS) * finecosine[angle],
+                                  context.portalpos.y + (context.attackrange >> FRACBITS) * finesine[angle] };
+            if(P_PathTraverse(context.portalpos, v2, PT_ADDLINES, PTR_UseTraverse, &context))
+            {
+                if(!P_PathTraverse(context.portalpos, v2, PT_ADDLINES, PTR_NoWayTraverse, &context))
+                    playNoWay(context.thing);
+                break;
+            }
+        }
+    }
 }
 
 //=============================================================================
@@ -873,6 +1017,16 @@ static void check_intercept()
     }
 }
 
+class TraverseInfo
+{
+public:
+    int                        flags;
+    divline_t                 &trace; // reference either to global or local
+    bool                       hitBlockWithPortals;
+    bool                       addedPortal;
+    PODCollection<intercept_t> intercepts;
+};
+
 //
 // PIT_AddLineIntercepts
 //
@@ -892,17 +1046,29 @@ static bool PIT_AddLineIntercepts(line_t *ld, polyobj_t *po, void *context)
     fixed_t   frac;
     divline_t dl;
 
-    // avoid precision problems with two routines
-    if(trace.dl.dx > FRACUNIT * 16 || trace.dl.dy > FRACUNIT * 16 || trace.dl.dx < -FRACUNIT * 16 ||
-       trace.dl.dy < -FRACUNIT * 16)
+    auto info = static_cast<TraverseInfo *>(context);
+    if(info->flags & PT_REQUIRE_LINE_PORTALS && !(ld->pflags & PS_PASSABLE))
+        return true;
+
+    if(info->flags & PT_COMPATIBILITY)
     {
-        s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace.dl);
-        s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace.dl);
+        // avoid precision problems with two routines
+        if(info->trace.dx > FRACUNIT * 16 || info->trace.dy > FRACUNIT * 16 || info->trace.dx < -FRACUNIT * 16 ||
+           info->trace.dy < -FRACUNIT * 16)
+        {
+            s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &info->trace);
+            s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &info->trace);
+        }
+        else
+        {
+            s1 = P_PointOnLineSide(info->trace.x, info->trace.y, ld);
+            s2 = P_PointOnLineSide(info->trace.x + info->trace.dx, info->trace.y + info->trace.dy, ld);
+        }
     }
     else
     {
-        s1 = P_PointOnLineSide(trace.dl.x, trace.dl.y, ld);
-        s2 = P_PointOnLineSide(trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy, ld);
+        s1 = P_PointOnDivlineSidePrecise(ld->v1->x, ld->v1->y, &info->trace);
+        s2 = P_PointOnDivlineSidePrecise(ld->v2->x, ld->v2->y, &info->trace);
     }
 
     if(s1 == s2)
@@ -910,17 +1076,70 @@ static bool PIT_AddLineIntercepts(line_t *ld, polyobj_t *po, void *context)
 
     // hit the line
     P_MakeDivline(ld, &dl);
-    frac = P_InterceptVector(&trace.dl, &dl);
 
-    if(frac < 0)
-        return true; // behind source
+    frac = P_InterceptVector(&info->trace, &dl);
+    if(info->flags & PT_COMPATIBILITY)
+    {
+        if(frac < 0)
+            return true; // behind source
+    }
+    else
+    {
+        s1 = P_PointOnDivlineSidePrecise(info->trace.x, info->trace.y, &dl);
+        s2 = P_PointOnDivlineSidePrecise(info->trace.x + info->trace.dx, info->trace.y + info->trace.dy, &dl);
+        if(s1 == s2)
+            return true; // line isn't crossed
+    }
 
-    check_intercept(); // killough
+    // Early outs are only possible if we haven't crossed a portal block
+    // ioanch 20151230: aim cams never quit
+    if(info->flags & PT_ANY_EARLY_OUT && !info->hitBlockWithPortals)
+    {
+        // try to early out the check
+        if(!ld->backsector)
+            return false; // stop checking
 
-    intercept_p->frac    = frac;
-    intercept_p->isaline = true;
-    intercept_p->d.line  = ld;
-    intercept_p++;
+        // haleyjd: block-all lines block sight
+        if(ld->extflags & EX_ML_BLOCKALL)
+            return false; // can't see through it
+    }
+
+    if(info->flags & PT_COMPATIBILITY)
+    {
+        check_intercept(); // killough
+
+        intercept_p->frac    = frac;
+        intercept_p->isaline = true;
+        intercept_p->d.line  = ld;
+        intercept_p++;
+    }
+    else
+    {
+        intercept_t &inter = info->intercepts.addNew();
+        inter.frac         = frac;
+        inter.isaline      = true;
+        inter.d.line       = ld;
+
+        // if this is a passable portal line, remember we just added it
+        // ioanch 20151229: also check sectors
+        const sector_t *fsec, *bsec;
+        if(Polyobj_IsLine(*ld))
+        {
+            v2fixed_t point = info->trace.v + info->trace.dv.fixedMul(frac);
+            fsec = bsec = R_PointInSubsector(point)->sector;
+        }
+        else
+        {
+            fsec = ld->frontsector;
+            bsec = ld->backsector;
+        }
+        if(ld->pflags & PS_PASSABLE ||
+           (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE)) ||
+           (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
+        {
+            info->addedPortal = true;
+        }
+    }
 
     return true; // continue
 }
@@ -938,8 +1157,10 @@ static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
     divline_t dl;
     fixed_t   frac;
 
+    auto info = static_cast<TraverseInfo *>(context);
+
     // check a corner to corner crossection for hit
-    if((trace.dl.dx ^ trace.dl.dy) > 0)
+    if((info->trace.dx ^ info->trace.dy) > 0)
     {
         x1 = thing->x - thing->radius;
         y1 = thing->y + thing->radius;
@@ -954,8 +1175,16 @@ static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
         y2 = thing->y + thing->radius;
     }
 
-    s1 = P_PointOnDivlineSide(x1, y1, &trace.dl);
-    s2 = P_PointOnDivlineSide(x2, y2, &trace.dl);
+    if(info->flags & PT_COMPATIBILITY)
+    {
+        s1 = P_PointOnDivlineSide(x1, y1, &info->trace);
+        s2 = P_PointOnDivlineSide(x2, y2, &info->trace);
+    }
+    else
+    {
+        s1 = P_PointOnDivlineSidePrecise(x1, y1, &info->trace);
+        s2 = P_PointOnDivlineSidePrecise(x2, y2, &info->trace);
+    }
 
     if(s1 == s2)
         return true; // line isn't crossed
@@ -965,17 +1194,27 @@ static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
     dl.dx = x2 - x1;
     dl.dy = y2 - y1;
 
-    frac = P_InterceptVector(&trace.dl, &dl);
+    frac = P_InterceptVector(&info->trace, &dl);
 
     if(frac < 0)
         return true; // behind source
 
-    check_intercept(); // killough
+    if(info->flags & PT_COMPATIBILITY)
+    {
+        check_intercept(); // killough
 
-    intercept_p->frac    = frac;
-    intercept_p->isaline = false;
-    intercept_p->d.thing = thing;
-    intercept_p++;
+        intercept_p->frac    = frac;
+        intercept_p->isaline = false;
+        intercept_p->d.thing = thing;
+        intercept_p++;
+    }
+    else
+    {
+        intercept_t &inter = info->intercepts.addNew();
+        inter.frac         = frac;
+        inter.isaline      = false;
+        inter.d.thing      = thing;
+    }
 
     return true; // keep going
 }
@@ -988,15 +1227,33 @@ static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
+static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context, TraverseInfo &info)
 {
-    intercept_t *in    = nullptr;
-    int          count = static_cast<int>(intercept_p - intercepts);
+    intercept_t *in = nullptr;
+    int          count;
+    intercept_t *begin, *end;
+
+    if(info.flags & PT_COMPATIBILITY)
+    {
+        count = static_cast<int>(intercept_p - intercepts);
+        begin = intercepts;
+        end   = intercept_p;
+    }
+    else
+    {
+        count = (int)info.intercepts.getLength();
+        begin = info.intercepts.begin();
+        end   = info.intercepts.end();
+        for(intercept_t &intercept : info.intercepts)
+            if(intercept.frac < 0)
+                intercept.frac = D_MAXINT;
+    }
+
     while(count--)
     {
         fixed_t      dist = D_MAXINT;
         intercept_t *scan;
-        for(scan = intercepts; scan < intercept_p; scan++)
+        for(scan = begin; scan < end; scan++)
             if(scan->frac < dist)
                 dist = (in = scan)->frac;
         if(dist > maxfrac)
@@ -1004,7 +1261,7 @@ static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *contex
 
         if(in) // haleyjd: for safety
         {
-            if(!func(in, context))
+            if(!func(in, context, info.trace))
                 return false; // don't bother going farther
             in->frac = D_MAXINT;
         }
@@ -1022,112 +1279,158 @@ static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *contex
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, traverser_t trav, void *context)
+bool P_PathTraverse(v2fixed_t v1, v2fixed_t v2, int flags, traverser_t trav, void *context, divline_t *outTrace)
 {
-    fixed_t xt1, yt1;
-    fixed_t xt2, yt2;
-    fixed_t xstep, ystep;
-    fixed_t partial;
-    fixed_t xintercept, yintercept;
-    int     mapx, mapy;
-    fixed_t mapx1, mapy1;
-    int     mapxstep, mapystep;
-    int     count;
+    fixed_t   xt1, yt1;
+    fixed_t   xt2, yt2;
+    fixed_t   xstep, ystep;
+    v2fixed_t partial;
+    fixed_t   xintercept, yintercept;
+    int       mapx, mapy;
+    fixed_t   mapx1, mapy1;
+    int       mapxstep, mapystep;
+    int       count;
 
-    validcount++;
-    intercept_p = intercepts;
+    divline_t    localTrace = {};
+    TraverseInfo info       = { .flags = flags, .trace = flags & PT_COMPATIBILITY ? ::trace.dl : localTrace };
 
-    if(!((x1 - bmaporgx) & (MAPBLOCKSIZE - 1)))
-        x1 += FRACUNIT; // don't side exactly on a line
+    LineIteratorVisiting visiting;
+    if(info.flags & PT_COMPATIBILITY)
+    {
+        validcount++;
+        intercept_p = intercepts;
+    }
+    else
+    {
+        visiting.lines.init(numlines);
+        visiting.polys.init(numPolyObjects);
+    }
 
-    if(!((y1 - bmaporgy) & (MAPBLOCKSIZE - 1)))
-        y1 += FRACUNIT; // don't side exactly on a line
+    if(!((v1.x - bmaporgx) & (MAPBLOCKSIZE - 1)))
+        v1.x += FRACUNIT; // don't side exactly on a line
 
-    trace.dl.x  = x1;
-    trace.dl.y  = y1;
-    trace.dl.dx = x2 - x1;
-    trace.dl.dy = y2 - y1;
+    if(!((v1.y - bmaporgy) & (MAPBLOCKSIZE - 1)))
+        v1.y += FRACUNIT; // don't side exactly on a line
+
+    if(info.flags & PT_COMPATIBILITY)
+    {
+        trace.dl.v  = v1;
+        trace.dl.dv = v2 - v1;
+    }
+    else
+    {
+        localTrace.v  = v1;
+        localTrace.dv = v2 - v1;
+    }
+
+    if(outTrace)
+    {
+        *outTrace = info.trace;
+    }
 
     // This fix is comperr_blockmap from PRBoom+.
     if(demo_version >= 406)
     {
         int64_t _x1, _x2, _y1, _y2;
 
-        _x1 = int64_t(x1) - bmaporgx;
-        _y1 = int64_t(y1) - bmaporgy;
+        _x1 = int64_t(v1.x) - bmaporgx;
+        _y1 = int64_t(v1.y) - bmaporgy;
         xt1 = int(_x1 >> MAPBLOCKSHIFT);
         yt1 = int(_y1 >> MAPBLOCKSHIFT);
 
         mapx1 = int(_x1 >> MAPBTOFRAC);
         mapy1 = int(_y1 >> MAPBTOFRAC);
 
-        _x2 = int64_t(x2) - bmaporgx;
-        _y2 = int64_t(y2) - bmaporgy;
+        _x2 = int64_t(v2.x) - bmaporgx;
+        _y2 = int64_t(v2.y) - bmaporgy;
         xt2 = int(_x2 >> MAPBLOCKSHIFT);
         yt2 = int(_y2 >> MAPBLOCKSHIFT);
 
-        x1 -= bmaporgx;
-        y1 -= bmaporgy;
-        x2 -= bmaporgx;
-        y2 -= bmaporgy;
+        v1.x -= bmaporgx;
+        v1.y -= bmaporgy;
+        v2.x -= bmaporgx;
+        v2.y -= bmaporgy;
     }
     else
     {
-        x1  -= bmaporgx;
-        y1  -= bmaporgy;
-        xt1  = x1 >> MAPBLOCKSHIFT;
-        yt1  = y1 >> MAPBLOCKSHIFT;
+        v1.x -= bmaporgx;
+        v1.y -= bmaporgy;
+        xt1   = v1.x >> MAPBLOCKSHIFT;
+        yt1   = v1.y >> MAPBLOCKSHIFT;
 
-        mapx1  = x1 >> MAPBTOFRAC;
-        mapy1  = y1 >> MAPBTOFRAC;
+        mapx1 = v1.x >> MAPBTOFRAC;
+        mapy1 = v1.y >> MAPBTOFRAC;
 
-        x2  -= bmaporgx;
-        y2  -= bmaporgy;
-        xt2  = x2 >> MAPBLOCKSHIFT;
-        yt2  = y2 >> MAPBLOCKSHIFT;
+        v2.x -= bmaporgx;
+        v2.y -= bmaporgy;
+        xt2   = v2.x >> MAPBLOCKSHIFT;
+        yt2   = v2.y >> MAPBLOCKSHIFT;
+    }
+
+    if(info.flags & PT_EARLY_OUT_OF_BOUNDS && (xt1 < 0 || yt1 < 0 || xt1 >= bmapwidth || yt1 >= bmapheight || xt2 < 0 ||
+                                               yt2 < 0 || xt2 >= bmapwidth || yt2 >= bmapheight))
+    {
+        return false;
     }
 
     if(xt2 > xt1)
     {
-        mapxstep = 1;
-        partial  = FRACUNIT - (mapx1 & (FRACUNIT - 1));
-        ystep    = FixedDiv(y2 - y1, D_abs(x2 - x1));
+        mapxstep  = 1;
+        partial.x = FRACUNIT - (mapx1 & (FRACUNIT - 1));
+        ystep     = FixedDiv(v2.y - v1.y, D_abs(v2.x - v1.x));
     }
     else if(xt2 < xt1)
     {
-        mapxstep = -1;
-        partial  = mapx1 & (FRACUNIT - 1);
-        ystep    = FixedDiv(y2 - y1, D_abs(x2 - x1));
+        mapxstep  = -1;
+        partial.x = mapx1 & (FRACUNIT - 1);
+        ystep     = FixedDiv(v2.y - v1.y, D_abs(v2.x - v1.x));
     }
     else
     {
-        mapxstep = 0;
-        partial  = FRACUNIT;
-        ystep    = 256 * FRACUNIT;
+        mapxstep  = 0;
+        partial.x = FRACUNIT;
+        ystep     = 256 * FRACUNIT;
     }
 
-    yintercept = mapy1 + FixedMul(partial, ystep);
+    yintercept = mapy1 + FixedMul(partial.x, ystep);
 
     if(yt2 > yt1)
     {
-        mapystep = 1;
-        partial  = FRACUNIT - (mapy1 & (FRACUNIT - 1));
-        xstep    = FixedDiv(x2 - x1, D_abs(y2 - y1));
+        mapystep  = 1;
+        partial.y = FRACUNIT - (mapy1 & (FRACUNIT - 1));
+        xstep     = FixedDiv(v2.x - v1.x, D_abs(v2.y - v1.y));
     }
     else if(yt2 < yt1)
     {
-        mapystep = -1;
-        partial  = mapy1 & (FRACUNIT - 1);
-        xstep    = FixedDiv(x2 - x1, D_abs(y2 - y1));
+        mapystep  = -1;
+        partial.y = mapy1 & (FRACUNIT - 1);
+        xstep     = FixedDiv(v2.x - v1.x, D_abs(v2.y - v1.y));
     }
     else
     {
-        mapystep = 0;
-        partial  = FRACUNIT;
-        xstep    = 256 * FRACUNIT;
+        mapystep  = 0;
+        partial.y = FRACUNIT;
+        xstep     = 256 * FRACUNIT;
     }
 
-    xintercept = mapx1 + FixedMul(partial, xstep);
+    xintercept = mapx1 + FixedMul(partial.y, xstep);
+
+    // From ZDoom (usable under the GPLv3):
+    // [RH] Fix for traces that pass only through blockmap corners. In that case,
+    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
+    // for loop would never advance anywhere.
+    if(!(info.flags & PT_COMPATIBILITY) && !vanilla_heretic && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+    {
+        if(ystep < 0)
+            partial.x = FRACUNIT - partial.x;
+        if(xstep < 0)
+            partial.y = FRACUNIT - partial.y;
+        if(partial.x == partial.y)
+        {
+            xintercept = xt1 << FRACBITS;
+            yintercept = yt1 << FRACBITS;
+        }
+    }
 
     // Step through map blocks.
     // Count is present to prevent a round off error
@@ -1136,37 +1439,126 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, t
     mapx = xt1;
     mapy = yt1;
 
-    for(count = 0; count < 64; count++)
+    const int maxcount = info.flags & PT_COMPATIBILITY ? 64 : 100;
+
+    auto visitBlockForLines = [&info, &visiting](int mapx, int mapy) {
+        if(!(info.flags & PT_ADDLINES))
+            return true;
+        // haleyjd 05/17/13: check portalmap; once we enter a cell with
+        // a line portal in it, we can't short-circuit any further and must
+        // build a full intercepts list.
+        // ioanch 20151229: don't just check for line portals, also consider
+        // floor/ceiling
+
+        // check this earlier to avoid mutations. I admit it's redundant with what P_BlockLinesIterator does.
+        if(mapx < 0 || mapy < 0 || mapx >= bmapwidth || mapy >= bmapheight)
+            return true;
+        if(!(info.flags & PT_COMPATIBILITY) && P_BlockHasLinkedPortals(mapy * bmapwidth + mapx, true))
+            info.hitBlockWithPortals = true;
+        bool result = P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts, R_NOGROUP, &info,
+                                           info.flags & PT_COMPATIBILITY ? nullptr : &visiting);
+
+        if(!(info.flags & PT_COMPATIBILITY) && result)
+        {
+            // haleyjd 08/20/13: optimization
+            // we can go back to short-circuiting in future blockmap cells if we haven't
+            // actually intercepted any portal lines yet.
+            if(!info.addedPortal)
+                info.hitBlockWithPortals = false;
+        }
+        return result;
+    };
+
+    auto visitBlockForThings = [&info](int mapx, int mapy) {
+        if(!(info.flags & PT_ADDTHINGS))
+            return true;
+        return P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts, &info);
+    };
+
+    for(count = 0; count < maxcount; count++)
     {
-        if(flags & PT_ADDLINES)
+        if(!(info.flags & PT_REQUIRE_LINE_PORTALS) || P_BlockHasLinkedPortals(mapy * bmapwidth + mapx, false))
         {
-            if(!P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts))
+            if(!visitBlockForLines(mapx, mapy) || !visitBlockForThings(mapx, mapy))
                 return false; // early out
         }
 
-        if(flags & PT_ADDTHINGS)
-        {
-            if(!P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts))
-                return false; // early out
-        }
-
-        if(mapx == xt2 && mapy == yt2)
+        if(!(info.flags & PT_COMPATIBILITY) && (mapxstep | mapystep) == 0)
             break;
 
-        if((yintercept >> FRACBITS) == mapy)
+        if(info.flags & PT_COMPATIBILITY || vanilla_heretic)
         {
-            yintercept += ystep;
-            mapx       += mapxstep;
+            if(mapx == xt2 && mapy == yt2)
+                break;
+            // Original code - this fails to account for all cases.
+            if((yintercept >> FRACBITS) == mapy)
+            {
+                yintercept += ystep;
+                mapx       += mapxstep;
+            }
+            else if((xintercept >> FRACBITS) == mapx)
+            {
+                xintercept += xstep;
+                mapy       += mapystep;
+            }
+            continue;
         }
-        else if((xintercept >> FRACBITS) == mapx)
+
+        // From ZDoom (usable under the GPLv3):
+        // This is the fix for the "Anywhere Moo" bug, which caused monsters to
+        // occasionally see the player through an arbitrary number of walls in
+        // Doom 1.2, and persisted into Heretic, Hexen, and some versions of
+        // ZDoom.
+        switch((((yintercept >> FRACBITS) == mapy) << 1) | ((xintercept >> FRACBITS) == mapx))
         {
+        case 0:
+            // Neither xintercept nor yintercept match!
+            // Continuing won't make things any better, so we might as well stop.
+            count = maxcount;
+            break;
+        case 1:
+            // xintercept matches
             xintercept += xstep;
             mapy       += mapystep;
+            if(mapy == yt2)
+                mapystep = 0;
+            break;
+        case 2:
+            // yintercept matches
+            yintercept += ystep;
+            mapx       += mapxstep;
+            if(mapx == xt2)
+                mapxstep = 0;
+            break;
+        case 3:
+            // xintercept and yintercept both match
+            // The trace is exiting a block through its corner. Not only does the
+            // block being entered need to be checked (which will happen when this
+            // loop continues), but the other two blocks adjacent to the corner
+            // also need to be checked.
+            // FIXME: memoize P_BlockHasLinkedPortals(..., false)
+            if(!(info.flags & PT_REQUIRE_LINE_PORTALS) || P_BlockHasLinkedPortals(mapy * ::bmapwidth + mapx, false))
+            {
+                if(!visitBlockForLines(mapx + mapxstep, mapy) || !visitBlockForLines(mapx, mapy + mapystep) ||
+                   !visitBlockForThings(mapx + mapxstep, mapy) || !visitBlockForThings(mapx, mapy + mapystep))
+                {
+                    return false;
+                }
+            }
+            xintercept += xstep;
+            yintercept += ystep;
+            mapx       += mapxstep;
+            mapy       += mapystep;
+            if(mapx == xt2)
+                mapxstep = 0;
+            if(mapy == yt2)
+                mapystep = 0;
+            break;
         }
     }
 
     // go through the sorted list
-    return P_TraverseIntercepts(trav, FRACUNIT, context);
+    return P_TraverseIntercepts(trav, FRACUNIT, context, info);
 }
 
 // EOF

@@ -151,10 +151,10 @@ void       *ZoneObject::newalloc;            // most recent ZoneObject alloc
 // Performs a fatal error condition check contingent on the definition
 // of ZONEIDCHECK, in any context where a memblock pointer is not available.
 //
-static void Z_IDCheckNB(bool err, const char *errmsg, const char *file, int line)
+static void Z_IDCheckNB(bool err, const char *errmsg, const std::source_location loc = std::source_location::current())
 {
     if(err)
-        I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\n", errmsg, file, line);
+        I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\n", errmsg, loc);
 }
 
 //
@@ -164,11 +164,11 @@ static void Z_IDCheckNB(bool err, const char *errmsg, const char *file, int line
 // of ZONEIDCHECK, and accepts a memblock pointer for provision of additional
 // malloc source information available when INSTRUMENTED is also defined.
 //
-static void Z_IDCheck(bool err, const char *errmsg, memblock_t *block, const char *file, int line)
+static void Z_IDCheck(bool err, const char *errmsg, memblock_t *block, const std::source_location loc)
 {
     if(err)
     {
-        I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\nSource of malloc: %s:%d\n", errmsg, file, line,
+        I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\nSource of malloc: %s:%d\n", errmsg, loc.file_name(), loc.line(),
 #if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
                      block->file, block->line
 #else
@@ -181,8 +181,8 @@ static void Z_IDCheck(bool err, const char *errmsg, memblock_t *block, const cha
 
 #define IDCHECK(a)
 #define IDBOOL(a) false
-#define Z_IDCheckNB(err, errmsg, file, line)
-#define Z_IDCheck(err, errmsg, block, file, line)
+#define Z_IDCheckNB(err, errmsg, loc)
+#define Z_IDCheck(err, errmsg, block, loc)
 
 #endif
 
@@ -302,7 +302,7 @@ void Z_Init()
 //
 // You can pass a nullptr user if the tag is < PU_PURGELEVEL.
 //
-void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, int line)
+void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const std::source_location loc)
 {
     memblock_t *block;
     byte       *ret;
@@ -310,7 +310,7 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
     DEBUG_CHECKHEAP();
 
     Z_IDCheckNB(IDBOOL(tag >= PU_PURGELEVEL && !user), "ZoneHeapBase::malloc: an owner is required for purgable blocks",
-                file, line);
+                loc);
 
     if(!size)
         return user ? *user = nullptr : nullptr; // malloc(0) returns nullptr
@@ -319,7 +319,7 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
     {
         if(m_blockbytag[PU_CACHE])
         {
-            ZoneHeapBase::freeTags(PU_CACHE, PU_CACHE, __FILE__, __LINE__);
+            ZoneHeapBase::freeTags(PU_CACHE, PU_CACHE);
             block = static_cast<memblock_t *>(std::malloc(size + header_size));
         }
     }
@@ -329,7 +329,7 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
         I_FatalError(I_ERR_KILL,
                      "ZoneHeapBase::malloc: Failure trying to allocate %u bytes\n"
                      "Source: %s:%d\n",
-                     (unsigned int)size, file, line);
+                     (unsigned int)size, loc.file_name(), loc.line());
     }
 
     block->size = size;
@@ -340,8 +340,8 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
     block->prev       = &m_blockbytag[tag];
 
     INSTRUMENT(m_memorybytag[tag] += block->size);
-    INSTRUMENT(block->file = file);
-    INSTRUMENT(block->line = line);
+    INSTRUMENT(block->file = loc.file_name());
+    INSTRUMENT(block->line = loc.line());
 
     IDCHECK(block->id = ZONEID); // signature required in block header
 
@@ -355,8 +355,8 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
     // scramble memory -- weed out any bugs
     SCRAMBLER(ret, size);
 
-    Z_LogPrintf("* %p = ZoneHeapBase::malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", ret, size, tag, user, file,
-                line);
+    Z_LogPrintf("* %p = ZoneHeapBase::malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", ret, size, tag, user,
+                loc.file_name(), loc.line());
 
     return ret;
 }
@@ -364,7 +364,7 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
 //
 // ZoneHeapBase::free
 //
-void ZoneHeapBase::free(void *p, const char *file, int line)
+void ZoneHeapBase::free(void *p, const std::source_location loc)
 {
     DEBUG_CHECKHEAP();
 
@@ -372,7 +372,7 @@ void ZoneHeapBase::free(void *p, const char *file, int line)
     {
         memblock_t *block = (memblock_t *)((byte *)p - header_size);
 
-        Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::free: freed a pointer without ZONEID", block, file, line);
+        Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::free: freed a pointer without ZONEID", block, loc);
 
         // haleyjd: permanent blocks are never freed even if the code tries.
         if(block->tag == PU_PERMANENT)
@@ -389,10 +389,10 @@ void ZoneHeapBase::free(void *p, const char *file, int line)
                          "Source: %s:%d\n"
 #if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
                          "Source of malloc: %s:%d\n",
-                         block->tag, file, line, block->file, block->line
+                         block->tag, loc.file_name(), loc.line(), block->file, block->line
 #else
                          ,
-                         block->tag, file, line
+                         block->tag, loc.file_name(), loc.line()
 #endif
             );
         }
@@ -410,14 +410,14 @@ void ZoneHeapBase::free(void *p, const char *file, int line)
 
         std::free(block);
 
-        Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, file, line);
+        Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, loc.file_name(), loc.line());
     }
 }
 
 //
 // ZoneHeapBase::freeTags
 //
-void ZoneHeapBase::freeTags(int lowtag, int hightag, const char *file, int line)
+void ZoneHeapBase::freeTags(int lowtag, int hightag, const std::source_location loc)
 {
     memblock_t *block;
 
@@ -433,21 +433,21 @@ void ZoneHeapBase::freeTags(int lowtag, int hightag, const char *file, int line)
         {
             memblock_t *next = block->next;
 
-            Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeTags: Changed a tag without ZONEID", block, file,
-                      line);
+            Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeTags: Changed a tag without ZONEID", block, loc);
 
-            ZoneHeapBase::free((byte *)block + header_size, file, line);
+            ZoneHeapBase::free((byte *)block + header_size, loc);
             block = next; // Advance to next block
         }
     }
 
-    Z_LogPrintf("* ZoneHeapBase::freeTags(lowtag=%d, hightag=%d, file=%s:%d)\n", lowtag, hightag, file, line);
+    Z_LogPrintf("* ZoneHeapBase::freeTags(lowtag=%d, hightag=%d, file=%s:%d)\n", lowtag, hightag, loc.file_name(),
+                loc.line());
 }
 
 //
 // ZoneHeapBase::changeTag
 //
-void ZoneHeapBase::changeTag(void *ptr, int tag, const char *file, int line)
+void ZoneHeapBase::changeTag(void *ptr, int tag, const std::source_location loc)
 {
     memblock_t *block;
 
@@ -455,19 +455,20 @@ void ZoneHeapBase::changeTag(void *ptr, int tag, const char *file, int line)
 
     if(!ptr)
     {
-        I_FatalError(I_ERR_KILL, "ZoneHeapBase::changeTag: can't change a nullptr at %s:%d\n", file, line);
+        I_FatalError(I_ERR_KILL, "ZoneHeapBase::changeTag: can't change a nullptr at %s:%d\n", loc.file_name(),
+                     loc.line());
     }
 
     block = (memblock_t *)((byte *)ptr - header_size);
 
-    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::changeTag: Changed a tag without ZONEID", block, file, line);
+    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::changeTag: Changed a tag without ZONEID", block, loc);
 
     // haleyjd: permanent blocks are not re-tagged even if the code tries.
     if(block->tag == PU_PERMANENT)
         return;
 
     Z_IDCheck(IDBOOL(tag >= PU_PURGELEVEL && !block->user),
-              "ZoneHeapBase::changeTag: an owner is required for purgable blocks", block, file, line);
+              "ZoneHeapBase::changeTag: an owner is required for purgable blocks", block, loc);
 
     if((*block->prev = block->next))
         block->next->prev = block->prev;
@@ -481,26 +482,26 @@ void ZoneHeapBase::changeTag(void *ptr, int tag, const char *file, int line)
 
     block->tag = tag;
 
-    Z_LogPrintf("* ZoneHeapBase::changeTag(p=%p, tag=%d, file=%s:%d)\n", ptr, tag, file, line);
+    Z_LogPrintf("* ZoneHeapBase::changeTag(p=%p, tag=%d, file=%s:%d)\n", ptr, tag, loc.file_name(), loc.line());
 }
 
 //
 // For the native heap, this can easily behave as a real realloc, and not
 // just an ignorant copy-and-free.
 //
-void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const char *file, int line)
+void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const std::source_location loc)
 {
     void       *p;
     memblock_t *block, *newblock, *origblock;
 
     // if not allocated at all, defer to ZoneHeapBase::malloc
     if(!ptr)
-        return ZoneHeapBase::malloc(n, tag, user, file, line);
+        return ZoneHeapBase::malloc(n, tag, user, loc);
 
     // size == 0 is a special case that cannot be handled below
     if(n == 0)
     {
-        ZoneHeapBase::free(ptr, file, line);
+        ZoneHeapBase::free(ptr, loc);
         return nullptr;
     }
 
@@ -508,8 +509,7 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const cha
 
     block = origblock = (memblock_t *)((byte *)ptr - header_size);
 
-    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::realloc: Reallocated a block without ZONEID\n", block, file,
-              line);
+    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::realloc: Reallocated a block without ZONEID\n", block, loc);
 
     // haleyjd: realloc cannot change the tag of a permanent block
     if(block->tag == PU_PERMANENT)
@@ -534,7 +534,7 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const cha
         // even if the current block is PU_CACHE; Z_FreeTags won't find it.
         if(m_blockbytag[PU_CACHE])
         {
-            ZoneHeapBase::freeTags(PU_CACHE, PU_CACHE, __FILE__, __LINE__);
+            ZoneHeapBase::freeTags(PU_CACHE, PU_CACHE);
             newblock = static_cast<memblock_t *>(std::realloc(block, n + header_size));
         }
     }
@@ -551,7 +551,7 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const cha
             I_FatalError(I_ERR_KILL,
                          "ZoneHeapBase::realloc: Failure trying to allocate %u bytes\n"
                          "Source: %s:%d\n",
-                         (unsigned int)n, file, line);
+                         (unsigned int)n, loc.file_name(), loc.line());
         }
     }
 
@@ -572,11 +572,11 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const cha
     block->prev       = &m_blockbytag[tag];
 
     INSTRUMENT(m_memorybytag[tag] += block->size);
-    INSTRUMENT(block->file = file);
-    INSTRUMENT(block->line = line);
+    INSTRUMENT(block->file = loc.file_name());
+    INSTRUMENT(block->line = loc.line());
 
     Z_LogPrintf("* %p = ZoneHeapBase::realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", p, ptr, n, tag, user,
-                file, line);
+                loc.file_name(), loc.line());
 
     return p;
 }
@@ -584,17 +584,17 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user, const cha
 //
 // ZoneHeapBase::calloc
 //
-void *ZoneHeapBase::calloc(size_t n1, size_t n2, int tag, void **user, const char *file, int line)
+void *ZoneHeapBase::calloc(size_t n1, size_t n2, int tag, void **user, const std::source_location loc)
 {
-    return (n1 *= n2) ? memset(ZoneHeapBase::malloc(n1, tag, user, file, line), 0, n1) : nullptr;
+    return (n1 *= n2) ? memset(ZoneHeapBase::malloc(n1, tag, user, loc), 0, n1) : nullptr;
 }
 
 //
 // ZoneHeapBase::strdup
 //
-char *ZoneHeapBase::strdup(const char *s, int tag, void **user, const char *file, int line)
+char *ZoneHeapBase::strdup(const char *s, int tag, void **user, const std::source_location loc)
 {
-    return strcpy(static_cast<char *>((ZoneHeapBase::malloc)(strlen(s) + 1, tag, user, file, line)), s);
+    return strcpy(static_cast<char *>((ZoneHeapBase::malloc)(strlen(s) + 1, tag, user, loc)), s);
 }
 
 //=============================================================================
@@ -605,7 +605,7 @@ char *ZoneHeapBase::strdup(const char *s, int tag, void **user, const char *file
 //
 // ZoneHeapBase::checkHeap
 //
-void ZoneHeapBase::checkHeap(const char *file, int line)
+void ZoneHeapBase::checkHeap(const std::source_location loc)
 {
 #ifdef ZONEIDCHECK
     memblock_t *block;
@@ -615,14 +615,13 @@ void ZoneHeapBase::checkHeap(const char *file, int line)
     {
         for(block = m_blockbytag[lowtag]; block; block = block->next)
         {
-            Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::checkHeap: Block found without ZONEID", block, file,
-                      line);
+            Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::checkHeap: Block found without ZONEID", block, loc);
         }
     }
 #endif
 
 #ifndef CHECKHEAP
-    Z_LogPrintf("* ZoneHeapBase::checkHeap(file=%s:%d)\n", file, line);
+    Z_LogPrintf("* ZoneHeapBase::checkHeap(file=%s:%d)\n", loc.file_name(), loc.line());
 #endif
 }
 
@@ -632,13 +631,13 @@ void ZoneHeapBase::checkHeap(const char *file, int line)
 // inadvertently lower the cache level of lump allocations and
 // cause code which expects them to be static to lose them
 //
-int ZoneHeapBase::checkTag(void *ptr, const char *file, int line)
+int ZoneHeapBase::checkTag(void *ptr, const std::source_location loc)
 {
     memblock_t *block = (memblock_t *)((byte *)ptr - header_size);
 
     DEBUG_CHECKHEAP();
 
-    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::checkTag: block doesn't have ZONEID", block, file, line);
+    Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::checkTag: block doesn't have ZONEID", block, loc);
 
     return block->tag;
 }
@@ -897,10 +896,10 @@ void ZoneHeapBase::freeAllocAuto()
     {
         memblock_t *next = block->next;
 
-        Z_IDCheckNB(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeAllocAuto: Freed a tag without ZONEID", __FILE__,
-                    __LINE__);
+        Z_IDCheckNB(IDBOOL(block->id != ZONEID), "ZoneHeapBase::freeAllocAuto: Freed a tag without ZONEID",
+                    std::source_location::current());
 
-        ZoneHeapBase::free((byte *)block + header_size, __FILE__, __LINE__);
+        ZoneHeapBase::free((byte *)block + header_size);
         block = next; // Advance to next block
     }
 }
@@ -909,7 +908,7 @@ void ZoneHeapBase::freeAllocAuto()
 // haleyjd 12/06/06:
 // Implements a portable garbage-collected alloca on the zone heap.
 //
-void *ZoneHeapBase::allocAuto(size_t n, const char *file, int line)
+void *ZoneHeapBase::allocAuto(size_t n, const std::source_location loc)
 {
     void *ptr;
 
@@ -917,9 +916,9 @@ void *ZoneHeapBase::allocAuto(size_t n, const char *file, int line)
         return nullptr;
 
     // allocate it
-    ptr = ZoneHeapBase::calloc(n, 1, PU_AUTO, nullptr, file, line);
+    ptr = ZoneHeapBase::calloc(n, 1, PU_AUTO, nullptr, loc);
 
-    Z_LogPrintf("* %p = ZoneHeapBase::allocAuto(n = %lu, file = %s, line = %d)\n", ptr, n, file, line);
+    Z_LogPrintf("* %p = ZoneHeapBase::allocAuto(n = %lu, file = %s, line = %d)\n", ptr, n, loc.file_name(), loc.line());
 
     return ptr;
 }
@@ -927,7 +926,7 @@ void *ZoneHeapBase::allocAuto(size_t n, const char *file, int line)
 //
 // haleyjd 07/08/10: realloc for automatic allocations.
 //
-void *ZoneHeapBase::reallocAuto(void *ptr, size_t n, const char *file, int line)
+void *ZoneHeapBase::reallocAuto(void *ptr, size_t n, const std::source_location loc)
 {
     void *ret;
 
@@ -936,16 +935,16 @@ void *ZoneHeapBase::reallocAuto(void *ptr, size_t n, const char *file, int line)
         // get zone block
         memblock_t *block = (memblock_t *)((byte *)ptr - header_size);
 
-        Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::reallocAuto: block found without ZONEID", block, file,
-                  line);
+        Z_IDCheck(IDBOOL(block->id != ZONEID), "ZoneHeapBase::reallocAuto: block found without ZONEID", block, loc);
 
         if(block->tag != PU_AUTO)
             I_FatalError(I_ERR_KILL, "ZoneHeapBase::reallocAuto: strange block tag %d\n", block->tag);
     }
 
-    ret = ZoneHeapBase::realloc(ptr, n, PU_AUTO, nullptr, file, line);
+    ret = ZoneHeapBase::realloc(ptr, n, PU_AUTO, nullptr, loc);
 
-    Z_LogPrintf("* %p = ZoneHeapBase::reallocAuto(ptr = %p, n = %lu, file = %s, line = %d)\n", ret, ptr, n, file, line);
+    Z_LogPrintf("* %p = ZoneHeapBase::reallocAuto(ptr = %p, n = %lu, file = %s, line = %d)\n", ret, ptr, n,
+                loc.file_name(), loc.line());
 
     return ret;
 }
@@ -953,9 +952,9 @@ void *ZoneHeapBase::reallocAuto(void *ptr, size_t n, const char *file, int line)
 //
 // haleyjd 05/07/08: strdup that uses alloca, for convenience.
 //
-char *ZoneHeapBase::strdupAuto(const char *s, const char *file, int line)
+char *ZoneHeapBase::strdupAuto(const char *s, const std::source_location loc)
 {
-    return strcpy(static_cast<char *>(ZoneHeapBase::allocAuto(strlen(s) + 1, file, line)), s);
+    return strcpy(static_cast<char *>(ZoneHeapBase::allocAuto(strlen(s) + 1, loc)), s);
 }
 
 //=============================================================================
@@ -993,19 +992,19 @@ ZoneHeapThreadSafe::~ZoneHeapThreadSafe()
 // ZoneHeapThreadSafe class methods
 //
 
-void *ZoneHeapThreadSafe::malloc(size_t size, int tag, void **user, const char *file, int line)
+void *ZoneHeapThreadSafe::malloc(size_t size, int tag, void **user, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::malloc(size, tag, user, file, line);
+    return ZoneHeapBase::malloc(size, tag, user, loc);
 }
 
-void ZoneHeapThreadSafe::free(void *ptr, const char *file, int line)
+void ZoneHeapThreadSafe::free(void *ptr, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    ZoneHeapBase::free(ptr, file, line);
+    ZoneHeapBase::free(ptr, loc);
 }
 
-void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const char *file, int line)
+void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
 
@@ -1013,36 +1012,36 @@ void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const char *file, int
     // MaxW: 2023/03/31: But only if we're freeing tags from the global zone heap!
     ZoneObject::FreeTags(lowtag, hightag);
 
-    ZoneHeapBase::freeTags(lowtag, hightag, file, line);
+    ZoneHeapBase::freeTags(lowtag, hightag, loc);
 
     // Free up the same tags in all the context-specific heaps, too
-    R_ForEachContext([lowtag, hightag, file, line](rendercontext_t &context) {
-        context.heap->freeTags(lowtag, hightag, file, line);
+    R_ForEachContext([lowtag, hightag, loc](rendercontext_t &context) {
+        context.heap->freeTags(lowtag, hightag, loc);
     });
 }
 
-void ZoneHeapThreadSafe::changeTag(void *ptr, int tag, const char *file, int line)
+void ZoneHeapThreadSafe::changeTag(void *ptr, int tag, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    ZoneHeapBase::changeTag(ptr, tag, file, line);
+    ZoneHeapBase::changeTag(ptr, tag, loc);
 }
 
-void *ZoneHeapThreadSafe::calloc(size_t n, size_t n2, int tag, void **user, const char *file, int line)
+void *ZoneHeapThreadSafe::calloc(size_t n, size_t n2, int tag, void **user, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::calloc(n, n2, tag, user, file, line);
+    return ZoneHeapBase::calloc(n, n2, tag, user, loc);
 }
 
-void *ZoneHeapThreadSafe::realloc(void *p, size_t n, int tag, void **user, const char *file, int line)
+void *ZoneHeapThreadSafe::realloc(void *p, size_t n, int tag, void **user, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::realloc(p, n, tag, user, file, line);
+    return ZoneHeapBase::realloc(p, n, tag, user, loc);
 }
 
-char *ZoneHeapThreadSafe::strdup(const char *s, int tag, void **user, const char *file, int line)
+char *ZoneHeapThreadSafe::strdup(const char *s, int tag, void **user, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::strdup(s, tag, user, file, line);
+    return ZoneHeapBase::strdup(s, tag, user, loc);
 }
 
 void ZoneHeapThreadSafe::freeAllocAuto()
@@ -1051,34 +1050,34 @@ void ZoneHeapThreadSafe::freeAllocAuto()
     ZoneHeapBase::freeAllocAuto();
 }
 
-void *ZoneHeapThreadSafe::allocAuto(size_t n, const char *file, int line)
+void *ZoneHeapThreadSafe::allocAuto(size_t n, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::allocAuto(n, file, line);
+    return ZoneHeapBase::allocAuto(n, loc);
 }
 
-void *ZoneHeapThreadSafe::reallocAuto(void *ptr, size_t n, const char *file, int line)
+void *ZoneHeapThreadSafe::reallocAuto(void *ptr, size_t n, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::reallocAuto(ptr, n, file, line);
+    return ZoneHeapBase::reallocAuto(ptr, n, loc);
 }
 
-char *ZoneHeapThreadSafe::strdupAuto(const char *s, const char *file, int line)
+char *ZoneHeapThreadSafe::strdupAuto(const char *s, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::strdupAuto(s, file, line);
+    return ZoneHeapBase::strdupAuto(s, loc);
 }
 
-void ZoneHeapThreadSafe::checkHeap(const char *file, int line)
+void ZoneHeapThreadSafe::checkHeap(const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    ZoneHeapBase::checkHeap(file, line);
+    ZoneHeapBase::checkHeap(loc);
 }
 
-int ZoneHeapThreadSafe::checkTag(void *ptr, const char *file, int line)
+int ZoneHeapThreadSafe::checkTag(void *ptr, const std::source_location loc)
 {
     std::lock_guard lock(m_mutex->mutex);
-    return ZoneHeapBase::checkTag(ptr, file, line);
+    return ZoneHeapBase::checkTag(ptr, loc);
 }
 
 //=============================================================================

@@ -471,6 +471,9 @@ default_t defaults[] = {
     DEFAULT_INT("comp_thingsectorlight", &default_comp[comp_thingsectorlight], &comp[comp_thingsectorlight], 0, 0, 1,
                 default_t::wad_game, "MObjs are lit by transfered light"),
 
+    DEFAULT_INT("comp_voodooscroller", &default_comp[comp_voodooscroller], &comp[comp_voodooscroller], 0, 0, 1,
+                default_t::wad_game, "Voodoo dolls on slow scrollers move too slowly"),
+
     // For key bindings, the values stored in the key_* variables       // phares
     // are the internal Doom Codes. The values stored in the default.cfg
     // file are the keyboard codes. I_ScanCode2DoomCode converts from
@@ -800,7 +803,7 @@ default_t defaults[] = {
 #ifdef _SDL_VER
     DEFAULT_INT("showendoom", &showendoom, nullptr, 1, 0, 1, default_t::wad_game, "1 to show ENDOOM at exit"),
 
-    DEFAULT_INT("endoomdelay", &endoomdelay, nullptr, 350, 35, 3500, default_t::wad_no,
+    DEFAULT_INT("endoomdelay", &endoomdelay, nullptr, 10 * TICRATE, TICRATE, 100 * TICRATE, default_t::wad_no,
                 "Amount of time to display ENDOOM when shown"),
 #endif
 

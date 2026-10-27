@@ -102,6 +102,7 @@ enum
     netcmd_comp_jump,       // ioanch:  air control for jumping
     netcmd_comp_aircontrol = netcmd_comp_jump,
     netcmd_comp_thingsectorlight,
+    netcmd_comp_voodooscroller,
     NUMNETCMDS
 };
 

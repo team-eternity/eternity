@@ -272,9 +272,12 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
         strval = info->getString("next", nullptr);
         if(strval)
             LevelInfo.nextLevel = strval;
-        strval = info->getString("nextsecret", nullptr);
+        const char *const next = strval;
+        strval                 = info->getString("nextsecret", nullptr);
         if(strval)
             LevelInfo.nextSecret = strval;
+        else if(next)
+            LevelInfo.nextSecret = next;
     }
     strval = info->getString("skytexture", nullptr);
     if(strval)
@@ -312,15 +315,17 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.finaleSecretOnly = false;
         };
 
-        val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
-        if(val == XL_UMAPINFO_SPECVAL_FALSE)
-        {
+        auto clearFinale = []() {
             // Override a default map exit
             // Default map exits are defined in P_InfoDefaultFinale according to game mode info
             LevelInfo.finaleType  = FINALE_TEXT;
             LevelInfo.endOfGame   = false;
             LevelInfo.finaleEarly = false;
-        }
+        };
+
+        val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
+        if(val == XL_UMAPINFO_SPECVAL_FALSE)
+            clearFinale();
         else if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {
             const finalerule_t *rule = P_DetermineEpisodeFinaleRule(false);
@@ -332,7 +337,7 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             // Also generalize this (and same below) for both exits. The presence of the respective
             // intertext will dictate whether it will really happen.
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
         strval = info->getString("endpic", nullptr);
         if(strval)
@@ -343,15 +348,34 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.endPic     = strval;
 
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
+        strval = info->getString("endpalette", nullptr);
+        if(strval)
+            LevelInfo.endPal = strval;
         val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
         {
             LevelInfo.endOfGame  = false;
             LevelInfo.finaleType = FINALE_DOOM_BUNNY;
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
+        }
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE && demo_version >= 407)
+            clearFinale();
+        if(demo_version >= 407)
+        {
+            // TODO: revise the false changes
+            val = info->getInt("enddemon", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_TRUE)
+            {
+                LevelInfo.endOfGame  = false;
+                LevelInfo.finaleType = FINALE_HTIC_DEMON;
+                reuseSecretStoryForMainExit();
+                P_EnsureDefaultStoryText(ExitType::normal);
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+                clearFinale();
         }
         val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
         if(val == XL_UMAPINFO_SPECVAL_TRUE)
@@ -359,8 +383,41 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
             LevelInfo.endOfGame  = true;
             LevelInfo.finaleType = FINALE_TEXT;
             reuseSecretStoryForMainExit();
-            P_EnsureDefaultStoryText(false);
+            P_EnsureDefaultStoryText(ExitType::normal);
         }
+        else if(val == XL_UMAPINFO_SPECVAL_FALSE && demo_version >= 407)
+            clearFinale();
+
+        if(demo_version >= 407)
+        {
+            val = info->getInt("jumping", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_FALSE) // disallow
+            {
+                LevelInfo.disableJump = true;
+                LevelInfo.requireJump = false;
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG) // require
+            {
+                LevelInfo.disableJump = false;
+                LevelInfo.requireJump = true;
+            }
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE) // allow
+            {
+                LevelInfo.disableJump = false;
+                LevelInfo.requireJump = false;
+            }
+            val = info->getInt("freeaim", XL_UMAPINFO_SPECVAL_NOT_SET);
+            if(val == XL_UMAPINFO_SPECVAL_FALSE)
+                LevelInfo.freeAim = UMapInfoAllow::disallow;
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE)
+                LevelInfo.freeAim = UMapInfoAllow::allow;
+            else if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG)
+                LevelInfo.freeAim = UMapInfoAllow::require;
+        }
+
+        val = info->getInt("crouching", XL_UMAPINFO_SPECVAL_NOT_SET);
+        if(val == XL_UMAPINFO_SPECVAL_TRUE_STRONG)
+            LevelInfo.crouchWarning = true;
 
         // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
         val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);

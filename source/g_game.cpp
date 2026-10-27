@@ -120,9 +120,10 @@ player_t        players[MAXPLAYERS];
 int             consoleplayer; // player taking events and displaying
 int             displayplayer; // view being displayed
 int             gametic;
-int             levelstarttic;                       // gametic at level start
-int             basetic;                             // killough 9/29/98: for demo sync
-int             totalkills, totalitems, totalsecret; // for intermission
+int             levelstarttic;                          // gametic at level start
+int             basetic;                                // killough 9/29/98: for demo sync
+int             totalmonsters, totalitems, totalsecret; // for intermission
+int             totalKilledMonsters;
 bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
@@ -338,7 +339,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
     if(gameactions[ka_user4])
         cmd->actions |= AC_USER4;
 
-    int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+    const int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
     // console commands
     cmd->chatchar = C_dequeueChatChar();
@@ -364,7 +365,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
         if(gameactions[ka_nextweapon])
         {
-            weaponinfo_t *temp = E_FindBestWeapon(p);
+            const weaponinfo_t *temp = E_FindBestWeapon(p);
             if(temp == nullptr)
             {
                 p.attackdown = AT_NONE;
@@ -396,9 +397,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
         // next / prev weapon actions
         if(gameactions[ka_weaponup])
-            newweapon = P_NextWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::next, &cmd->slotIndex);
         else if(gameactions[ka_weapondown])
-            newweapon = P_PrevWeapon(p, &cmd->slotIndex);
+            newweapon = P_CycleWeapon(p, CycleDir::previous, &cmd->slotIndex);
 
         if(p.readyweapon)
         {
@@ -489,9 +490,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         {
             // haleyjd 03/06/09: next/prev weapon actions
             if(gameactions[ka_weaponup])
-                newweapon = P_NextWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::next);
             else if(gameactions[ka_weapondown])
-                newweapon = P_PrevWeapon(p);
+                newweapon = P_CycleWeapon(p, CycleDir::previous);
 
             const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
@@ -1008,6 +1009,8 @@ struct complevel_s
     { 335, 335, false }, // comp_special
     { 337, 337, false }, // comp_ninja
     { 340, 340, false }, // comp_jump
+    { 406, 406, false }, // comp_thingsectorlight (FIXME: use MBF version number?)
+    { 221, 221, true  }, // comp_voodooscroller
     { 0,   0,   false }
 };
 
@@ -1779,6 +1782,12 @@ static void G_setupMapInfoWMInfo(levelkind_t kind)
     wminfo.li_lastlevelpic = LevelInfo.levelPic;
     wminfo.li_nextlevelpic = next.levelpic;
 
+    if(strcasecmp(LevelInfo.creator, "unknown"))
+        wminfo.li_lastlevelcreator = LevelInfo.creator;
+    else
+        wminfo.li_lastlevelcreator = "";
+    wminfo.li_nextlevelcreator = next.creator;
+
     const intermapinfo_t &last = IN_GetMapInfo(gamemapname);
 
     // NOTE: just for exit-pic, do NOT use LevelInfo.interPic! We need to tell if
@@ -1870,7 +1879,7 @@ static void G_DoCompleted()
     else
         wminfo.nextexplicit = false;
 
-    wminfo.maxkills  = totalkills;
+    wminfo.maxkills  = totalmonsters;
     wminfo.maxitems  = totalitems;
     wminfo.maxsecret = totalsecret;
     wminfo.maxfrags  = 0;
@@ -1967,7 +1976,7 @@ void G_ForceFinale()
     if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
         LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
-    P_EnsureDefaultStoryText(false);
+    P_EnsureDefaultStoryText(ExitType::normal);
 
     // set other variables for consistency
     LevelInfo.killFinale       = false;
@@ -2207,7 +2216,7 @@ void G_Ticker()
             G_DoCompleted();
             break;
         case ga_victory: //
-            F_StartFinale(secretexit);
+            F_StartFinale(secretexit ? ExitType::secret : ExitType::normal);
             break;
         case ga_worlddone: //
             G_DoWorldDone();
@@ -2398,7 +2407,6 @@ void G_PlayerReborn(int player)
     skin_t        *playerskin;
     playerclass_t *playerclass;
     inventory_t    inventory;
-    inventory_t    unmorphInventory;
 
     p = &players[player];
 
@@ -2412,10 +2420,9 @@ void G_PlayerReborn(int player)
     playercolour = p->colormap;
     totalfrags   = p->totalfrags;
     // Restore class now
-    playerskin       = p->unmorphSkin ? p->unmorphSkin : p->skin;
-    playerclass      = p->unmorphClass ? p->unmorphClass : p->pclass; // haleyjd: playerclass
-    inventory        = p->inventory;                                  // haleyjd: inventory
-    unmorphInventory = p->unmorphInventory;
+    playerskin  = p->unmorphSkin ? p->unmorphSkin : p->skin;
+    playerclass = p->unmorphClass ? p->unmorphClass : p->pclass; // haleyjd: playerclass
+    inventory   = p->inventory;                                  // haleyjd: inventory
 
     delete p->weaponctrs;
 
@@ -2426,19 +2433,18 @@ void G_PlayerReborn(int player)
 
     p->weaponctrs = new WeaponCounterTree();
 
-    p->killcount        = killcount;
-    p->itemcount        = itemcount;
-    p->secretcount      = secretcount;
-    p->cheats           = cheats;
-    p->colormap         = playercolour;
-    p->totalfrags       = totalfrags;
-    p->skin             = playerskin;
-    p->pclass           = playerclass; // haleyjd: playerclass
-    p->inventory        = inventory;   // haleyjd: inventory
-    p->unmorphInventory = unmorphInventory;
-    p->playerstate      = PST_LIVE;
-    p->health           = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
-    p->quake            = 0;                        // haleyjd 01/21/07
+    p->killcount   = killcount;
+    p->itemcount   = itemcount;
+    p->secretcount = secretcount;
+    p->cheats      = cheats;
+    p->colormap    = playercolour;
+    p->totalfrags  = totalfrags;
+    p->skin        = playerskin;
+    p->pclass      = playerclass; // haleyjd: playerclass
+    p->inventory   = inventory;   // haleyjd: inventory
+    p->playerstate = PST_LIVE;
+    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
+    p->quake       = 0;                        // haleyjd 01/21/07
 
     p->usedown = true; // don't do anything immediately
 
@@ -2800,7 +2806,7 @@ void G_WorldDone()
         players[consoleplayer].didsecret = true;
 
     if(G_doFinale())
-        F_StartFinale(secretexit);
+        F_StartFinale(secretexit ? ExitType::secret : ExitType::normal);
 }
 
 static skill_t d_skill;
@@ -3333,8 +3339,10 @@ byte *G_WriteOptions(byte *demoptr)
     *demoptr++ = monkeys; // byte 26
 
     // killough 10/98: a compatibility vector now
-    for(int i = 0; i < MBF_COMP_TOTAL; i++)
+    for(int i = 0; i < emin(COMP_TOTAL, MBF_COMP_TOTAL); i++)
         *demoptr++ = comp[i] != 0; // bytes 27 - 58 : comp
+    for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
+        *demoptr++ = 0; // comp padding
 
     // haleyjd 05/23/04: autoaim is sync critical
     *demoptr++ = autoaim; // byte 59
@@ -3421,8 +3429,10 @@ byte *G_ReadOptions(byte *demoptr)
 
         { // killough 10/98: a compatibility vector now
             int i;
-            for(i = 0; i < MBF_COMP_TOTAL; ++i)
+            for(i = 0; i < emin(COMP_TOTAL, MBF_COMP_TOTAL); ++i)
                 comp[i] = *demoptr++;
+            for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
+                demoptr++; // comp padding
         }
 
         G_SetCompatibility();
@@ -3943,7 +3953,7 @@ static int G_totalPlayerParam(int player_t::*tally)
 // Named this way to prevent confusion with similarly named variables
 int G_TotalKilledMonsters()
 {
-    return G_totalPlayerParam(&player_t::killcount);
+    return demo_version >= 406 ? totalKilledMonsters : G_totalPlayerParam(&player_t::killcount);
 }
 int G_TotalFoundItems()
 {

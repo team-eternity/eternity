@@ -41,9 +41,11 @@
 #include "ev_bindings.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "polyobj.h"
@@ -89,28 +91,15 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
     // SoM: only allow switch specials on 3d sides to be triggered if
     // the mobj is within range of the side.
     // haleyjd 05/02/06: ONLY on two-sided lines.
-    if((line->flags & ML_3DMIDTEX) && line->backsector && sidedef && sidedef->midtexture)
+    // printz: don't apply this treatment for wrapmidtex, which is effectively like any tiling texture.
+    if(line->flags & ML_3DMIDTEX && !(line->extflags & EX_ML_WRAPMIDTEX) && line->backsector && sidedef &&
+       sidedef->midtexture)
     {
-        fixed_t opentop, openbottom, textop, texbot;
+        const linkoffset_t *link     = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
+        const v2fixed_t     thingpos = { thing->x + link->x, thing->y + link->y };
 
-        opentop = line->frontsector->srf.ceiling.height < line->backsector->srf.ceiling.height ?
-                      line->frontsector->srf.ceiling.height :
-                      line->backsector->srf.ceiling.height;
-
-        openbottom = line->frontsector->srf.floor.height > line->backsector->srf.floor.height ?
-                         line->frontsector->srf.floor.height :
-                         line->backsector->srf.floor.height;
-
-        if(line->flags & ML_DONTPEGBOTTOM)
-        {
-            texbot = sidedef->offset_base_y + sidedef->offset_mid_y + openbottom;
-            textop = texbot + textures[sidedef->midtexture]->heightfrac;
-        }
-        else
-        {
-            textop = opentop + sidedef->offset_base_y + sidedef->offset_mid_y;
-            texbot = textop - textures[sidedef->midtexture]->heightfrac;
-        }
+        fixed_t textop, texbot;
+        P_Get3DMidTexHeights(*line, *sidedef, texbot, textop, &thingpos);
 
         if(thing->z > textop || thing->z + thing->height < texbot)
             return false;
@@ -1491,7 +1480,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac, bool byALineEffect)
 {
-    ev_action_t *action;
+    ev_action_t  *action;
     ev_instance_t instance = {};
 
     // setup instance
@@ -1532,7 +1521,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj
 //
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnly)
 {
-    ev_action_t *action;
+    ev_action_t  *action;
     ev_instance_t instance = {};
 
     // setup instance
@@ -1557,7 +1546,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnl
 //
 int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly)
 {
-    ev_action_t *action;
+    ev_action_t  *action;
     ev_instance_t instance = {};
 
     // setup instance
@@ -1669,7 +1658,7 @@ int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
 
     for(auto *links = sector->actions; links; links = links->dllNext)
     {
-        ev_instance_t instance = {};
+        ev_instance_t   instance     = {};
         sectoraction_t *sectoraction = links->dllObject;
 
         // setup instance
@@ -1719,4 +1708,3 @@ CONSOLE_COMMAND(ev_mapspecials, cf_level)
 }
 
 // EOF
-

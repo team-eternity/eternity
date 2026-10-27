@@ -85,6 +85,12 @@ struct pspdef_t
     void backupPosition() { prevpos = renderpos; }
 };
 
+enum class CycleDir
+{
+    next,
+    previous,
+};
+
 int        P_WeaponPreferred(int w1, int w2);
 extern int action_from_pspr; // haleyjd 05/21/08
 
@@ -94,8 +100,7 @@ void P_SetPsprite(player_t &player, int position, statenum_t stnum);
 bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon);
 bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon);
 
-int P_NextWeapon(const player_t &player, uint8_t *slotindex = nullptr);
-int P_PrevWeapon(const player_t &player, uint8_t *slotindex = nullptr);
+int P_CycleWeapon(const player_t &player, CycleDir dir, uint8_t *slotindex = nullptr);
 
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player);
 bool         P_CheckAmmo(player_t &player);

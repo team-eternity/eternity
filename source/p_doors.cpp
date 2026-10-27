@@ -584,7 +584,7 @@ void P_SpawnDoorCloseIn30(sector_t *sec)
     door->type         = doorNormal;
     door->speed        = VDOORSPEED;
     door->turbo        = false;
-    door->topcountdown = 30 * 35;
+    door->topcountdown = 30 * TICRATE;
     door->lighttag     = 0; // killough 10/98: no lighting changes
 }
 
@@ -613,7 +613,7 @@ void P_SpawnDoorRaiseIn5Mins(sector_t *sec)
     door->topheight     = P_FindLowestCeilingSurrounding(sec);
     door->topheight    -= 4 * FRACUNIT;
     door->topwait       = VDOORWAIT;
-    door->topcountdown  = 5 * 60 * 35;
+    door->topcountdown   = 5 * 60 * TICRATE;
     door->lighttag      = 0; // killough 10/98: no lighting changes
 }
 

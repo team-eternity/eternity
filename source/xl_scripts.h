@@ -27,7 +27,9 @@
 #ifndef XL_SCRIPTS_H__
 #define XL_SCRIPTS_H__
 
+#include "m_collection.h"
 #include "m_qstr.h"
+#include "mn_engin.h"
 
 struct lumpinfo_t;
 class WadDirectory;
@@ -154,6 +156,41 @@ public:
     // Accessors
     const char *getLumpName() const { return lumpname; }
     void        setLumpName(const char *s) { lumpname = s; }
+};
+
+class XLEpisodeReplacement
+{
+public:
+    XLEpisodeReplacement();
+    ~XLEpisodeReplacement();
+
+    bool isDisabled() const { return disabled; }
+    void clear()
+    {
+        items.makeEmpty();
+        changed = true;
+    }
+    void add(const menuitem_t &item)
+    {
+        items.add(item);
+        changed = true;
+    }
+    void cap(size_t limit)
+    {
+        if(items.getLength() > limit)
+        {
+            items.resize(limit);
+            changed = true;
+        }
+    }
+
+private:
+    bool                      disabled = false;
+    PODCollection<menuitem_t> prefixItems;
+    PODCollection<menuitem_t> items;
+    int                       prefixGaps = 0;
+    menu_t                    newmenu    = {};
+    bool                      changed    = false;
 };
 
 void XL_ParseHexenScripts();

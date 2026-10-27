@@ -56,12 +56,13 @@ inline static constexpr int PO2(const int x)
 
 void A_StaffAttackPL1(actionargs_t *actionargs)
 {
-    Mobj   *mo     = actionargs->actor;
-    int     damage = 5 + (P_Random(pr_staff) & 15);
-    angle_t angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-    fixed_t slope  = P_DoAutoAim(mo, angle, MELEERANGE);
+    Mobj         *mo     = actionargs->actor;
+    int           damage = 5 + (P_Random(pr_staff) & 15);
+    angle_t       angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
+    const fixed_t range  = P_GetMeleeRange(*mo);
+    fixed_t       slope  = P_DoAutoAim(mo, angle, range);
 
-    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff");
+    P_LineAttack(mo, angle, range, slope, damage, "HereticStaffPuff");
     // Turn to face the target if necessary
     if(clip.linetarget)
         mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
@@ -69,12 +70,13 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
 
 void A_StaffAttackPL2(actionargs_t *actionargs)
 {
-    Mobj   *mo     = actionargs->actor;
-    int     damage = 18 + (P_Random(pr_staff2) & 63);
-    angle_t angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-    fixed_t slope  = P_DoAutoAim(mo, angle, MELEERANGE);
+    Mobj         *mo     = actionargs->actor;
+    int           damage = 18 + (P_Random(pr_staff2) & 63);
+    angle_t       angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
+    const fixed_t range  = P_GetMeleeRange(*mo);
+    fixed_t       slope  = P_DoAutoAim(mo, angle, range);
 
-    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff2");
+    P_LineAttack(mo, angle, range, slope, damage, "HereticStaffPuff2");
     // Turn to face the target if necessary
     if(clip.linetarget)
         mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
@@ -685,7 +687,7 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 
 void A_InitPhoenixPL2(actionargs_t *actionargs)
 {
-    constexpr int FLAME_THROWER_TICS = 10 * 35;
+    constexpr int FLAME_THROWER_TICS = 10 * TICRATE;
     Mobj         *mo                 = actionargs->actor;
     player_t     *player             = mo->player;
 
@@ -775,17 +777,19 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
     angle = mo->angle;
 
+    const fixed_t baserange = P_GetMeleeRange(*mo);
+
     if(powered)
     {
         damage    = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
-        dist      = 4 * MELEERANGE;
+        dist      = 4 * baserange;
         angle    += P_SubRandom(pr_gauntletsangle) * PO2(17);
         puffname  = "HereticGauntletPuff2";
     }
     else
     {
         damage    = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
-        dist      = MELEERANGE + 1;
+        dist      = baserange + 1;
         angle    += P_SubRandom(pr_gauntletsangle) * PO2(18);
         puffname  = "HereticGauntletPuff1";
     }
@@ -874,7 +878,7 @@ void A_HticArtiTele(actionargs_t *actionargs)
         destAngle = ANG45 * (playerstarts[0].angle / 45);
     }
 
-    P_HereticTeleport(mo, destX, destY, destAngle, false);
+    P_Teleport(mo, { destX, destY }, destAngle, false);
     S_StartSound(nullptr, sfx_hwpnup);
 }
 

@@ -75,6 +75,7 @@ enum extmlflags_e : unsigned int
     EX_ML_LOWERPORTAL  = 0x00004000, // extends the floor portal of the back sector
     EX_ML_UPPERPORTAL  = 0x00008000, // extends the ceiling portal of the back sector
     EX_ML_POLYOBJECT   = 0x00010000, // enabled for polyobjects
+    EX_ML_WRAPMIDTEX   = 0x00020000, // line has the midtexture wrap up and down
 };
 
 static const unsigned e_edgePortalFlags[surf_NUM] = { EX_ML_LOWERPORTAL, EX_ML_UPPERPORTAL };

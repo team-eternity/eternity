@@ -574,6 +574,7 @@ int EV_DoFloor(const line_t *line, int tag, floor_e floortype)
             floor->floordestheight = floor->sector->srf.floor.height + 24 * FRACUNIT;
             if(line)
             {
+                // NOTE: polyobject lines will use the control sector texture
                 R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                 sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                 // jff 3/14/98 transfer both old and new special
@@ -720,6 +721,7 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
         switch(changetype)
         {
         case trigChangeOnly:
+            // NOTE: polyobject lines will use the control sector texture
             R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
             sec->srf.floor.pic = line->frontsector->srf.floor.pic;
             P_DirectTransferSectorSpecial(line->frontsector, sec);
@@ -1246,6 +1248,7 @@ int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po, int t
         // elevator to floor height of activating switch's front sector
         case elevateCurrent:
             // Fall back to different references if linedef is missing
+            // NOTE: polyobject lines will use the control sector texture
             if(line)
                 elevator->floordestheight = line->frontsector->srf.floor.height;
             else if(mo)
@@ -1591,7 +1594,7 @@ int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed, int 
         waggle->scale          = 0;
         waggle->targetScale    = height << 10;
         waggle->scaleDelta     = waggle->targetScale / (35 + ((3 * 35) * height) / 255);
-        waggle->ticker         = timer ? timer * 35 : -1;
+        waggle->ticker         = timer ? timer * TICRATE : -1;
         waggle->state          = WGLSTATE_EXPAND;
 
         if(manual)

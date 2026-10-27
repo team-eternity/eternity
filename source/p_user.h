@@ -32,6 +32,7 @@ class Mobj;
 
 static constexpr int INVERSECOLORMAP = 32;
 
+void P_RemovePower(player_t &player, int powernum);
 void P_PlayerThink(player_t &player);
 void P_CalcHeight(player_t &player);
 void P_DeathThink(player_t &player);

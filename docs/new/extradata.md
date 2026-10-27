@@ -1,0 +1,1206 @@
+### Eternity Engine ExtraData Reference v1.3 \-- 10/22/06
+
+[Return to the Eternity Engine Page](../etcengine.html)
+
+- [**Table of Contents**]{#contents}
+  - [Introduction to ExtraData](#intro)
+  - [Changes in ExtraData 1.3](#changes)
+  - [General Syntax](#gensyn)
+  - [Embedding and Associating ExtraData](#embed)
+  - [Mapthings](#mapthings)
+    - [Creating ExtraData Control Objects](#mtcreate)
+    - [Mapthing Syntax and Fields](#mtsyntax)
+  - [Linedefs](#linedefs)
+    - [Creating ExtraData Linedefs](#ldcreate)
+    - [Linedef Syntax and Fields](#ldsyntax)
+  - [Appendix: Linedef Special Names](#linenames)
+
+[]{#intro}
+
+------------------------------------------------------------------------
+
+**Introduction to ExtraData**
+
+------------------------------------------------------------------------
+
+\
+ExtraData is a new data specification language for the Eternity Engine
+that allows arbitrary extension of mapthings, lines, and sectors with
+any number of new fields, with data provided in more or less any format.
+The use of a textual input language forever removes any future problems
+caused by binary format limitations. The ExtraData parser is based on
+the libConfuse configuration file parser library by Martin Hedenfalk,
+which is also used by GFS and EDF.\
+\
+Each section in this document deals with one of the ExtraData
+constructs, as well as how to embed ExtraData in a WAD and how to
+associate it with a given map.\
+\
+Plans are in place to steadily introduce more features and functionality
+to ExtraData in future versions of the Eternity Engine. This
+documentation will be regularly updated to reflect all changes and
+additions.\
+\
+[Return to Table of Contents](#contents)
+
+[]{#changes}
+
+------------------------------------------------------------------------
+
+**Changes in ExtraData 1.3**
+
+------------------------------------------------------------------------
+
+- New pillar line types, and fixes to parameterized stairs
+  documentation.
+
+[Return to Table of Contents](#contents)
+
+[]{#gensyn}
+
+------------------------------------------------------------------------
+
+**General Syntax**
+
+------------------------------------------------------------------------
+
+\
+
+- ExtraData is Free-form\
+  \
+  Whitespace and token positioning are totally free-form in ExtraData.
+  In addition, semicolons are discarded as whitespace and can therefore
+  be used to terminate field assignments, lists, etc. as in C or C++. As
+  an example, all of the following are strictly equivalent:
+
+           mapthing { recordnum = 1; }
+           
+           mapthing
+           {
+              recordnum = 1;
+           }
+           
+           mapthing
+                       {
+              recordnum     =
+                   1     ;;;;;;
+                           }
+
+  Obviously, you are encouraged to use a clean and consistent format,
+  even though it is not required.\
+  \
+
+- Comments\
+  \
+  ExtraData files can use three forms of comments:
+
+  - \# Comments\
+    Like in DeHackEd, this comment type extends to the end of the line.
+  - // Comments\
+    An alternate form of single-line comment, equivalent to #.
+  - /\* \*/ Comments\
+    This type of comment is multiline, and extends from the opening /\*
+    to the first \*/ found. This type of comment CANNOT be nested.
+    Nested multiline comments will cause a syntax error.
+
+  Examples:
+
+
+           # Single line comment
+           
+           // Another single line comment
+           
+           /*
+           
+              This is a multiline comment
+              
+           */
+           
+
+- Strings\
+  \
+  Some fields in ExtraData may take strings. Strings, if they do not
+  contain whitespace or any character that needs to be escaped, may be
+  unquoted. Unquoted strings additionally cannot contain any of the
+  following characters: \" \' = { } ( ) + , \# / ;\
+  If any of those characters are found, the unquoted string will be
+  terminated at the last valid character.\
+  \
+  Other fields more or less require quoted strings. Quoted strings must
+  start and end with either single or double quotes (the beginning and
+  ending quote types must match, as well). Quoted strings may contain
+  any character except a line break, including those not allowed in
+  unquoted strings. In addition, quoted strings also support the
+  following escape codes for non-typable characters:\
+  \
+
+  - \\n : Hard line break
+  - \\t : Tab
+  - \\b : Backspace
+  - \\a : Beep (causes a sound when printed to the console)
+  - \\\\ : Literal \\ character.
+  - \\\" : Literal \", necessary to use in double-quoted strings only
+  - \\\' : Literal \', necessary to use in single-quoted strings only
+  - \\0 : Null character
+  - \\K : Changes text color to \"brick\" range where supported.
+  - \\1 : Changes text color to \"tan\" range where supported.
+  - \\2 : Changes text color to \"gray\" range where supported.
+  - \\3 : Changes text color to \"green\" range where supported.
+  - \\4 : Changes text color to \"brown\" range where supported.
+  - \\5 : Changes text color to \"gold\" range where supported.
+  - \\6 : Changes text color to \"red\" range where supported.
+  - \\7 : Changes text color to \"blue\" range where supported.
+  - \\8 : Changes text color to \"orange\" range where supported.
+  - \\9 : Changes text color to \"yellow\" range where supported.
+  - \\N : Changes text color to gamemode \"normal\" range where
+    supported.
+  - \\H : Changes text color to gamemode \"hilite\" range where
+    supported.
+  - \\E : Changes text color to gamemode \"error\" range where
+    supported.
+  - \\S : Toggles text shadowing where supported.
+  - \\C : Toggles absolute centering of text where supported.
+
+  \
+  If \\ is followed by any other character, the slash is discarded and
+  the next character is treated normally (ie, \\d becomes d).\
+  \
+  Line Continuation:\
+  \
+  Line continuation can be used to split quoted strings across multiple
+  lines. The syntax for doing this is demonstrated in the following
+  example:
+
+
+              somefield = "This string is split \
+                           across two lines"
+           
+
+  The \"\\\" character, when followed immediately by a line break,
+  signifies that line continuation should be triggered. Whitespace
+  before the line continuation will be included in the string, but any
+  spaces or tabs at the beginning of the next line will NOT be included
+  (this is the same as line continuation in BEX and EDF files). This
+  allows the following continued parts of the string to be arbitrarily
+  indented for purposes of beautification. A string can be split across
+  any number of lines in this fashion.\
+  \
+
+- Numbers\
+  \
+  Most non-string fields in ExtraData are numbers, either integer or
+  floating-point. Decimal, octal, and hexadecimal integers will be
+  accepted in all number fields. Octal numbers start with a zero, and
+  hexadecimal numbers start with the sequence 0x \-- Examples:
+
+
+           # this is a normal, decimal number (base 10)
+           recordnum = 16
+           ...
+           # this is an octal number (base 8)
+           recordnum = 020
+           ...
+           # this is a hexadecimal number (base 16)
+           recordnum = 0x10
+
+  Floating-point numbers must have a decimal point in them, as in
+  \"20.0\". Floating-point numbers are always base 10.
+
+[Return to Table of Contents](#contents)
+
+[]{#embed}
+
+------------------------------------------------------------------------
+
+**Embedding and Associating ExtraData**
+
+------------------------------------------------------------------------
+
+\
+ExtraData is embedded directly as a text script into a lump of any name.
+This can be done with any number of wad file management tools, including
+WinTex (though WinTex has some bugs which make the process more
+complicated).
+
+An ExtraData script is associated with a map via use of the
+[MapInfo](mapinfo.html) variable **extradata**. A map can only have one
+ExtraData script, but it is possible for multiple maps to share the same
+script.
+
+Example of ExtraData specification via MapInfo:
+
+       [level info]
+       extradata = EDLUMP01
+
+ExtraData (as well as all other MapInfo variables) can be specified in
+either global or level-header MapInfo scripts.
+
+[Return to Table of Contents](#contents)
+
+[]{#mapthings}
+
+------------------------------------------------------------------------
+
+**Mapthings**
+
+------------------------------------------------------------------------
+
+\
+Mapthings define monsters, lamps, control points, items, etc \--
+anything that is spawned on the map at level start.
+
+Each field in the mapthing definition, with the exception of the
+**recordnum** field, is optional. If a field is not provided, it takes
+on the default value indicated below the syntax information. Fields may
+also be provided in any order.
+
+Note that the order of mapthing definitions in ExtraData is not
+important. The **recordnum** field serves to identify mapthing records.
+
+[Return to Table of Contents](#contents)
+
+[]{#mtcreate}
+
+------------------------------------------------------------------------
+
+**Creating ExtraData Control Objects**
+
+------------------------------------------------------------------------
+
+\
+Mapthing records in ExtraData are only associated with a special control
+object that must be placed on the map in the usual manner in your editor
+of choice.
+
+The ExtraData control object has a **doomednum** of 5004. Each control
+object specifies its corresponding ExtraData mapthing record number as
+an integer value in its mapthing options field. If your editor does not
+allow entering arbitrary values into the options field of mapthings, you
+will need to use the BOOM command-line editor, CLED. As of the initial
+writing time of this document, both DETH and Doom Builder support
+entering arbitrary integer values for the options field. Check your
+editor\'s documentation or user interface to verify if it supports this.
+
+The x, y, and angle fields of the ExtraData control object are passed on
+to the thing which will be spawned at the control point\'s location, so
+those fields of the control object should be set normally. The true type
+and options fields of the thing to be spawned, along with any extended
+fields, are specified in the ExtraData record which the control thing
+references.
+
+Any number of ExtraData control objects can reference the same ExtraData
+record. In the event that a control object references a non-existant
+ExtraData record, the ExtraData script for a level is missing, or the
+thing type referenced by an ExtraData record isn\'t valid, an Unknown
+thing will be spawned at the control point\'s location. See the [EDF
+Documentation](edf_ref.html) for information on the required Unknown
+thingtype definition. Note that you cannot spawn ExtraData control
+objects using ExtraData. Attempting this will also result in an Unknown
+thing.
+
+[Return to Table of Contents](#contents)
+
+[]{#mtsyntax}
+
+------------------------------------------------------------------------
+
+**Mapthing Syntax and Fields**
+
+------------------------------------------------------------------------
+
+\
+The syntax of the ExtraData mapthing record is as follows. Remember that
+all fields except the **recordnum** field are optional and can be
+specified in any order.
+
+
+    mapthing
+    {
+       recordnum = <unique number>
+       
+       # These fields are normal mapthing fields
+       type      = <doomednum> OR <EDF thingtype mnemonic>
+       options   = <options flag list>
+       
+       # These fields are ExtraData extensions
+       tid       = <number>
+       args      = { <special field>, ... }
+       height    = <number>
+    }
+
+Explanation of fields:
+
+- **recordnum**\
+  The recordnum serves to identify this record, and is the number which
+  ExtraData control objects must use to associate themselves with a
+  mapthing record. Every ExtraData mapthing record must have a unique
+  record number. If a duplicate record number is detected, the engine
+  will currently exit with an error message. The record number is
+  limited to values between 0 and 65535 inclusive. Some editors may only
+  allow input of numbers up to 32767 in the mapthing options field, or
+  may treat values above 32767 as negative numbers. Beware of this.\
+  \
+
+- **type**\
+  Default: No meaningful default value, an Unknown thing will be
+  spawned.\
+  \
+  This field specifies the type of object to spawn at the location and
+  angle of ExtraData control objects using this record. This field can
+  accept one of two types of values. The first is a normal thingtype
+  **doomednum** as specified via EDF and used by all editors. For
+  example, the DOOM Imp\'s doomednum is 3001.\
+  \
+  This field can also accept EDF thingtype mnemonics. EDF thingtype
+  mnemonics must be prefixed with **thing:** \-- this allows the parser
+  to know it is dealing with a string instead of a number. EDF
+  thingtypes **must** have a unique doomednum to be specified in an
+  ExtraData mapthing record. If the specified EDF thingtype doesn\'t
+  exist or has a doomednum of -1, an Unknown object will be spawned
+  instead.\
+  \
+  Example:
+
+
+          mapthing { type = 3001 }          // This record specifies an Imp via its doomednum
+          
+          mapthing { type = thing:DoomImp } // This record specifies an Imp by its EDF mnemonic
+          
+
+- **options**\
+  Default: No flags are set by default.\
+  \
+  This field specifies the options (also known as mapthing flags). This
+  field uses the same syntax as BEX/EDF flag strings, but the syntax
+  will be reviewed here for completeness.\
+  \
+  A BEX flag list is a string of flag names separated by whitespace,
+  pipe characters, commas, or plus characters. In ExtraData, if a flag
+  list contains whitespace, commas, or plus signs, it must be enclosed
+  in double or single quotations. Flags are combined using bitwise-OR
+  logic, so a flag name can be specified more than once. Specifying a
+  flag name causes that flag to be turned on. The default state of all
+  flags is off.\
+  \
+  These are the flag values which are available for this field:
+
+
+          Flag name   Decimal  Hex     Meaning
+          ------------------------------------------------------------------------------
+          EASY        1        0x0001  Thing appears in easy difficulties
+          NORMAL      2        0x0002  Thing appears in "Hurt Me Plenty"
+          HARD        4        0x0004  Thing appears in Ultra-Violence and Nightmare
+          AMBUSH      8        0x0008  Thing is "deaf", will not wake up via sound
+          NOTSINGLE   16       0x0010  Thing doesn't appear in single-player mode
+          NOTDM       32       0x0020  Thing doesn't appear in deathmatch
+          NOTCOOP     64       0x0040  Thing doesn't appear in cooperative multiplayer
+          FRIEND      128      0x0080  Thing uses MBF friendly logic
+          DORMANT     512      0x0200  Thing is dormant at map startup (script feature)
+          ------------------------------------------------------------------------------
+          
+
+  The mapthing options value 256 (0x0100) is reserved. If this bit is
+  set, all BOOM, MBF, and Eternity extended mapthing bits will be
+  cleared. This is to guard against editors like Hellmaker which set all
+  bits they do not understand, instead of leaving them zero.\
+  \
+  Example options fields \-- All of these are equivalent:
+
+
+          # This is the only syntax that does not require quotations.
+          
+          mapthing { options = EASY|NORMAL|HARD }
+          
+          # All of these syntaxes must be quoted, because unquoted strings in 
+          # ExtraData cannot contain spaces, commas, or plus signs.
+          
+          mapthing { options = "EASY NORMAL HARD" }
+          mapthing { options = "EASY | NORMAL | HARD" }
+          mapthing { options = "EASY+NORMAL+HARD" }
+          mapthing { options = "EASY + NORMAL + HARD" }
+          mapthing { options = "EASY,NORMAL,HARD" }
+          mapthing { options = "EASY, NORMAL, HARD" }
+
+- **tid**\
+  Default: 0\
+  \
+  The TID, or \"Thing ID\", is a tag for mapthings which is used for
+  identification in Small scripts. TID values must be positive numbers
+  between 1 and 65535. The TID value zero means no TID. Negative TID
+  values are reserved and are used to indicate special things within the
+  engine. TIDs are not required to be unique, and most Small functions
+  that accept TIDs will perform an action on all mapthings which bear
+  the same TID. Things spawned within Small scripts can also be given
+  TIDs.\
+  \
+
+- **args**\
+  Default: All args values default to zero.\
+  \
+  The args field is a list of up to five special values which can have a
+  broad range of meanings. Any values not provided in the args list will
+  default, and if more than five values are provided, only the first
+  five will be used. Currently, all args values are interpreted as
+  integers (a non-number string evaluates to zero). This may change in
+  the future.\
+  \
+  Example args list:
+
+
+          mapthing { args = { 0, 1, 2, 3, 4 } }
+          
+
+- **height**\
+  Default: 0\
+  \
+  For normal objects, this field indicates a distance above the floor
+  that the thing will spawn at level start. For objects with the
+  SPAWNCEILING flag, this field indicates a distance below the ceiling
+  instead. This field will have no effect on objects which spawn at a
+  randomized height.
+
+[Return to Table of Contents](#contents)
+
+[]{#linedefs}
+
+------------------------------------------------------------------------
+
+**Linedefs**
+
+------------------------------------------------------------------------
+
+\
+Linedefs define walls, two-sided textures, and provide action triggers
+within maps.
+
+Each field in the linedef definition, with the exception of the
+**recordnum** field, is optional. If a field is not provided, it takes
+on the default value indicated below the syntax information. Fields may
+also be provided in any order.
+
+Note that the order of linedef definitions in ExtraData is not
+important. The **recordnum** field serves to identify linedef records.
+
+[Return to Table of Contents](#contents)
+
+[]{#ldcreate}
+
+------------------------------------------------------------------------
+
+**Creating ExtraData Linedefs**
+
+------------------------------------------------------------------------
+
+\
+Linedef records in ExtraData are associated only with lines which bear
+the ExtraData Control Line Special, #270. You can place this special
+into the normal \"special\" field of a line using virtually any map
+editor. Editors with Eternity-specific configurations should support
+this special natively.
+
+Each control linedef specifies its corresponding ExtraData linedef
+record number as an integer value in its linedef tag field. If your
+editor does not allow entering arbitrary values up to 32767 into the tag
+field of linedefs, you will need to use the BOOM command-line editor,
+CLED. As of the initial writing time of this document, both DETH and
+Doom Builder support entering arbitrary integer values for the tag
+field. Check your editor\'s documentation or user interface to verify if
+it supports this.
+
+The flags, sidedefs, textures, and location of the ExtraData control
+linedef are used normally by the line and cannot be altered from within
+ExtraData. The true special and tag fields of the linedef, along with
+any extended fields, are specified in the ExtraData record which the
+control linedef references.
+
+Any number of ExtraData control linedefs can reference the same
+ExtraData record. In the event that a control linedef references a
+non-existant ExtraData record or the ExtraData script for a level is
+missing, the special and tag of the ExtraData control linedef will both
+be set to zero.
+
+[Return to Table of Contents](#contents)
+
+[]{#ldsyntax}
+
+------------------------------------------------------------------------
+
+**Linedef Syntax and Fields**
+
+------------------------------------------------------------------------
+
+\
+The syntax of the ExtraData linedef record is as follows. Remember that
+all fields except the **recordnum** field are optional and can be
+specified in any order.
+
+
+    linedef
+    {
+       recordnum = <unique number>
+       
+       # These fields are normal linedef fields
+       special   = <number> OR <special name> OR <generalized specifier>
+       tag       = <number>
+       
+       # These fields are ExtraData extensions
+       extflags  = <extended line flags list>
+       args      = { <special field>, ... }
+    }
+
+Explanation of fields:
+
+- **recordnum**\
+  The recordnum serves to identify this record, and is the number which
+  ExtraData control linedefs must use to associate themselves with a
+  linedef record. Every ExtraData linedef record must have a unique
+  record number. If a duplicate record number is detected, the engine
+  will currently exit with an error message. The record number is
+  limited to values between 0 and 32767 inclusive. Some editors may only
+  allow input of numbers up to 255 in the linedef tag field. Beware of
+  this.\
+  \
+
+- **special**\
+  Default: 0\
+  \
+  The special field determines what type of action may be taken when a
+  line is crossed, used, shot, etc. There are three types of linedef
+  specials in Eternity: normal, generalized, and parameterized.
+  Parameterized specials use the **args** field documented below to
+  provide complete customization of line actions.\
+  \
+  This field can accept numbers for any special type, including
+  generalized and parameterized, but it can also accept special names
+  for all line types. See the appendix [Linedef Special
+  Names](#linenames) for a complete list of the names available and an
+  explanation of how to specify generalized specials.\
+  \
+
+- **tag**\
+  Default: 0\
+  \
+  The tag of the linedef, used by DOOM-style line specials and sector
+  effects.\
+  \
+
+- **extflags**\
+  Default: No flags are set by default.\
+  \
+  This field specifies extended linedef flag values which impact the
+  functionality of parameterized linedef specials. This field uses the
+  same syntax as BEX/EDF flag strings, but the syntax will be reviewed
+  here for completeness.\
+  \
+  A BEX flag list is a string of flag names separated by whitespace,
+  pipe characters, commas, or plus characters. In ExtraData, if a flag
+  list contains whitespace, commas, or plus signs, it must be enclosed
+  in double or single quotations. Flags are combined using bitwise-OR
+  logic, so a flag name can be specified more than once. Specifying a
+  flag name causes that flag to be turned on. The default state of all
+  flags is off.\
+  \
+  These are the flag values which are available for this field:
+
+
+          Flag name   Decimal  Hex     Meaning
+          ---------------------------------------------------------------------------------------
+          CROSS       1        0x0001  Linedef can be activated by being crossed.
+          USE         2        0x0002  Linedef can be activated by being used.
+          IMPACT      4        0x0004  Linedef can be activated by being shot.
+          PUSH        8        0x0008  Linedef can be activated by being pushed.
+          PLAYER      16       0x0010  Linedef can be activated by players.
+          MONSTER     32       0x0020  Linedef can be activated by objects with SPACMONSTER flag.
+          MISSILE     64       0x0040  Linedef can be activated by objects with SPACMISSILE flag.
+          REPEAT      128      0x0080  Linedef action is repeatable.
+          1SONLY      256      0x0100  Linedef can only be activated from first side.
+          ---------------------------------------------------------------------------------------
+          
+
+  Notes: IMPACT is currently only implemented for bullet weapons. The
+  ability to use IMPACT with MISSILE will be added in the near future.
+  The PUSH style of activation is not implemented at all yet, so this
+  flag currently does nothing.\
+  \
+  Example flags fields \-- All of these are equivalent:
+
+
+          # This is the only syntax that does not require quotations.
+          
+          linedef { extflags = CROSS|PLAYER|MISSILE|REPEAT }
+          
+          # All of these syntaxes must be quoted, because unquoted strings in 
+          # ExtraData cannot contain spaces, commas, or plus signs.
+          
+          linedef { extflags = "CROSS PLAYER MISSILE REPEAT" }
+          linedef { extflags = "CROSS | PLAYER | MISSILE | REPEAT" }
+          linedef { extflags = "CROSS+PLAYER+MISSILE+REPEAT" }
+          linedef { extflags = "CROSS + PLAYER + MISSILE + REPEAT" }
+          linedef { extflags = "CROSS,PLAYER,MISSILE,REPEAT" }
+          linedef { extflags = "CROSS, PLAYER, MISSILE, REPEAT" }
+
+- **args**\
+  Default: All args values default to zero.\
+  \
+  The args field is a list of up to five special values which can have a
+  broad range of meanings. Any values not provided in the args list will
+  default, and if more than five values are provided, only the first
+  five will be used. Currently, all args values are interpreted as
+  integers (a non-number string evaluates to zero). This may change in
+  the future. The args list is used by parameterized linedef specials.\
+  \
+  Example args list:
+
+
+          linedef { args = { 0, 1, 2, 3, 4 } }
+          
+
+[Return to Table of Contents](#contents)
+
+[]{#linenames}
+
+------------------------------------------------------------------------
+
+**Appendix: Linedef Special Names**
+
+------------------------------------------------------------------------
+
+\
+The **special** field of the linedef record can accept name strings in
+the place of numbers for any linedef special that exists in Eternity,
+including normal DOOM specials, extended BOOM specials, BOOM generalized
+specials, and Eternity parameterized specials. Except for generalized
+specials, the syntax is simply to provide the string name as a normal
+value, as in this example:
+
+
+       linedef { special = Door_Raise }
+
+Generalized linedefs, however, must be specified with a more complicated
+syntax:
+
+
+      'Gen'<type>'('<arg>+')'
+
+      where:
+      <type> = Floor | Ceiling | Door | LockedDoor | Lift | Stairs | Crusher
+      <arg>  = <char>+','
+
+The number and order of arguments for each type of generalized line
+special are fixed, and each type of special accepts certain values in
+each argument. To make this more clear before proceeding with the
+details, here is a complete example of a generalized special:
+
+
+       //                    door       type       speed  monster? delay   
+       linedef { special = "GenDoor(OpenWaitClose, turbo, true,    9    )" }
+
+This defines a door which opens, waits 9 seconds, and then closes at
+turbo speed and can be activated by monsters as well as the player.\
+\
+Note that generalized specifiers of this type must always be enclosed
+within double or single quotation marks because they include restricted
+characters. Whitespace within the specifier is ignored.\
+\
+Also note that Eternity\'s new parameterized specials more or less
+obsolete BOOM generalized line specials, so use of this syntax is
+neither necessary or encouraged for the most part. It is present only
+for the sake of completeness.\
+\
+
+
+    -----------------------------------------------------------------------------------------
+    Linedef Special Names
+    -----------------------------------------------------------------------------------------
+    ------------------------------
+    Normal and Extended Line Types
+    ------------------------------
+
+    Note that most normal/extended line types have ugly names in order to be fully descriptive.
+    Use of new parameterized specials is preferred where possible.
+
+    Notes on Nomenclature:
+
+    Activation Types
+    ----------------
+    DR = Use repeatedly, activates sector on backside, tag is for lighting effect only
+    D1 = Use once, activates sector on backside, tag is for lighting effect only
+    WR = Cross repeatedly
+    W1 = Cross once
+    SR = Use repeatedly
+    S1 = Use once
+    GR = Shoot repeatedly
+    G1 = Shoot once
+
+    Targets
+    -------
+    UpHnC   = Up to Highest Neighboring Ceiling
+    UpLnC   = Up to Lowest Neighboring Ceiling
+    DnLnC   = Down to Lowest Neighboring Ceiling
+    UpLnCm8 = Up to Lowest Neighboring Ceiling - 8
+    DnF     = Down to Floor
+    DnFp8   = Down to Floor + 8
+    UpNnF   = Up to Nearest Neighboring Floor
+    DnNnF   = Down to Nearest Neighboring Floor
+    DnHnF   = Down to Highest Neighboring Floor
+    DnHnFp8 = Down to Highest Neighboring Floor + 8
+    DnLnF   = Down to Lowest Neighboring Floor
+    UpsT    = Up by Shortest Texture
+
+    Change Types
+    ------------
+    c0t = Change texture, zero type, trigger model
+    cTt = Change texture, preserve type, trigger model
+    cSt = Change texture and type, trigger model
+    cSn = Change texture and type, numeric model
+
+    Number  Name                                     Notes
+    -----------------------------------------------------------------------------------------
+       0    None
+       1    DR_RaiseDoor_Slow_Mon                    Can be opened by monsters
+       2    W1_OpenDoor_Slow
+       3    W1_CloseDoor_Slow  
+       4    W1_RaiseDoor_Slow  
+       5    W1_Floor_UpLnC_Slow
+       6    W1_StartCrusher_Fast
+       7    S1_Stairs_Up8_Slow  
+       8    W1_Stairs_Up8_Slow  
+       9    S1_Donut  
+      10    W1_Plat_Lift_Slow  
+      11    S1_ExitLevel  
+      12    W1_Light_MaxNeighbor  
+      13    W1_Light_Set255  
+      14    S1_Plat_Up32_c0t_Slow
+      15    S1_Plat_Up24_cTt_Slow
+      16    W1_Door_CloseWait30  
+      17    W1_Light_Blink  
+      18    S1_Floor_UpNnF_Slow
+      19    W1_Floor_DnHnF_Slow
+      20    S1_Plat_UpNnF_c0t_Slow
+      21    S1_Plat_Lift_Slow  
+      22    W1_Plat_UpNnF_c0t_Slow
+      23    S1_Floor_DnLnF_Slow
+      24    G1_Floor_UpLnC_Slow
+      25    W1_StartCrusher_Slow  
+      26    DR_RaiseLockedDoor_Blue_Slow  
+      27    DR_RaiseLockedDoor_Yellow_Slow  
+      28    DR_RaiseLockedDoor_Red_Slow  
+      29    S1_RaiseDoor_Slow  
+      30    W1_Floor_UpsT_Slow
+      31    D1_OpenDoor_Slow  
+      32    D1_OpenLockedDoor_Blue_Slow  
+      33    D1_OpenLockedDoor_Red_Slow  
+      34    D1_OpenLockedDoor_Yellow_Slow  
+      35    W1_Light_Set35  
+      36    W1_Floor_DnHnFp8_Fast
+      37    W1_Floor_DnLnF_cSn_Slow
+      38    W1_Floor_DnLnF_Slow
+      39    W1_TeleportToSpot  
+      40    W1_Ceiling_UpHnC_Slow
+      41    S1_Ceiling_DnF_Fast
+      42    SR_CloseDoor_Slow  
+      43    SR_Ceiling_DnF_Fast  
+      44    W1_Ceiling_DnFp8_Slow
+      45    SR_Floor_DnHnF_Slow
+      46    GR_OpenDoor_Slow  
+      47    G1_Plat_UpNnF_c0t_Slow
+      48    ScrollLeft  
+      49    S1_StartCrusher_Slow  
+      50    S1_CloseDoor_Slow  
+      51    S1_ExitSecret  
+      52    W1_ExitLevel  
+      53    W1_Plat_LoHiPerpetual  
+      54    W1_StopPlat  
+      55    S1_Floor_UpLnCm8_Slow_Crush  
+      56    W1_Floor_UpLnCm8_Slow_Crush  
+      57    W1_StopCrusher  
+      58    W1_Floor_Up24_Slow  
+      59    W1_Floor_Up24_cSt_Slow  
+      60    SR_Floor_DnLnF_Slow  
+      61    SR_OpenDoor_Slow  
+      62    SR_Plat_Lift_Slow  
+      63    SR_RaiseDoor_Slow  
+      64    SR_Floor_UpLnC_Slow  
+      65    SR_Floor_UpLnCm8_Slow_Crush  
+      66    SR_Plat_Up24_cTt_Slow  
+      67    SR_Plat_Up32_c0t_Slow  
+      68    SR_Plat_UpNnF_c0t_Slow  
+      69    SR_Floor_UpNnF_Slow  
+      70    SR_Floor_DnHnFp8_Fast  
+      71    S1_Floor_DnHnFp8_Fast  
+      72    WR_Ceiling_DnFp8_Slow  
+      73    WR_StartCrusher_Slow  
+      74    WR_StopCrusher  
+      75    WR_CloseDoor_Slow  
+      76    WR_Door_CloseWait30  
+      77    WR_StartCrusher_Fast  
+      78    SR_Floor_cSn                             Pure transfer type
+      79    WR_Light_Set35  
+      80    WR_Light_MaxNeighbor  
+      81    WR_Light_Set255  
+      82    WR_Floor_DnLnF_Slow  
+      83    WR_Floor_DnHnF_Slow  
+      84    WR_Floor_DnLnF_cSn_Slow  
+      85    ScrollRight  
+      86    WR_OpenDoor_Slow  
+      87    WR_Plat_LoHiPerpetual  
+      88    WR_Plat_Lift_Slow  
+      89    WR_StopPlat  
+      90    WR_RaiseDoor_Slow  
+      91    WR_Floor_UpLnC_Slow  
+      92    WR_Floor_Up24_Slow  
+      93    WR_Floor_Up24_cSt_Slow  
+      94    WR_Floor_UpLnCm8_Slow_Crush  
+      95    WR_Plat_UpNnF_c0t_Slow  
+      96    WR_Floor_UpsT_Slow  
+      97    WR_TeleportToSpot  
+      98    WR_Floor_DnHnFp8_Fast  
+      99    WR_OpenLockedDoor_Blue_Fast  
+     100    W1_Stairs_Up16_Fast  
+     101    S1_Floor_UpLnC_Slow  
+     102    S1_Floor_DnHnF_Slow  
+     103    S1_OpenDoor_Slow  
+     104    W1_Light_MinNeighbor  
+     105    WR_RaiseDoor_Fast  
+     106    WR_OpenDoor_Fast  
+     107    WR_CloseDoor_Fast  
+     108    W1_RaiseDoor_Fast  
+     109    W1_OpenDoor_Fast  
+     110    W1_CloseDoor_Fast  
+     111    S1_RaiseDoor_Fast  
+     112    S1_OpenDoor_Fast  
+     113    S1_CloseDoor_Fast  
+     114    SR_RaiseDoor_Fast  
+     115    SR_OpenDoor_Fast  
+     116    SR_CloseDoor_Fast  
+     117    DR_RaiseDoor_Fast  
+     118    D1_OpenDoor_Fast  
+     119    W1_Floor_UpNnF_Slow  
+     120    WR_Plat_Lift_Fast  
+     121    W1_Plat_Lift_Fast  
+     122    S1_Plat_Lift_Fast  
+     123    SR_Plat_Lift_Fast  
+     124    W1_ExitSecret  
+     125    W1_TeleportToSpot_MonOnly                Monsters only
+     126    WR_TeleportToSpot_MonOnly                Monsters only
+     127    S1_Stairs_Up16_Fast  
+     128    WR_Floor_UpNnF_Slow  
+     129    WR_Floor_UpNnF_Fast  
+     130    W1_Floor_UpNnF_Fast  
+     131    S1_Floor_UpNnF_Fast  
+     132    SR_Floor_UpNnF_Fast  
+     133    S1_OpenLockedDoor_Blue_Fast  
+     134    SR_OpenLockedDoor_Red_Fast  
+     135    S1_OpenLockedDoor_Red_Fast  
+     136    SR_OpenLockedDoor_Yellow_Fast  
+     137    S1_OpenLockedDoor_Yellow_Fast  
+     138    SR_Light_Set255  
+     139    SR_Light_Set35  
+     140    S1_Floor_Up512_Slow  
+     141    W1_StartCrusher_Silent_Slow  
+     142    W1_Floor_Up512_Slow  
+     143    W1_Plat_Up24_cTt_Slow  
+     144    W1_Plat_Up32_c0t_Slow  
+     145    W1_Ceiling_DnF_Fast  
+     146    W1_Donut  
+     147    WR_Floor_Up512_Slow  
+     148    WR_Plat_Up24_cTt_Slow  
+     149    WR_Plat_Up32_c0t_Slow  
+     150    WR_StartCrusher_Silent_Slow  
+     151    WR_Ceiling_UpHnC_Slow  
+     152    WR_Ceiling_DnF_Fast  
+     153    W1_Floor_cSt                             Pure transfer type
+     154    WR_Floor_cSt                             Pure transfer type
+     155    WR_Donut  
+     156    WR_Light_Blink  
+     157    WR_Light_MinNeighbor  
+     158    S1_Floor_UpsT_Slow  
+     159    S1_Floor_DnLnF_cSn_Slow  
+     160    S1_Floor_Up24_cSt_Slow  
+     161    S1_Floor_Up24_Slow  
+     162    S1_Plat_LoHiPerpetual  
+     163    S1_StopPlat  
+     164    S1_StartCrusher_Fast  
+     165    S1_StartCrusher_Silent_Slow  
+     166    S1_Ceiling_UpHnC_Slow  
+     167    S1_Ceiling_DnFp8_Slow  
+     168    S1_StopCrusher  
+     169    S1_Light_MaxNeighbor  
+     170    S1_Light_Set35  
+     171    S1_Light_Set255  
+     172    S1_Light_Blink  
+     173    S1_Light_MinNeighbor  
+     174    S1_TeleportToSpot  
+     175    S1_Door_CloseWait30  
+     176    SR_Floor_UpsT_Slow  
+     177    SR_Floor_DnLnF_cSn_Slow  
+     178    SR_Floor_Up512_Slow  
+     179    SR_Floor_Up24_cSt_Slow  
+     180    SR_Floor_Up24_Slow  
+     181    SR_Plat_LoHiPerpetual  
+     182    SR_StopPlat  
+     183    SR_StartCrusher_Fast  
+     184    SR_StartCrusher_Slow  
+     185    SR_StartCrusher_Silent_Slow  
+     186    SR_Ceiling_UpHnC_Slow  
+     187    SR_Ceiling_DnFp8_Slow  
+     188    SR_StopCrusher  
+     189    S1_Floor_cSt                             Pure transfer type
+     190    SR_Floor_cSt                             Pure transfer type
+     191    SR_Donut  
+     192    SR_Light_MaxNeighbor  
+     193    SR_Light_Blink  
+     194    SR_Light_MinNeighbor  
+     195    SR_TeleportToSpot  
+     196    SR_Door_CloseWait30  
+     197    G1_ExitLevel  
+     198    G1_ExitSecret  
+     199    W1_Ceiling_DnLnC_Slow  
+     200    W1_Ceiling_DnHnF_Slow  
+     201    WR_Ceiling_DnLnC_Slow  
+     202    WR_Ceiling_DnHnF_Slow  
+     203    S1_Ceiling_DnLnC_Slow  
+     204    S1_Ceiling_DnHnF_Slow  
+     205    SR_Ceiling_DnLnC_Slow  
+     206    SR_Ceiling_DnHnF_Slow  
+     207    W1_TeleportToSpot_Orient_Silent          Preserves orientation
+     208    WR_TeleportToSpot_Orient_Silent          Preserves orientation
+     209    S1_TeleportToSpot_Orient_Silent          Preserves orientation
+     210    SR_TeleportToSpot_Orient_Silent          Preserves orientation
+     211    SR_Plat_CeilingToggle_Instant  
+     212    WR_Plat_CeilingToggle_Instant  
+     213    TransferLight_Floor  
+     214    ScrollCeiling_Accel                      Accelerate w/tagged floor
+     215    ScrollFloor_Accel                        Accelerate w/tagged floor
+     216    CarryObjects_Accel                       Accelerate w/tagged floor
+     217    ScrollFloorCarryObjects_Accel            Accelerate w/tagged floor
+     218    ScrollWallWithFlat_Accel                 Accelerate w/tagged floor
+     219    W1_Floor_DnNnF_Slow  
+     220    WR_Floor_DnNnF_Slow  
+     221    S1_Floor_DnNnF_Slow  
+     222    SR_Floor_DnNnF_Slow  
+     223    TransferFriction  
+     224    TransferWind  
+     225    TransferCurrent  
+     226    TransferPointForce  
+     227    W1_Elevator_NextHi  
+     228    WR_Elevator_NextHi  
+     229    S1_Elevator_NextHi  
+     230    SR_Elevator_NextHi  
+     231    W1_Elevator_NextLo  
+     232    WR_Elevator_NextLo  
+     233    S1_Elevator_NextLo  
+     234    SR_Elevator_NextLo  
+     235    W1_Elevator_Current  
+     236    WR_Elevator_Current  
+     237    S1_Elevator_Current  
+     238    SR_Elevator_Current  
+     239    W1_Floor_cSn                             Pure transfer type
+     240    WR_Floor_cSn                             Pure transfer type
+     241    S1_Floor_cSn                             Pure transfer type
+     242    TransferHeights  
+     243    W1_TeleportToLine  
+     244    WR_TeleportToLine  
+     245    ScrollCeiling_ByHeight                   Scroll w/tagged floor motion
+     246    ScrollFloor_ByHeight                     Scroll w/tagged floor motion
+     247    CarryObjects_ByHeight                    Carry w/tagged floor motion
+     248    ScrollFloorCarryObjects_ByHeight         Scroll/carry w/tagged floor motion
+     249    ScrollWallWithFlat_ByHeight              Scroll wall w/floor w/tagged floor motion
+     250    ScrollCeiling  
+     251    ScrollFloor  
+     252    CarryObjects  
+     253    ScrollFloorCarryObjects  
+     254    ScrollWallWithFlat                       Scroll wall along with sector's flat
+     255    ScrollWallByOffsets                      Scroll wall by texture offsets
+     256    WR_Stairs_Up8_Slow  
+     257    WR_Stairs_Up16_Fast  
+     258    SR_Stairs_Up8_Slow  
+     259    SR_Stairs_Up16_Fast  
+     260    Translucent  
+     261    TransferLight_Ceiling  
+     262    W1_TeleportToLine_Reverse                Reverse orientation
+     263    WR_TeleportToLine_Reverse                Reverse orientation
+     264    W1_TeleportToLine_Reverse_MonOnly        Reverse orientation, monsters only
+     265    WR_TeleportToLine_Reverse_MonOnly        Reverse orientation, monsters only
+     266    W1_TeleportToLine_MonOnly                Monsters only
+     267    WR_TeleportToLine_MonOnly                Monsters only
+     268    W1_TeleportToSpot_Silent_MonOnly         Monsters only
+     269    WR_TeleportToSpot_Silent_MonOnly         Monsters only
+     270    ExtraDataSpecial  
+     271    TransferSky  
+     272    TransferSkyFlipped  
+     273    WR_StartScript_1S                        Activated from first side only
+     274    W1_StartScript  
+     275    W1_StartScript_1S                        Activated from first side only
+     276    SR_StartScript  
+     277    S1_StartScript  
+     278    GR_StartScript  
+     279    G1_StartScript  
+     280    WR_StartScript  
+     281    3DMidTex_MoveWithFloor  
+     282    3DMidTex_MoveWithCeiling  
+     283    Portal_PlaneCeiling  
+     284    Portal_PlaneFloor  
+     285    Portal_PlaneFloorCeiling  
+     286    Portal_HorizonCeiling  
+     287    Portal_HorizonFloor  
+     288    Portal_HorizonFloorCeiling  
+     289    Portal_LineTransfer  
+     290    Portal_SkyboxCeiling  
+     291    Portal_SkyboxFloor  
+     292    Portal_SkyboxFloorCeiling  
+     293    TransferHereticWind  
+     294    TransferHereticCurrent  
+     295    Portal_AnchoredCeiling  
+     296    Portal_AnchoredFloor  
+     297    Portal_AnchoredFloorCeiling  
+     298    Portal_AnchorLine  
+     299    Portal_AnchorLineFloor  
+     344    Portal_TwowayCeiling
+     345    Portal_TwowayFloor
+     346    Portal_TwowayAnchorLine
+     347    Portal_TwowayAnchorLineFloor
+
+
+    ------------------------
+    Parameterized Line Types
+    ------------------------
+
+    See the Eternity Engine Editing Reference for information on how these specials work.
+
+    Number  Name                         Parameters
+    -----------------------------------------------------------------------------------------
+     300    Door_Raise                   tag, speed, delay, lighttag
+     301    Door_Open                    tag, speed, lighttag
+     302    Door_Close                   tag, speed, lighttag
+     303    Door_CloseWaitOpen           tag, speed, delay, lighttag
+     304    Door_WaitRaise               tag, speed, delay, countdown, lighttag
+     305    Door_WaitClose               tag, speed, countdown, lighttag
+     306    Floor_RaiseToHighest         tag, speed, change, crush
+     307    Floor_LowerToHighest         tag, speed, change
+     308    Floor_RaiseToLowest          tag, change, crush
+     309    Floor_LowerToLowest          tag, speed, change
+     310    Floor_RaiseToNearest         tag, speed, change, crush
+     311    Floor_LowerToNearest         tag, speed, change
+     312    Floor_RaiseToLowestCeiling   tag, speed, change, crush
+     313    Floor_LowerToLowestCeiling   tag, speed, change
+     314    Floor_RaiseToCeiling         tag, speed, change, crush
+     315    Floor_RaiseByTexture         tag, speed, change, crush
+     316    Floor_LowerByTexture         tag, speed, change
+     317    Floor_RaiseByValue           tag, speed, height, change, crush
+     318    Floor_LowerByValue           tag, speed, height, change
+     319    Floor_MoveToValue            tag, speed, height, change, crush
+     320    Floor_RaiseInstant           tag, height, change, crush
+     321    Floor_LowerInstant           tag, height, change
+     322    Floor_ToCeilingInstant       tag, change, crush
+     323    Ceiling_RaiseToHighest       tag, speed, change
+     324    Ceiling_ToHighestInstant     tag, change, crush
+     325    Ceiling_RaiseToNearest       tag, speed, change
+     326    Ceiling_LowerToNearest       tag, speed, change, crush
+     327    Ceiling_RaiseToLowest        tag, speed, change
+     328    Ceiling_LowerToLowest        tag, speed, change, crush
+     329    Ceiling_RaiseToHighestFloor  tag, speed, change
+     330    Ceiling_LowerToHighestFloor  tag, speed, change, crush
+     331    Ceiling_ToFloorInstant       tag, change, crush
+     332    Ceiling_LowerToFloor         tag, speed, change, crush
+     333    Ceiling_RaiseByTexture       tag, speed, change
+     334    Ceiling_LowerByTexture       tag, speed, change, crush
+     335    Ceiling_RaiseByValue         tag, speed, height, change
+     336    Ceiling_LowerByValue         tag, speed, height, change, crush
+     337    Ceiling_MoveToValue          tag, speed, height, change, crush
+     338    Ceiling_RaiseInstant         tag, height, change
+     339    Ceiling_LowerInstant         tag, height, change, crush
+     340    Stairs_BuildUpDoom           tag, speed, stepsize, delay, reset
+     341    Stairs_BuildDownDoom         tag, speed, stepsize, delay, reset
+     342    Stairs_BuildUpDoomSync       tag, speed, stepsize, reset
+     343    Stairs_BuildDownDoomSync     tag, speed, stepsize, reset
+     348    Polyobj_StartLine            polyobj_id, mirror_id, sndseq_id
+     349    Polyobj_ExplicitLine         polyobj_id, linenum, mirror_id, sndseq_id
+     350    Polyobj_DoorSlide            polyobj_id, speed, angle, dist, delay
+     351    Polyobj_DoorSwing            polyobj_id, aspeed, adist, delay
+     352    Polyobj_Move                 polyobj_id, speed, angle, dist
+     353    Polyobj_OR_Move              polyobj_id, speed, angle, dist
+     354    Polyobj_RotateRight          polyobj_id, aspeed, adist
+     355    Polyobj_OR_RotateRight       polyobj_id, aspeed, adist
+     356    Polyobj_RotateLeft           polyobj_id, aspeed, adist
+     357    Polyobj_OR_RotateLeft        polyobj_id, aspeed, adist
+     362    Pillar_Build                 tag, speed, height
+     363    Pillar_BuildAndCrush         tag, speed, height, crush
+     364    Pillar_Open                  tag, speed, fdist, cdist
+
+    ----------------------
+    Generalized Line Types
+    ----------------------
+
+    Values indicated are the exact values which must be provided inside the generalized specifier, 
+    although case of letters is not important and will be ignored.
+
+    Range    Name                         Parameters
+    -----------------------------------------------------------------------------------------
+    6000h-   GenFloor                     crush, speed, changetype, modelormonster, targ, dir
+    7FFFh
+                                          Values:
+                                          crush -- true, false
+                                          speed -- slow, normal, fast, turbo
+                                          changetype -- none, zero, texture, texturetype
+                                          modelormonster -- if change == none, true or false
+                                                            else: numeric or trigger
+                                          targ -- HnF, LnF, NnF, LnC, C, sT, 24, 32
+         
+
+    4000h-   GenCeiling                   crush, speed, changetype, modelormonster, targ, dir
+    5FFFh
+                                          Values:
+                                          crush -- true, false
+                                          speed -- slow, normal, fast, turbo
+                                          changetype -- none, zero, texture, texturetype
+                                          modelormonster -- if change == none, true or false
+                                                            else: numeric or trigger
+                                          targ -- HnC, LnC, NnC, HnF, F, sT, 24, 32
+         
+         
+    3C00h-   GenDoor                      kind, speed, monster, delay
+    4000h
+                                          Values:
+                                          kind -- Open, Close, OpenWaitClose, CloseWaitOpen
+                                          speed -- slow, normal, fast, turbo
+                                          monster -- true, false
+                                          delay -- 1, 4, 9, 30
+         
+         
+    3800h-   GenLockedDoor                kind, speed, key, skulliscard
+    3C00h
+                                          Values:
+                                          kind -- Open, OpenWaitClose
+                                          speed -- slow, normal, fast, turbo
+                                          key -- Any, RedCard, BlueCard, YellowCard, RedSkull, 
+                                                 BlueSkull, YellowSkull, All
+                                          skulliscard -- true, false
+         
+         
+    3400h-   GenLift                      target, delay, monster, speed
+    37FFh
+                                          Values:
+                                          target -- LnF, NnF, LnC, Perpetual
+                                          delay -- 1, 3, 5, 10
+                                          monster -- true, false
+                                          speed -- slow, normal, fast, turbo
+         
+         
+    3000h-   GenStairs                    dir, stepsize, ignoretex, monster, speed
+    33FFh
+                                          Values:
+                                          dir -- up, down
+                                          stepsize -- 4, 8, 16, 24
+                                          ignoretex -- true, false
+                                          monster -- true, false
+                                          speed -- slow, normal, fast, turbo
+         
+         
+    2F80h-   GenCrusher                   silent, monster, speed
+    2FFFh
+                                          Values:
+                                          silent -- true, false
+                                          monster -- true, false
+                                          speed -- slow, normal, fast, turbo
+    -----------------------------------------------------------------------------------------

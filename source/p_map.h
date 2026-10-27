@@ -36,6 +36,7 @@ struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
 struct polyobj_t; // ioanch 20160122
+struct pslope_t;
 struct sector_t;
 
 //=============================================================================
@@ -73,13 +74,24 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // Movement and Clipping
 //
 
+bool P_CheckSpaceToStepUp(Mobj &thing);
+bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ);
+
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
-void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
-                     const sector_t *&topsector);
+enum class UnstuckCheck
+{
+    escape,
+    verify,
+};
 
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter, const sector_t *&bottomsector,
+                     const sector_t *&topsector, UnstuckCheck unstuckCheck);
+
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr,
+                     UnstuckCheck unstuckCheck = UnstuckCheck::escape);
+bool P_CheckWrap3DMidTexBlock(const line_t &line, const Mobj &mobj);
 bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link, PODCollection<line_t *> *pushhit, bool &output);
 
 //
@@ -222,6 +234,7 @@ struct zrefs_t
     // Sometimes we need to know if we're on top of a floor slope or below a ceiling slope. To that
     // end, we need the complete floor or ceiling sector reference
     Surfaces<const sector_t *> sector;
+    Surfaces<const pslope_t *> slope; // when the slope is detached from sector
 
     int floorgroupid;
 
@@ -235,6 +248,9 @@ struct zrefs_t
     // clipping pass (map architecture + 3d sides).
     fixed_t passfloor;
     fixed_t passceil;
+
+    // killough 8/1/98: Highest touched floor
+    const line_t *floorline;
 };
 
 //
@@ -259,6 +275,8 @@ struct lineopening_t
     // 1 == 3DMidTex involved but not responsible for floorz
     // 2 == 3DMidTex responsible for floorz
     int touch3dside;
+
+    Surfaces<const pslope_t *> midtexslopes;
 };
 
 struct doom_mapinter_t
@@ -289,7 +307,7 @@ struct doom_mapinter_t
     // so missiles don't explode against sky hack walls
     const line_t *ceilingline;
     const line_t *blockline; // killough 8/11/98: blocking linedef
-    const line_t *floorline; // killough 8/1/98: Highest touched floor
+    // printz: floorline moved to zref
 
     // TODO: equivalent blocking slopes maybe!
 
@@ -330,8 +348,16 @@ void P_PopClipStack();
 void P_ClearGlobalLevelReferences();
 
 bool P_OnGroundOrThing(const Mobj &mobj);
-void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, bool underportal,
-                         bool aboveportal, uint32_t lineclipflags, bool samegroupid, fixed_t linetop);
+
+enum
+{
+    UO_UNDERPORTAL = 1,
+    UO_ABOVEPORTAL = 2,
+    UO_SAMEGROUPID = 4,
+};
+
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, unsigned flags,
+                         uint32_t lineclipflags, fixed_t linetop);
 
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
@@ -339,4 +365,3 @@ extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 #endif
 
 // EOF
-

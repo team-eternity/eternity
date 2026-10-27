@@ -538,7 +538,7 @@ static void I_getEvent(SDL_Window *window)
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
             // This quick exit code is adapted from PRBoom+
             // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
-            if(ev.key.keysym.mod & KMOD_LALT)
+            if(ev.key.keysym.mod & KMOD_ALT)
             {
                 // Prevent executing action on Alt-Tab
                 if(ev.key.keysym.scancode == SDL_SCANCODE_TAB)

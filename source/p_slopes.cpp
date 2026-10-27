@@ -25,25 +25,40 @@
 
 #include "c_io.h"
 #include "doomdef.h"
+#include "e_hash.h"
+#include "e_exdata.h"
 #include "ev_specials.h"
 #include "i_system.h"
 #include "m_bbox.h"
 #include "p_map3d.h"
+#include "p_maputl.h"
+#include "p_portal.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
+#include "r_main.h"
 #include "r_state.h"
 #include "v_misc.h"
 
 slopeheight_t *pSlopeHeights;
+
+struct midtexextras_t
+{
+    Surfaces<pslope_t *>       slopes;
+    Surfaces<fixed_t>          referenceHeights;
+    int                        lineindex;
+    DLListItem<midtexextras_t> indexlink;
+};
+
+static EHashTable<midtexextras_t, EIntHashKey, &midtexextras_t::lineindex, &midtexextras_t::indexlink> pMidTexExtras;
 
 //
 // P_MakeSlope
 //
 // Alocates and fill the contents of a slope structure.
 //
-static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float zdelta, const surface_t &surface,
-                             surf_e type)
+static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float zdelta, const surface_t *surface,
+                             surf_e type, const int *groupid)
 {
     pslope_t *ret = ecalloctag(pslope_t *, 1, sizeof(pslope_t), PU_LEVEL, nullptr);
 
@@ -89,8 +104,13 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
     //
     // Setup the sector refs
     //
-    ret->surfaceZOffset  = ret->o.z - surface.height;
-    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
+    if(surface)
+    {
+        ret->surfaceZOffset  = ret->o.z - surface->height;
+        ret->surfaceZOffsetF = ret->of.z - surface->heightf;
+    }
+
+    ret->groupid = groupid;
 
     return ret;
 }
@@ -98,20 +118,30 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
 //
 // P_CopySlope
 //
-// Allocates and returns a copy of the given slope structure.
+// If source sector is sloped, this allocates and places a copy of the slope structure to the targeted sector surface.
+// If source is not sloped, this removes the target surface slope and matches its flat height.
 //
-static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
+static void P_CopySlope(const sector_t &sourceSector, sector_t &destinationSector, surf_e surf)
 {
+    const pslope_t *sourceSlope        = sourceSector.srf[surf].slope;
+    surface_t      &destinationSurface = destinationSector.srf[surf];
+    if(!sourceSlope)
+    {
+        destinationSurface.slope = nullptr; // clear the slope if source is none
+        P_SetSectorHeight(destinationSector, surf, sourceSector.srf[surf].height);
+        return;
+    }
     pslope_t *ret = emalloctag(pslope_t *, sizeof(pslope_t), PU_LEVEL, nullptr);
-    *ret          = *src;
+    *ret          = *sourceSlope;
+    ret->groupid  = &destinationSector.groupid;
 
     //
     // Setup the sector refs
     //
-    ret->surfaceZOffset  = ret->o.z - surface.height;
-    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
+    ret->surfaceZOffset  = ret->o.z - destinationSurface.height;
+    ret->surfaceZOffsetF = ret->of.z - destinationSurface.heightf;
 
-    return ret;
+    destinationSurface.slope = ret;
 }
 
 // Calculate difference from nominal floor height given by slope on top of a sector
@@ -241,6 +271,97 @@ void P_PostProcessSlopes()
 {
     P_initSlopeHeights();
     P_repositionThingsOnSlopes();
+}
+
+void P_PreZoneFreeMidTexExtras()
+{
+    pMidTexExtras.destroy(); // the elements will be purged by PU_LEVEL
+}
+
+void P_SpawnMidTexExtras()
+{
+    pMidTexExtras.initialize(127);
+    for(int i = 0; i < numlines; ++i)
+    {
+        const line_t &line = lines[i];
+        if(!line.backsector || !(line.flags & ML_TWOSIDED))
+            continue;
+        const float lineLength = sqrtf(powf(line.v2->fx - line.v1->fx, 2) + powf(line.v2->fy - line.v1->fy, 2));
+        if(!lineLength)
+            continue;
+
+        midtexextras_t *element = nullptr;
+        if(line.intflags & MLI_DYNASEGLINE)
+        {
+            element            = estructalloctag(midtexextras_t, 1, PU_LEVEL);
+            element->lineindex = i;
+            pMidTexExtras.addObject(element);
+            const v2fixed_t middle = { line.v1->x + line.dx / 2, line.v1->y + line.dy / 2 };
+            const sector_t *sector = R_PointInSubsector(middle)->sector;
+
+            element->referenceHeights.floor   = sector->srf.floor.height;
+            element->referenceHeights.ceiling = sector->srf.ceiling.height;
+
+            continue; // slopes irrelevant if polyobject
+        }
+
+        if(!(line.flags & ML_3DMIDTEX) || line.extflags & EX_ML_WRAPMIDTEX)
+        {
+            continue;
+        }
+
+        const side_t   &side        = sides[line.sidenum[0]];
+        const int       skew        = side.middleSkewType();
+        const pslope_t *sectorSlope = nullptr;
+        switch(skew)
+        {
+        case SKEW_NONE:          continue;
+        case SKEW_FRONT_FLOOR:   sectorSlope = line.frontsector->srf.floor.slope; break;
+        case SKEW_FRONT_CEILING: sectorSlope = line.frontsector->srf.ceiling.slope; break;
+        case SKEW_BACK_FLOOR:    sectorSlope = line.backsector->srf.floor.slope; break;
+        case SKEW_BACK_CEILING:  sectorSlope = line.backsector->srf.ceiling.slope; break;
+        default:                 I_Error("Wrong skew case\n");
+        }
+        if(!sectorSlope || !sectorSlope->zdelta)
+            continue;
+
+        const float zdiff =
+            P_GetZAtf(sectorSlope, line.v2->fx, line.v2->fy) - P_GetZAtf(sectorSlope, line.v1->fx, line.v1->fy);
+
+        fixed_t texbot = 0;
+        fixed_t textop = 0;
+
+        // Deliberately no point; this is for building up
+        P_Get3DMidTexHeights(line, side, texbot, textop, nullptr);
+
+        Surfaces<pslope_t *> lineSlopes;
+        const v2float_t      normDir = { -line.ny, line.nx };
+        const float          zdelta  = zdiff / lineLength;
+        lineSlopes.floor   = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(textop) }, normDir, zdelta,
+                                         nullptr, surf_floor, &line.frontsector->groupid);
+        lineSlopes.ceiling = P_MakeSlope(v3float_t{ line.v1->fx, line.v1->fy, M_FixedToFloat(texbot) }, normDir, zdelta,
+                                         nullptr, surf_ceil, &line.frontsector->groupid);
+        if(!element)
+        {
+            element            = estructalloctag(midtexextras_t, 1, PU_LEVEL);
+            element->lineindex = i;
+            pMidTexExtras.addObject(element);
+            element->referenceHeights.floor = element->referenceHeights.ceiling = D_MININT;
+        }
+        element->slopes = lineSlopes;
+    }
+}
+
+Surfaces<pslope_t *> *P_Get3DMidTexSlopes(const line_t &line)
+{
+    midtexextras_t *element = pMidTexExtras.objectForKey(eindex(&line - lines));
+    return element && element->slopes.floor && element->slopes.ceiling ? &element->slopes : nullptr;
+}
+
+const Surfaces<fixed_t> *P_GetMidTexPolyobjectReference(const line_t &line)
+{
+    const midtexextras_t *element = pMidTexExtras.objectForKey(eindex(&line - lines));
+    return element && element->referenceHeights.floor != D_MININT ? &element->referenceHeights : nullptr;
 }
 
 //
@@ -409,15 +530,15 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.backsector->srf.floor.heightf - point.z) / extent;
 
             line.frontsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, line.frontsector->srf.floor, surf_floor);
+                P_MakeSlope(point, direction, dz, &line.frontsector->srf.floor, surf_floor, &line.frontsector->groupid);
         }
         if(frontceil)
         {
             point.z = line.frontsector->srf.ceiling.heightf;
             dz      = (line.backsector->srf.ceiling.heightf - point.z) / extent;
 
-            line.frontsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, line.frontsector->srf.ceiling, surf_ceil);
+            line.frontsector->srf.ceiling.slope = P_MakeSlope(point, direction, dz, &line.frontsector->srf.ceiling,
+                                                              surf_ceil, &line.frontsector->groupid);
         }
     }
 
@@ -446,7 +567,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.floor.heightf - point.z) / extent;
 
             line.backsector->srf.floor.slope =
-                P_MakeSlope(point, direction, dz, line.backsector->srf.floor, surf_floor);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.floor, surf_floor, &line.backsector->groupid);
         }
         if(backceil)
         {
@@ -454,7 +575,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
             dz      = (line.frontsector->srf.ceiling.heightf - point.z) / extent;
 
             line.backsector->srf.ceiling.slope =
-                P_MakeSlope(point, direction, dz, line.backsector->srf.ceiling, surf_ceil);
+                P_MakeSlope(point, direction, dz, &line.backsector->srf.ceiling, surf_ceil, &line.backsector->groupid);
         }
     }
 
@@ -476,7 +597,7 @@ static void P_copyPlane(int tag, sector_t *dest, surf_e type)
         const sector_t &srcsec = sectors[secnum];
         if(srcsec.srf[type].slope)
         {
-            dest->srf[type].slope = P_CopySlope(srcsec.srf[type].slope, dest->srf[type]);
+            P_CopySlope(srcsec, *dest, type);
             return;
         }
     }
@@ -503,35 +624,38 @@ static void P_copySectorSlopeParam(line_t *line)
         }
     }
 
+    const int     shareslope       = line->args[4];
+    constexpr int frontFloorToBack = 1;
+    constexpr int backFloorToFront = 2;
+    constexpr int floorBits        = frontFloorToBack | backFloorToFront;
+    constexpr int frontCeilToBack  = 4;
+    constexpr int backCeilToFront  = 8;
+    constexpr int ceilingBits      = frontCeilToBack | backCeilToFront;
     if(line->backsector)
     {
-        if((line->args[4] & 3) == 1)
+        if((shareslope & floorBits) == frontFloorToBack)
         {
-            line->backsector->srf.floor.slope =
-                P_CopySlope(line->frontsector->srf.floor.slope, line->backsector->srf.floor);
+            P_CopySlope(*line->frontsector, *line->backsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 2)
+        else if((shareslope & floorBits) == backFloorToFront)
         {
-            line->frontsector->srf.floor.slope =
-                P_CopySlope(line->backsector->srf.floor.slope, line->frontsector->srf.floor);
+            P_CopySlope(*line->backsector, *line->frontsector, surf_floor);
         }
-        else if((line->args[4] & 3) == 3)
+        else if((shareslope & floorBits) == floorBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 1 and 2 are mutually"
                               " exclusive.\n");
         }
 
-        if((line->args[4] & 12) == 4)
+        if((shareslope & ceilingBits) == frontCeilToBack)
         {
-            line->backsector->srf.ceiling.slope =
-                P_CopySlope(line->frontsector->srf.ceiling.slope, line->backsector->srf.ceiling);
+            P_CopySlope(*line->frontsector, *line->backsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 8)
+        else if((shareslope & ceilingBits) == backCeilToFront)
         {
-            line->frontsector->srf.ceiling.slope =
-                P_CopySlope(line->backsector->srf.ceiling.slope, line->frontsector->srf.ceiling);
+            P_CopySlope(*line->backsector, *line->frontsector, surf_ceil);
         }
-        else if((line->args[4] & 12) == 12)
+        else if((shareslope & ceilingBits) == ceilingBits)
         {
             C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
                               " exclusive.\n");
@@ -577,10 +701,10 @@ void P_CopySectorSlope(line_t *line, int staticFn)
         const sector_t *srcsec = &sectors[i];
 
         if(copyFloor && !fsec->srf.floor.slope && srcsec->srf.floor.slope)
-            fsec->srf.floor.slope = P_CopySlope(srcsec->srf.floor.slope, fsec->srf.floor);
+            P_CopySlope(*srcsec, *fsec, surf_floor);
 
         if(copyCeiling && !fsec->srf.ceiling.slope && srcsec->srf.ceiling.slope)
-            fsec->srf.ceiling.slope = P_CopySlope(srcsec->srf.ceiling.slope, fsec->srf.ceiling);
+            P_CopySlope(*srcsec, *fsec, surf_ceil);
     }
 
     line->special = 0;
@@ -608,7 +732,7 @@ fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y)
 //
 // Returns the height of the sloped plane at (x, y) as a float
 //
-float P_GetZAtf(pslope_t *slope, float x, float y)
+float P_GetZAtf(const pslope_t *slope, float x, float y)
 {
     float dist = (x - slope->of.x) * slope->df.x + (y - slope->of.y) * slope->df.y;
     return slope->of.z + (dist * slope->zdeltaf);
@@ -644,6 +768,12 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                           D_abs(s1.normal.y - s2.normal.y) < epsilon && //
                           D_abs(s1.normal.z - s2.normal.z) < epsilon && //
                           D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
+}
+bool P_SlopesEqual(const pslope_t *s1, const pslope_t *s2)
+{
+    if(!s1 || !s2)
+        return false;
+    return P_SlopesEqual(*s1, *s2);
 }
 
 // Flexible overload which also allows null checks
@@ -685,8 +815,13 @@ bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const p
 
 bool P_AnySlope(const line_t &line)
 {
-    return line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope ||
-           (line.backsector && (line.backsector->srf.floor.slope || line.backsector->srf.ceiling.slope));
+    if(line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope)
+        return true;
+    const sector_t *backsector =
+        line.intflags & MLI_1SPORTALLINE && line.beyondportalline && line.portal && line.portal->type == R_LINKED ?
+            line.beyondportalline->frontsector :
+            line.backsector;
+    return backsector && (backsector->srf.floor.slope || backsector->srf.ceiling.slope);
 }
 
 //
@@ -710,4 +845,3 @@ bool P_IsSteep(const pslope_t *slope)
 }
 
 // EOF
-

@@ -162,6 +162,7 @@ static bool PIT_PushThing(Mobj *thing, void *context)
                 pushangle += ANG180; // away
 
             P_ThrustMobj(thing, pushangle, speed, false);
+            thing->intflags |= MIF_SCROLLING;
         }
     }
     return true;
@@ -250,11 +251,8 @@ void PushThinker::Think()
     for(; node; node = node->m_snext)
     {
         // ioanch 20160115: portal aware
-        if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-           !P_SectorTouchesThingVertically(sec, node->m_thing))
-        {
+        if(!P_SectorTouchesThingVertically(sec, node->m_thing) || node->flags & MSN_POLYLINE)
             continue;
-        }
 
         thing = node->m_thing;
         if(!thing->player || (thing->flags2 & MF2_NOTHRUST) || // haleyjd
@@ -299,7 +297,7 @@ void PushThinker::Think()
             {
                 if((!sec->srf.floor.slope && thing->z > sec->srf.floor.height) ||
                    (sec->srf.floor.slope &&
-                    (thing->zref.sector.floor != sec || thing->z > thing->zref.floor))) // above ground
+                    (thing->zref.slope.floor != sec->srf.floor.slope || thing->z > thing->zref.floor))) // above ground
                 {
                     xspeed = yspeed = 0; // no force
                 }

@@ -382,6 +382,25 @@ static void P_CalcSegLength(seg_t *lseg)
 }
 
 //
+// R_DynaSegOffset
+//
+// Computes the offset value of the seg relative to its parent linedef.
+// Not terribly fast.
+// Derived from BSP 5.2 SplitDist routine.
+//
+// haleyjd 06/14/10: made global for map loading in p_setup.c and added
+//                   side parameter.
+// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
+//
+static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
+{
+    float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
+    float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
+
+    lseg->offset = sqrtf(dx * dx + dy * dy);
+}
+
+//
 // P_LoadSegs
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -420,6 +439,8 @@ static void P_LoadSegs(int lump)
             level_error = "Seg line side number out of range";
             return;
         }
+
+        R_calcSegOffset(li, ldef, side);
 
         li->frontside   = side == 0;
         li->sidedef     = &sides[ldef->sidenum[side]];
@@ -493,6 +514,8 @@ static void P_LoadSegs_V4(int lump)
             Z_Free(data);
             return;
         }
+
+        R_calcSegOffset(li, ldef, side);
 
         li->frontside   = side == 0;
         li->sidedef     = &sides[ldef->sidenum[side]];
@@ -735,15 +758,15 @@ static void P_createSectorInterps()
 
     for(int i = 0; i < numsectors; i++)
     {
-        sectorinterps[i].prevfloorheight    = sectors[i].srf.floor.height;
-        sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
-        sectorinterps[i].prevfloorheightf   = sectors[i].srf.floor.heightf;
-        sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
+        sectorinterps[i].prevheight.floor    = sectors[i].srf.floor.height;
+        sectorinterps[i].prevheight.ceiling  = sectors[i].srf.ceiling.height;
+        sectorinterps[i].prevheightf.floor   = sectors[i].srf.floor.heightf;
+        sectorinterps[i].prevheightf.ceiling = sectors[i].srf.ceiling.heightf;
 
         if(sectors[i].srf.floor.slope)
-            sectorinterps[i].prevfloorslopezf = sectors[i].srf.floor.slope->of.z;
+            sectorinterps[i].prevslopezf.floor = sectors[i].srf.floor.slope->of.z;
         if(sectors[i].srf.ceiling.slope)
-            sectorinterps[i].prevceilingslopezf = sectors[i].srf.ceiling.slope->of.z;
+            sectorinterps[i].prevslopezf.ceiling = sectors[i].srf.ceiling.slope->of.z;
     }
 }
 
@@ -753,7 +776,7 @@ static void P_createSectorInterps()
 static void P_createSectorBoundingBoxVisitIDs()
 {
     R_ForEachContext([](rendercontext_t &context) {
-        context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+        context.portalcontext.visitids = context.heap->structAlloc<sectorboxvisit_t>(numsectors, PU_LEVEL);
     });
 }
 
@@ -1184,25 +1207,6 @@ struct mapnode_znod_t
     // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
     int32_t children[2];
 };
-
-//
-// R_DynaSegOffset
-//
-// Computes the offset value of the seg relative to its parent linedef.
-// Not terribly fast.
-// Derived from BSP 5.2 SplitDist routine.
-//
-// haleyjd 06/14/10: made global for map loading in p_setup.c and added
-//                   side parameter.
-// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
-//
-static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
-{
-    float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
-    float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
-
-    lseg->offset = sqrtf(dx * dx + dy * dy);
-}
 
 //
 // P_LoadZSegs
@@ -2212,6 +2216,13 @@ static void P_LoadSideDefs2(int lumpnum)
 
         sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
         sd->offset_base_y = GetBinaryWord(data) << FRACBITS;
+
+        sd->scale_top_x    = FRACUNIT;
+        sd->scale_top_y    = FRACUNIT;
+        sd->scale_bottom_x = FRACUNIT;
+        sd->scale_bottom_y = FRACUNIT;
+        sd->scale_mid_x    = FRACUNIT;
+        sd->scale_mid_y    = FRACUNIT;
 
         // haleyjd 05/26/10: read texture names into buffers
         GetBinaryString(data, toptexture, 8);
@@ -3414,8 +3425,9 @@ static void P_ClearPlayerVars()
         players[i].attacker = nullptr;
     }
 
-    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
-    wminfo.partime                                          = 180;
+    totalmonsters = totalitems = totalsecret = wminfo.maxfrags = 0;
+    totalKilledMonsters                                        = 0;
+    wminfo.partime                                             = 180;
 
     // Initial height of PointOfView will be set by player think.
     players[consoleplayer].viewz = players[consoleplayer].prevviewz = 1;
@@ -3984,6 +3996,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_
         acslumpnum = setupwad->checkNumForNameNSG(LevelInfo.acsScriptLump, lumpinfo_t::ns_acs);
 
     ACS_LoadLevelScript(dir, acslumpnum);
+
+    if(LevelInfo.crouchWarning)
+        doom_printf("Level requires crouching and may not work as intended.");
 }
 
 //
@@ -4018,17 +4033,17 @@ void P_LoadOlo(void)
 {
    int lumpnum;
    char *lump;
-   
+
    if((lumpnum = W_CheckNumForName("OLO")) == -1)
       return;
-   
+
    lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   
+
    if(strncmp(lump, "OLO", 3))
       return;
-   
+
    memcpy(&olo, lump, sizeof(olo_t));
-   
+
    olo_loaded = true;
 }
 #endif

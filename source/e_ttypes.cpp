@@ -142,10 +142,10 @@ cfg_opt_t edf_terrn_opts[] = {
     CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
     CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
     CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
     CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
     CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
     CFG_END()
 };
 
@@ -161,10 +161,10 @@ cfg_opt_t edf_terdelta_opts[] = {
     CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
     CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
     CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
     CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
     CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
     CFG_END()
 };
 
@@ -739,10 +739,13 @@ ETerrain *E_GetThingFloorType(const Mobj *thing)
         fixed_t z = thing->zref.floor;
         for(m = thing->touching_sectorlist; m; m = m->m_tnext)
         {
+            if(m->flags & MSN_POLYLINE)
+                continue;
             // Handle sloped floors a bit differently, using the designated floorsector
-            if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.sector.floor)
+            const auto &mfloor = m->m_sector->srf.floor;
+            if(mfloor.slope && mfloor.slope == thing->zref.slope.floor)
                 break;
-            if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
+            if(!mfloor.slope && z == mfloor.height)
                 break;
         }
 
@@ -917,6 +920,16 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
             reduceAlpha();
             P_SetTarget<Mobj>(&mo->target, thing);
 
+            if(sector->srf.floor.slope)
+            {
+                P_CheckPosition(mo, mo->x, mo->y);
+                mo->zref = clip.zref;
+                if(mo->zref.floor > mo->z)
+                {
+                    mo->z = mo->zref.floor;
+                }
+            }
+
             if(splash->chunkxvelshift != -1)
                 mo->momx = P_SubRandom(pr_splash) << splash->chunkxvelshift;
             if(splash->chunkyvelshift != -1)
@@ -1055,14 +1068,14 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 
 //
 // Check if thing is standing on given sector, compatible with slopes and non-slopes
-// NOTE: this checks _exact_ floor equality, not <=
+// NOTE: for classic, non-sloped floors, this checks _exact_ floor equality, not <=
 //
 bool E_StandingOnExactly(const sector_t &sector, const Mobj &thing)
 {
     if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
         return true;
     // Different handling for sloped floors
-    if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.sector.floor == &sector)
+    if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.slope.floor == sector.srf.floor.slope)
         return true;
     return false;
 }
@@ -1078,7 +1091,7 @@ bool E_HitFloor(Mobj *thing)
 
     // determine what touched sector the thing is standing on
     for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-        if(E_StandingOnExactly(*m->m_sector, *thing))
+        if(!(m->flags & MSN_POLYLINE) && E_StandingOnExactly(*m->m_sector, *thing))
             break;
 
     // not on a floor or dealing with deep water, return solid
@@ -1097,7 +1110,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
     const msecnode_t *m;
     for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-        if(E_StandingOnExactly(*m->m_sector, thing))
+        if(!(m->flags & MSN_POLYLINE) && E_StandingOnExactly(*m->m_sector, thing))
             break;
 
     // NOTE: same conditions as E_HitFloor
@@ -1125,4 +1138,3 @@ bool E_UnderBoomLiquidFakeFloor(const Mobj &thing)
 }
 
 // EOF
-

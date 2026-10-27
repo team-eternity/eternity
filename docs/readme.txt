@@ -4,7 +4,7 @@ Filename                : ee-4.06.00-win64.zip, ee-4.06.00-win32.zip,
                           ee-4.06.00-win-legacy.zip,
                           ee-4.06.00-macos-applesilicon.dmg,
                           ee-4.06.00-macos-intel.dmg,
-Release date            : 2026-02-16
+Release date            : 2026-06-13
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -274,6 +274,45 @@ Features
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* Added new ACS functions:
+  - void GiveInventory(str item_name, int amount):
+    Can be used to give all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects to the player.
+    Negative value of amount will mean to give maximum.
+  - void ClearInventory():
+    Takes all armor, backpack, weapons and ammunition, keys, all powers and all items except those marked with
+    the UNDROPPABLE flag.
+  - int UseInventory(str item_name):
+    Uses and consume the item if the player has it in their inventory. Returns true if the use is successful,
+    otherwise false.
+  - int GetMaxInventory(int tid, str item_name):
+    Returns the current maximum number of items a player can carry.
+    If a health/armor item is passed, returns the maximum amount of health/armor that this type of item
+    can heal/repair.
+    If PowerArtifact is passed, it returns the duration of this artifact (if it is infinite, it returns -1).
+    If type of PowerEffect is passed directly, it returns -1 if effect is infinite by default, otherwise 1.
+* Next ACS functions has been heavily improved (thanks to DRON12261):
+  - void TakeInventory(str item_name, int amount):
+    Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects from the player.
+    Also, if the function is passed a amount of item that is greater than the player actually has, the item will be
+    taken away completely (previously, it was necessary to specify a number of items equal to what was in the
+    player's inventory, which was a bug).
+    Negative value of amount will mean to take all.
+  - int CheckInventory(str item_name):
+    Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects with the player.
+* Added new cheat codes for automap: iddkt, iddit and iddst (Doom); ravkmap, ravimap and ravsmap (Heretic).
+  Each one only works inside the automap, and moves the cursor to a remaining count-kill monster, count-item object or
+  unexplored secret in the level. They're inspired from equivalent cheat codes from other ports. Thanks to DRON12261 for
+  the contribution!
+* Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
+  lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+* Added support for wall texture scaling, which includes top, middle, and bottom X and Y scaling.
+* Added support for wrapping 2-sided middle textures.
+* 3DMidTex polyobjects can now work as transporters. Also, they no longer change their Y offsets when crossing elevations.
+* Passable 2-sided polyobject lines no longer push solid things.
+
 
 Improvements
 ------------
@@ -281,6 +320,38 @@ Improvements
 * Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
   for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
 * Reimplemented the key automap colour.
+* Boom fake floor/ceiling transfers and colormaps now render correctly via portals.
+* Now under coop and solo-net, all monster deaths are counted for the HUD, not just current player's
+  kills.
+* Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
+  level exit score. This was needed because otherwise it would become useless on heavily scripted
+  maps.
+* Updated chicken morphing rules to match Heretic 2025.
+* Updated weapon autoswitch rule to match Heretic 2025.
+* Increased MAPINFO support so the Heretic episode "Curse of D'Sparil" from /idgames loads.
+* Switches with bad secondary textures now just don't animate, but don't display the checkerboard.
+* Prevent BSP-caused texture misalignment, in the same way as other Boom-compatible source ports.
+* Updated to UMAPINFO requirement that nextsecret should fallback to next.
+* Fixed so UMAPINFO episode ending debriefing background, when set as patch (not as flat as usual),
+  renders properly.
+* UMAPINFO "author" and EMAPINFO "creator" now show on the intermission below the level name, if
+  specified.
+* Relax UMAPINFO to tolerate "endbunny = false" and "endcast = false". Needed because of released WADs,
+  and other popular source ports implementing the specification poorly.
+* Right Alt key can now active the fast exit and fullscreen toggle.
+* Fixed Plane_Copy linedef special from crashing if the fifth argument is nonzero but the designated source sector
+  surface has no slope. Now it will just clear the slope of the other surface and match its height.
+* Terrain splashes now spawn correctly on sloped liquids.
+* Removed foot-clip on sloped liquids because it would cut off the sprite even when not submerged
+* ACS CheckActorCeilingTexture and CheckActorFloorTexture are now portal-aware.
+* ACS SetLineBlocking now also supports BLOCK_PLAYERS.
+* Fixed so the Heretic ghost translucency takes precedence over the weaker (by TRANMAP) Boom default translucency.
+* Added some readily available APROP implementations to the GetActorProperty and CheckActorProperty ACS functions.
+* Fixed so Doom teleportation also works fine with Heretic-like flying players or telestomp projectiles.
+* Added missing "3DMTPASSPROJ" extflag to ExtraData linedef entries.
+* WRAPMIDTEX applied over 3DMIDTEX now modifies the behavior so the line blocks the entire space.
+* Polyobjects with impassable 2-sided lines (of any flavour) can now carry and properly push (or not push) things.
+* Polyobjects with passable 2-sided lines can now cause actors to trigger their walkover specials when moving into them.
 
 For bug fixes, see the end of this document.
 
@@ -313,7 +384,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 4.06.00 "Nidhogg" -- 2/16/26
 
-  Incremental improvement.
+  General improvement and bug fix.
 
 4.05.04 "Citadel" -- 8/23/25
 
@@ -537,6 +608,55 @@ Bugs Fixed (between 4.05.04 and 4.06.00):
   if set to "none". Thanks to sink666's pull request for the catch.
 * Fixed EDF includes from lumps included by lumps in the same folder.
 * Fixed translucent PNGs that use a separate palette from the current WAD.
+* Fixed a freeze with an infinite loop when the player had only “Unknown” (dummy weapon) left and tried to change
+  a weapon.
+* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and
+  attempted to switch to a more suitable weapon (which did not exist).
+* Fixed a bug where a player's all weapons were taken via TakeInventory, but they still had the last weapon they
+  used in their hands (even though that weapon was no longer in the player's inventory).
+* PowerFlight, PowerAllMap, and PowerSilencer can now have limited duration and be modded in EDF using the permanent,
+  additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will
+  it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite
+  regardless of duration settings.
+* Fixed bug with ACS functions CheckActorCeilingTexture, CheckActorFloorTexture, CheckActorProperty,
+  CheckActorClass.
+* Fixed CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names as
+  textures (e.g. STEP1).
+* Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
+* Fixed A_PlaySound (and a few other triggers) not playing DSDHacked newly defined sounds.
+* Fixed EDF gameproperties sound.titlemusic not working.
+* Fixed empty MIDIs (easily used in mods to silence the music) causing infinite loop errors with the FluidSynth backend
+  under some Linux distros.
+* Fixed very large maps having potential collision issues.
+* Fixed blocklist start being ignored when building portal map.
+* Fixed memory corruption when running ACS functions early in the game.
+* Fixed sprites being missed when looking through a rotated portal.
+* Fixed bug with z-offset anchored portals not rendering lower/upper textures correctly for 1-sided portal walls.
+* Fixed crashing on openings overflow.
+* Fixed a possible memory corruption when saving.
+* Hopefully reduced a crash on thing frame recursion, by catching it earlier.
+* Fixed wrong scaled sprite rendering on Boom fake floors.
+* Fixed crash when submerging under in a Boom water with sloped floor.
+* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health
+  (thanks to DRON12261).
+* Fixed wrong additive powerup time on multiplayers for players other than 1.
+* Fixed ACS SetWeapon function.
+* Fixed skies not rotating correctly past angled visual portals.
+* Fixed crash when using playerdelta with added rebornitem entries (without clearrebornitems).
+* Fixed bad polyobject coordinate control in ACS GetPolyobjX, GetPolyobjY and SetPolyobjXY.
+* Fixed plane and horizon portals getting the wrong colormap.
+* Fixed the Boom sector colormap being chosen for the wrong coordinates from portals.
+* Fixed buggy rendering of 2-sided line dynasegs when crossing lines and viewed on the back side.
+* Fixed lack of interpolation with 2-sided linedef polyobjects.
+* Fixed lack of interpolation with polyobjects subject to multiple movements (e.g. rotation and translation
+  simultaneously).
+* Fixed monster interpolation bug when going up slopes, especially on liquid ones.
+* ACS ReplaceTextures wasn't updating the sky status when switching a sky texture.
+* Fixed lock-up caused by polyobject mirror cycles and override specials.
+* Fixed default melee range still being wrongly used despite possibility to customize it, for some
+  cases.
+* Fixed clip or wrap midtextures bleeding too far when viewed through a sector portal.
+* Fixed portal error occurring when being exactly colinear with a line portal out of your sight.
 
 Known Issues in v4.06.00:
 

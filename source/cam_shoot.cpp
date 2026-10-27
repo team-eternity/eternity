@@ -36,6 +36,7 @@
 #include "p_portal.h"
 #include "p_pspr.h"
 #include "p_spec.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -78,7 +79,7 @@ private:
     bool        checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
     bool        shoot2SLine(line_t *li, int lineside, fixed_t dist, const tracelineopening_t &lo) const;
     bool        shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos) const;
-    static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
+    static bool shootTraverse(intercept_t *in, void *data, const divline_t &trace);
     ShootContext(const params_t &params, const State *instate);
 
     const params_t params;
@@ -98,13 +99,7 @@ void ShootContext::lineAttack(const params_t &params, const State *state)
     v2fixed_t    v2 =
         v2fixed_t(context.state.v) + v2fixed_t(context.cos, context.sin).fixedMul(context.params.attackrange);
 
-    PTDef def;
-    def.flags    = CAM_ADDLINES | CAM_ADDTHINGS;
-    def.earlyOut = PTDef::eo_no;
-    def.trav     = shootTraverse;
-    PathTraverser traverser(def, &context);
-
-    if(traverser.traverse(v2fixed_t(context.state.v), v2))
+    if(P_PathTraverse(v2fixed_t(context.state.v), v2, PT_ADDLINES | PT_ADDTHINGS, shootTraverse, &context))
     {
         // if 100% passed, check if the final sector was crossed
         const sector_t *endsector = R_PointInSubsector(v2)->sector;
@@ -217,7 +212,7 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fix
 //
 // ShootContext::shootTraverse
 //
-bool ShootContext::shootTraverse(const intercept_t *in, void *data, const divline_t &trace)
+bool ShootContext::shootTraverse(intercept_t *in, void *data, const divline_t &trace)
 {
     auto &context = *static_cast<ShootContext *>(data);
     if(in->isaline)
@@ -231,25 +226,29 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data, const divlin
         fixed_t   dist    = FixedMul(context.params.attackrange, in->frac);
         v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
 
+        const bool polyline = Polyobj_IsLine(*li);
+
         if(context.shotCheck2SLine(li, lineside, dist, edgepos))
         {
             // ioanch 20160101: line portal aware
             const portal_t *portal = nullptr;
-            if(li->extflags & EX_ML_LOWERPORTAL && li->backsector && li->backsector->srf.floor.pflags & PS_PASSABLE &&
+            if(!polyline && li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
+               li->backsector->srf.floor.pflags & PS_PASSABLE &&
                FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist) >= context.params.aimslope)
             {
                 portal = li->backsector->srf.floor.portal;
             }
-            else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
+            else if(!polyline && li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
                     li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
                     FixedDiv(li->backsector->srf.ceiling.getZAt(edgepos) - context.state.v.z, dist) <=
                         context.params.aimslope)
             {
                 portal = li->backsector->srf.ceiling.portal;
             }
-            else if(li->pflags & PS_PASSABLE && (!(li->extflags & EX_ML_LOWERPORTAL) ||
-                                                 FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z,
-                                                          dist) < context.params.aimslope))
+            else if(li->pflags & PS_PASSABLE &&
+                    (!(li->extflags & EX_ML_LOWERPORTAL) ||
+                     (!polyline && FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist) <
+                                       context.params.aimslope)))
             {
                 portal = li->portal;
             }
@@ -310,9 +309,13 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data, const divlin
         fixed_t y    = trace.y + FixedMul(trace.dy, frac);
         fixed_t z = context.state.v.z + FixedMul(context.params.aimslope, FixedMul(frac, context.params.attackrange));
 
-        const sector_t *sidesector = lineside ? li->backsector : li->frontsector;
-        bool            hitplane   = false;
-        int             updown     = 2;
+        const sector_t *sidesector;
+        if(polyline)
+            sidesector = R_PointInSubsector(edgepos)->sector;
+        else
+            sidesector = lineside ? li->backsector : li->frontsector;
+        bool hitplane = false;
+        int  updown   = 2;
 
         // ioanch 20160102: check for Z portals
 

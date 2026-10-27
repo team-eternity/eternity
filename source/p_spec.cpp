@@ -1255,7 +1255,8 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
     // Sector specials don't apply in mid-air
     if(!sector->srf.floor.slope && player->mo->z != sector->srf.floor.height)
         return;
-    if(sector->srf.floor.slope && (player->mo->z != player->mo->zref.floor || player->mo->zref.sector.floor != sector))
+    if(sector->srf.floor.slope &&
+       (player->mo->z != player->mo->zref.floor || player->mo->zref.slope.floor != sector->srf.floor.slope))
     {
         return;
     }
@@ -1383,7 +1384,7 @@ void P_UpdateSpecials()
     int     pic;
 
     // Downcount level timer, exit level if elapsed
-    if(levelTimeLimit && leveltime >= levelTimeLimit * 35 * 60)
+    if(levelTimeLimit && leveltime >= levelTimeLimit * TICRATE * 60)
         G_ExitLevel();
 
     // Check frag counters, if frag limit reached, exit level // Ty 03/18/98
@@ -1626,13 +1627,13 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             // and will affect weather or not the sector will keep moving,
             // thus keeping compatibility for all thinker types.
         case EV_STATIC_3DMIDTEX_ATTACH_FLOOR: //
-            P_AttachLines(&lines[i], false);
+            P_AttachLines(&lines[i], surf_floor);
             break;
         case EV_STATIC_3DMIDTEX_ATTACH_CEILING: //
-            P_AttachLines(&lines[i], true);
+            P_AttachLines(&lines[i], surf_ceil);
             break;
         case EV_STATIC_3DMIDTEX_ATTACH_PARAM: //
-            P_AttachLines(&lines[i], !!lines[i].args[ev_AttachMidtex_Arg_DoCeiling]);
+            P_AttachLines(&lines[i], lines[i].args[ev_AttachMidtex_Arg_DoCeiling] ? surf_ceil : surf_floor);
             break;
 
             // SoM 12/10/03: added skybox/portal specials
@@ -1784,6 +1785,7 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
     }
 
     P_PostProcessSlopes();
+    P_SpawnMidTexExtras();
 }
 
 // haleyjd 04/11/10:
@@ -1844,8 +1846,7 @@ void FrictionThinker::Think()
     while(node)
     {
         // ioanch 20160115: portal aware
-        if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-           !P_SectorTouchesThingVertically(sec, node->m_thing))
+        if(!P_SectorTouchesThingVertically(sec, node->m_thing) || node->flags & MSN_POLYLINE)
         {
             node = node->m_snext;
             continue;
@@ -2226,7 +2227,7 @@ void P_ZeroSectorSpecial(sector_t *sec)
 // Runs through the given attached sector list and scrolls both
 // sides of any linedef it finds with same tag.
 //
-bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int crush)
+bool P_Scroll3DSides(const sector_t *sector, surf_e surf, fixed_t delta, int crush)
 {
     bool    ok = true;
     int     i;
@@ -2237,20 +2238,10 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int cr
     int  numattsectors;
     int *attsectors;
 
-    if(ceiling)
-    {
-        numattached   = sector->srf.ceiling.numattached;
-        attached      = sector->srf.ceiling.attached;
-        numattsectors = sector->srf.ceiling.numsectors;
-        attsectors    = sector->srf.ceiling.attsectors;
-    }
-    else
-    {
-        numattached   = sector->srf.floor.numattached;
-        attached      = sector->srf.floor.attached;
-        numattsectors = sector->srf.floor.numsectors;
-        attsectors    = sector->srf.floor.attsectors;
-    }
+    numattached   = sector->srf[surf].numattached;
+    attached      = sector->srf[surf].attached;
+    numattsectors = sector->srf[surf].numsectors;
+    attsectors    = sector->srf[surf].attsectors;
 
     // Go through the sectors list one sector at a time.
     // Move any qualifying linedef's side offsets up/down based
@@ -2323,7 +2314,7 @@ static void P_addLineToAttachList(const line_t *line, int *&attached, int &numat
 //
 // SoM 11/9/04: Now attaches lines and records another list of sectors
 //
-void P_AttachLines(const line_t *cline, bool ceiling)
+void P_AttachLines(const line_t *cline, surf_e surf)
 {
     // FIXME / TODO: replace with a collection
     static int  maxattach = 0;
@@ -2341,25 +2332,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
     // Check to ensure that this sector doesn't already
     // have attachments.
-    if(!ceiling && cline->frontsector->srf.floor.numattached)
+    if(cline->frontsector->srf[surf].numattached)
     {
-        numattach = cline->frontsector->srf.floor.numattached;
-
-        if(numattach >= maxattach)
-        {
-            maxattach = numattach + 5;
-            attached  = erealloc(int *, attached, sizeof(int) * maxattach);
-        }
-
-        memcpy(attached, cline->frontsector->srf.floor.attached, sizeof(int) * numattach);
-        Z_Free(cline->frontsector->srf.floor.attached);
-        cline->frontsector->srf.floor.attached    = nullptr;
-        cline->frontsector->srf.floor.numattached = 0;
-        Z_Free(cline->frontsector->srf.floor.attsectors);
-    }
-    else if(ceiling && cline->frontsector->srf.ceiling.numattached)
-    {
-        numattach = cline->frontsector->srf.ceiling.numattached;
+        numattach = cline->frontsector->srf[surf].numattached;
 
         if(numattach >= maxattach)
         {
@@ -2371,11 +2346,11 @@ void P_AttachLines(const line_t *cline, bool ceiling)
         if(!attached)
             I_Error("P_AttachLines: no attached list\n");
 
-        memcpy(attached, cline->frontsector->srf.ceiling.attached, sizeof(int) * numattach);
-        Z_Free(cline->frontsector->srf.ceiling.attached);
-        cline->frontsector->srf.ceiling.attached    = nullptr;
-        cline->frontsector->srf.ceiling.numattached = 0;
-        Z_Free(cline->frontsector->srf.ceiling.attsectors);
+        memcpy(attached, cline->frontsector->srf[surf].attached, sizeof(int) * numattach);
+        Z_Free(cline->frontsector->srf[surf].attached);
+        cline->frontsector->srf[surf].attached    = nullptr;
+        cline->frontsector->srf[surf].numattached = 0;
+        Z_Free(cline->frontsector->srf[surf].attsectors);
     }
 
     // ioanch: param specisl
@@ -2437,24 +2412,12 @@ void P_AttachLines(const line_t *cline, bool ceiling)
     }
 
     // Copy the list to the c_attached or f_attached list.
-    if(ceiling)
-    {
-        cline->frontsector->srf.ceiling.numattached = numattach;
-        cline->frontsector->srf.ceiling.attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.ceiling.attached, attached, sizeof(int) * numattach);
+    cline->frontsector->srf[surf].numattached = numattach;
+    cline->frontsector->srf[surf].attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+    memcpy(cline->frontsector->srf[surf].attached, attached, sizeof(int) * numattach);
 
-        alist     = cline->frontsector->srf.ceiling.attached;
-        alistsize = cline->frontsector->srf.ceiling.numattached;
-    }
-    else
-    {
-        cline->frontsector->srf.floor.numattached = numattach;
-        cline->frontsector->srf.floor.attached    = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.floor.attached, attached, sizeof(int) * numattach);
-
-        alist     = cline->frontsector->srf.floor.attached;
-        alistsize = cline->frontsector->srf.floor.numattached;
-    }
+    alist     = cline->frontsector->srf[surf].attached;
+    alistsize = cline->frontsector->srf[surf].numattached;
 
     // (re)create the sectors list.
     numattach = 0;
@@ -2499,18 +2462,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
     }
 
     // Copy the attached sectors list.
-    if(ceiling)
-    {
-        cline->frontsector->srf.ceiling.numsectors = numattach;
-        cline->frontsector->srf.ceiling.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.ceiling.attsectors, attached, sizeof(int) * numattach);
-    }
-    else
-    {
-        cline->frontsector->srf.floor.numsectors = numattach;
-        cline->frontsector->srf.floor.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
-        memcpy(cline->frontsector->srf.floor.attsectors, attached, sizeof(int) * numattach);
-    }
+    cline->frontsector->srf[surf].numsectors = numattach;
+    cline->frontsector->srf[surf].attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+    memcpy(cline->frontsector->srf[surf].attsectors, attached, sizeof(int) * numattach);
 }
 
 //
@@ -2518,53 +2472,40 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 //
 // Moves all attached surfaces.
 //
-bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, int crush, bool nointerp)
+bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, const int crush, const bool nointerp)
 {
     int i;
 
-    int                      count;
-    const attachedsurface_t *list;
+    int count;
 
     bool ok = true;
 
     count = sector->srf[surf].asurfacecount;
-    list  = sector->srf[surf].asurfaces;
+
+    const attachedsurface_t *const list = sector->srf[surf].asurfaces;
+
+    auto move = [crush, list, nointerp, &ok](int i, int delta, surf_e surf) {
+        P_SetSectorHeight(*list[i].sector, surf, list[i].sector->srf[surf].height + delta);
+        if(P_CheckSector(list[i].sector, crush, delta,
+                         surf == surf_ceil ? CheckSectorPlane::ceiling : CheckSectorPlane::floor))
+        {
+            ok = false;
+        }
+        if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, surf);
+    };
 
     for(i = 0; i < count; i++)
     {
         if(list[i].type & AS_CEILING)
-        {
-            P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height + delta);
-            if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::ceiling))
-                ok = false;
-            if(nointerp)
-                P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
-        }
+            move(i, +delta, surf_ceil);
         else if(list[i].type & AS_MIRRORCEILING)
-        {
-            P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height - delta);
-            if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::ceiling))
-                ok = false;
-            if(nointerp)
-                P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
-        }
+            move(i, -delta, surf_ceil);
 
         if(list[i].type & AS_FLOOR)
-        {
-            P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height + delta);
-            if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::floor))
-                ok = false;
-            if(nointerp)
-                P_SaveSectorPosition(*list[i].sector, ssurf_floor);
-        }
+            move(i, +delta, surf_floor);
         else if(list[i].type & AS_MIRRORFLOOR)
-        {
-            P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height - delta);
-            if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::floor))
-                ok = false;
-            if(nointerp)
-                P_SaveSectorPosition(*list[i].sector, ssurf_floor);
-        }
+            move(i, -delta, surf_floor);
     }
 
     return ok;
@@ -3809,4 +3750,3 @@ AMX_NATIVE_INFO pspec_Natives[] = {
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-
