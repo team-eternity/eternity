@@ -484,7 +484,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal, bool *pixelMaskTable) const
                 rgbto8bit_t *cached_entry = v_rgbto8bithash.objectForKey(col);
 
                 if(cached_entry)
-                    dest[y * width + x] = cached_entry->key;
+                    dest[y * width + x] = cached_entry->index;
                 else
                 {
                     cached_entry        = estructalloc(rgbto8bit_t, 1);
