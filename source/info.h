@@ -360,6 +360,21 @@ enum
 
 using mobjtype_t = int;
 
+
+// ********************************************************************
+// Definition of the Thing flag structure
+// ********************************************************************
+// This applies to both mobjinfo_t and Mobj.
+// They use this in a union with the raw properties to avoid mass code changes.
+struct mobjflagset_t
+{
+    unsigned int flags;
+    unsigned int flags2;
+    unsigned int flags3;
+    unsigned int flags4;
+    unsigned int flags5;
+};
+
 // ********************************************************************
 // Definition of the Thing structure
 // ********************************************************************
@@ -415,11 +430,19 @@ struct mobjinfo_t
     int damagemod;             // [XA] damage modulus (i.e. the 8 in '1d8')
     int activesound;           // What sound it makes wandering around, once
                                //  in a while.  Chance is 3/256 it will.
-    unsigned int flags;        // Bit masks for lots of things.  See p_mobj.h
-    unsigned int flags2;       // More bit masks for lots of other things -- haleyjd
-    unsigned int flags3;       // haleyjd 11/03/02: flags3
-    unsigned int flags4;       // haleyjd 09/13/09: flags4
-    unsigned int flags5;       // MaxW: 2021/02/14: flags5
+    union
+    {
+        // If you ever need to add to this then you MUST add to mobjflagset_t.
+        struct
+        {
+            unsigned int flags;  // Bit masks for lots of things.  See p_mobj.h
+            unsigned int flags2; // More bit masks for lots of other things -- haleyjd
+            unsigned int flags3; // haleyjd 11/03/02: flags3
+            unsigned int flags4; // haleyjd 09/13/09: flags4
+            unsigned int flags5; // MaxW: 2021/02/14: flags5
+        };
+        mobjflagset_t flagset;
+    };
     bool         adddeh;       // MaxW: made by DSDhacked
     int          raisestate;   // The first state for an Archvile or respawn
                                //  resurrection.  Zero means it won't come

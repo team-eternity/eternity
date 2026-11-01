@@ -70,19 +70,19 @@ namespace Aeon
         // TODO: else C_Printf warning?
     }
 
-    template<int flag, typename T, unsigned int T::*flagMember>
-    static bool getFlag(const T *const mobjOrInfo)
+    template<int flag, unsigned int mobjflagset_t::*flagMember>
+    static bool getFlag(const mobjflagset_t *const flagset)
     {
-        return !!(mobjOrInfo->*flagMember & flag);
+        return !!(flagset->*flagMember & flag);
     }
 
-    template<int flag, unsigned int Mobj::*flagMember>
-    static void setFlag(const bool isTrue, Mobj *const mo)
+    template<int flag, unsigned int mobjflagset_t::*flagMember>
+    static void setFlag(const bool isTrue, mobjflagset_t *const flagset)
     {
         if(isTrue)
-            mo->*flagMember |= flag;
+            flagset->*flagMember |= flag;
         else
-            mo->*flagMember &= ~flag;
+            flagset->*flagMember &= ~flag;
     }
 
     static fixed_t floatBobOffsets(const int in)
@@ -203,8 +203,8 @@ namespace Aeon
     FLAG_ACCESSOR(actlikebridge,    MF5_ACTLIKEBRIDGE,    flags5)
 
 #define FLAG_ACCESSOR(name, flag, member) \
-    { "bool get_" #name "() const property",         WRAP_OBJ_LAST((getFlag<flag, Mobj, &Mobj:: ##member>)) }, \
-    { "void set_" #name "(const bool val) property", WRAP_OBJ_LAST((setFlag<flag, &Mobj:: ##member>))       }
+    { "bool get_" #name "() const property",         WRAP_OBJ_LAST((getFlag<flag, &mobjflagset_t:: ##member>)) }, \
+    { "void set_" #name "(const bool val) property", WRAP_OBJ_LAST((setFlag<flag, &mobjflagset_t:: ##member>)) }
 
     // clang-format off
     static const aeonfuncreg_t mobjFuncs[] = {
@@ -245,30 +245,35 @@ namespace Aeon
         // Indexed property accessors (enables [] syntax for counters)
         { "int get_counters(const uint ctrnum) const property",           WRAP_OBJ_LAST(getMobjCounter)  },
         { "void set_counters(const uint ctrnum, const int val) property", WRAP_OBJ_LAST(setMobjCounter)  },
-
-        // Property accessors for the many, many, many flags
-        MOBJ_FLAG_FIELDS,
    };
     // clang-format on
 
+    // clang-format off
+    static const aeonfuncreg_t mobjFlagsFuncs[] = {
+        MOBJ_FLAG_FIELDS,
+    };
+    // clang-format on
+
     static const aeonpropreg_t mobjProps[] = {
-        { "fixed_t x",                  asOFFSET(Mobj, x)      },
-        { "fixed_t y",                  asOFFSET(Mobj, y)      },
-        { "fixed_t z",                  asOFFSET(Mobj, z)      },
-        { "angle_t angle",              asOFFSET(Mobj, angle)  },
+        { "fixed_t x",                  asOFFSET(Mobj, x)       },
+        { "fixed_t y",                  asOFFSET(Mobj, y)       },
+        { "fixed_t z",                  asOFFSET(Mobj, z)       },
+        { "angle_t angle",              asOFFSET(Mobj, angle)   },
 
-        { "fixed_t radius",             asOFFSET(Mobj, radius) },
-        { "fixed_t height",             asOFFSET(Mobj, height) },
-        { "vector3_t mom",              asOFFSET(Mobj, mom)    },
+        { "fixed_t radius",             asOFFSET(Mobj, radius)  },
+        { "fixed_t height",             asOFFSET(Mobj, height)  },
+        { "vector3_t mom",              asOFFSET(Mobj, mom)     },
 
-        { "int health",                 asOFFSET(Mobj, health) },
+        { "int health",                 asOFFSET(Mobj, health)  },
 
-        { "Mobj @target",               asOFFSET(Mobj, target) },
-        { "Mobj @tracer",               asOFFSET(Mobj, tracer) },
+        { "MobjFlags flags",            asOFFSET(Mobj, flagset) },
 
-        { "Player @const player",       asOFFSET(Mobj, player) },
+        { "Mobj @target",               asOFFSET(Mobj, target)  },
+        { "Mobj @tracer",               asOFFSET(Mobj, tracer)  },
 
-        { "const MobjInfo @const info", asOFFSET(Mobj, info)   },
+        { "Player @const player",       asOFFSET(Mobj, player)  },
+
+        { "const MobjInfo @const info", asOFFSET(Mobj, info)    },
     };
 
     // clang-format off
@@ -309,7 +314,7 @@ namespace Aeon
         { "const fixed_t get_height() const property", WRAP_OBJ_LAST(P_ThingInfoHeight)                    },
 
         // Getters for the many, many, many flags
-        MOBJ_FLAG_FIELDS,
+        //MOBJ_FLAG_FIELDS,
     };
 
     static const aeonpropreg_t mobjinfoProps[] = {
@@ -323,6 +328,7 @@ namespace Aeon
         { "const int gibhealth",     asOFFSET(mobjinfo_t, gibhealth)     },
         { "const int respawntime",   asOFFSET(mobjinfo_t, respawntime)   },
         { "const int respawnchance", asOFFSET(mobjinfo_t, respawnchance) },
+        { "const MobjFlags flags",   asOFFSET(mobjinfo_t, flagset)       },
     };
 
     void ScriptObjMobj::PreInit()
@@ -342,18 +348,21 @@ namespace Aeon
 
         e->SetDefaultNamespace("EE");
 
-        e->RegisterObjectType("MobjInfo", sizeof(mobjinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+        // mobjflagset_t
+        e->RegisterObjectType("MobjFlags", sizeof(mobjflagset_t), asOBJ_VALUE | asOBJ_POD);
+        for(const aeonfuncreg_t &fn : mobjFlagsFuncs)
+            e->RegisterObjectMethod("MobjFlags", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
+        // mobjinfo_t
+        e->RegisterObjectType("MobjInfo", sizeof(mobjinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
         for(const aeonpropreg_t &prop : mobjinfoProps)
             e->RegisterObjectProperty("MobjInfo", prop.declaration, prop.byteOffset);
-
         for(const aeonfuncreg_t &fn : mobjinfoFuncs)
             e->RegisterObjectMethod("MobjInfo", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
+        // Mobj
         for(const aeonbehaviorreg_t &behavior : mobjBehaviors)
-            e->RegisterObjectBehaviour("Mobj", behavior.behavior, behavior.declaration, behavior.funcPointer,
-                                       asCALL_GENERIC);
-
+            e->RegisterObjectBehaviour("Mobj", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
         for(const aeonpropreg_t &prop : mobjProps)
             e->RegisterObjectProperty("Mobj", prop.declaration, prop.byteOffset);
 
