@@ -479,7 +479,7 @@ extern int      numspechit;
 //
 // Move in the current direction; returns false if the move is blocked.
 //
-int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
+int P_Move(Mobj *actor, const dropoffType_e dropoff) // killough 9/12/98
 {
     fixed_t tryx, tryy, deltax, deltay;
     bool    try_ok;
@@ -672,8 +672,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 //
 bool P_SmartMove(Mobj *actor)
 {
-    Mobj *target = actor->target;
-    int   on_lift, dropoff = 0, under_damage;
+    Mobj          *target = actor->target;
+    int            on_lift, under_damage;
+    dropoffType_e dropoff = dropoffType_e::never; 
 
     // killough 9/12/98: Stay on a lift if target is on one
     on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
@@ -694,7 +695,7 @@ bool P_SmartMove(Mobj *actor)
        P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT * 144 &&
        P_Random(pr_dropoff) < 235)
     {
-        dropoff = 2;
+        dropoff = dropoffType_e::limited;
     }
 
     if(!P_Move(actor, dropoff))

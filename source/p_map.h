@@ -77,8 +77,15 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 bool P_CheckSpaceToStepUp(Mobj &thing);
 bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ);
 
+enum class dropoffType_e : int
+{
+    never   = 0,
+    always  = 1,
+    limited = 2, // 128 units maximum.
+};
+
 // killough 3/15/98: add fourth argument to P_TryMove
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, const dropoffType_e dropoff);
 
 enum class UnstuckCheck
 {

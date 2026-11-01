@@ -1458,7 +1458,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
 //
 // haleyjd 04/15/2010: Dropoff check for vanilla DOOM compatibility
 //
-static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
+static bool P_CheckDropOffVanilla(Mobj *thing, const dropoffType_e dropoff)
 {
     if(!(thing->flags & (MF_DROPOFF | MF_FLOAT)) && clip.zref.floor - clip.zref.dropoff > STEPSIZE)
         return false; // don't stand over a dropoff
@@ -1471,10 +1471,10 @@ static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 //
 // haleyjd 04/15/2010: Dropoff check for BOOM compatibility
 //
-static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
+static bool P_CheckDropOffBOOM(Mobj *thing, const dropoffType_e dropoff)
 {
     // killough 3/15/98: Allow certain objects to drop off
-    if(compatibility || !dropoff)
+    if(compatibility || dropoff == dropoffType_e::never)
     {
         if(!(thing->flags & (MF_DROPOFF | MF_FLOAT)) && clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -1491,7 +1491,7 @@ static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
 // I am of the opinion that this is the single most-butchered segment of code
 // in the entire engine.
 //
-static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
+static bool P_CheckDropOffMBF(Mobj *thing, const dropoffType_e dropoff)
 {
     // killough 3/15/98: Allow certain objects to drop off
     // killough 7/24/98, 8/1/98:
@@ -1504,11 +1504,12 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
         if(getComp(comp_dropoff))
         {
             // haleyjd: note missing 202 compatibility... WOOPS!
-            if(!dropoff && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
+            if(dropoff == dropoffType_e::never && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
                 return false;
         }
-        else if(!dropoff || (dropoff == 2 && (clip.zref.floor - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
-                                              thing->target->z > clip.zref.dropoff)))
+        else if(dropoff == dropoffType_e::never ||
+                (dropoff == dropoffType_e::limited && (clip.zref.floor - clip.zref.dropoff > 128 * FRACUNIT ||
+                                                        !thing->target || thing->target->z > clip.zref.dropoff)))
         {
             // haleyjd: I can't even mentally parse this statement with
             // any certainty.
@@ -1533,7 +1534,7 @@ static bool on3dmidtex;
 //
 // haleyjd 04/15/2010: Dropoff checking code for Eternity.
 //
-static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
+static bool P_CheckDropOffEE(Mobj *thing, const dropoffType_e dropoff)
 {
     fixed_t floorz = clip.zref.floor;
 
@@ -1555,8 +1556,9 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
         if(on3dmidtex)
         {
             // allow appropriate forced dropoff behavior
-            if(!dropoff || (dropoff == 2 && (thing->z - clip.zref.floor > 128 * FRACUNIT || !thing->target ||
-                                             thing->target->z > clip.zref.floor)))
+            if(dropoff == dropoffType_e::never ||
+               (dropoff == dropoffType_e::limited &&
+                (thing->z - clip.zref.floor > 128 * FRACUNIT || !thing->target || thing->target->z > clip.zref.floor)))
             {
                 // deny any move resulting in a difference > 24
                 if(thing->z - clip.zref.floor > STEPSIZE)
@@ -1575,9 +1577,10 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
             if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
                 return false; // don't stand over a dropoff
         }
-        else if(!dropoff || (dropoff == 2 && // large jump down (e.g. dogs)
-                             (floorz - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
-                              thing->target->z > clip.zref.dropoff)))
+        else if(dropoff == dropoffType_e::never ||
+                (dropoff == dropoffType_e::limited && // large jump down (e.g. dogs)
+                 (floorz - clip.zref.dropoff > 128 * FRACUNIT || !thing->target ||
+                  thing->target->z > clip.zref.dropoff)))
         {
             // haleyjd 04/14/10: This is so impossible to read that I have
             // had to restore it, because I cannot be confident that any of
@@ -1597,7 +1600,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
     return true;
 }
 
-using dropoff_func_t = bool (*)(Mobj *, int);
+using dropoff_func_t = bool (*)(Mobj *, const dropoffType_e);
 
 //
 // Runs the spechit push specials
@@ -1707,7 +1710,7 @@ bool P_BouncerCanStepUp(const Mobj &thing, fixed_t candidateFloorZ)
 //
 // killough 3/15/98: allow dropoff as option
 //
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, const int dropoff)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, const dropoffType_e dropoff)
 {
     fixed_t        oldx, oldy, oldz;
     int            oldgroupid;
@@ -2584,8 +2587,8 @@ void P_SlideMove(Mobj *mo)
             // haleyjd: yet another compatibility fix by cph -- the
             // fix is only necessary for boom v2.01
 
-            if(!P_TryMove(mo, mo->x, mo->y + mo->momy, true))
-                if(!P_TryMove(mo, mo->x + mo->momx, mo->y, true))
+            if(!P_TryMove(mo, mo->x, mo->y + mo->momy, dropoffType_e::always))
+                if(!P_TryMove(mo, mo->x + mo->momx, mo->y, dropoffType_e::always))
                     if(demo_version == 201)
                         mo->momx = mo->momy = 0;
 
@@ -2601,7 +2604,7 @@ void P_SlideMove(Mobj *mo)
 
             // killough 3/15/98: Allow objects to drop off ledges
 
-            if(!P_TryMove(mo, mo->x + newx, mo->y + newy, true))
+            if(!P_TryMove(mo, mo->x + newx, mo->y + newy, dropoffType_e::always))
                 goto stairstep;
         }
 
@@ -2633,7 +2636,7 @@ void P_SlideMove(Mobj *mo)
                 mo->player->momy = tmymove;
         }
     } // killough 3/15/98: Allow objects to drop off ledges:
-    while(!P_TryMove(mo, mo->x + tmxmove, mo->y + tmymove, true));
+    while(!P_TryMove(mo, mo->x + tmxmove, mo->y + tmymove, dropoffType_e::always));
 }
 
 //
