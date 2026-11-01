@@ -268,10 +268,16 @@ public:
     fixed_t height;
 
     // Momentums, used to update position.
-    v3fixed_t mom;
-    fixed_t  &momx = mom.x;
-    fixed_t  &momy = mom.y;
-    fixed_t  &momz = mom.z;
+    union
+    {
+        v3fixed_t mom;
+        struct
+        {
+            fixed_t momx;
+            fixed_t momy;
+            fixed_t momz;
+        };
+    };
 
     // If == validcount, already checked.
     int validcount;
