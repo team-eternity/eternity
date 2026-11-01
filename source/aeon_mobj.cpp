@@ -199,7 +199,8 @@ namespace Aeon
     FLAG_ACCESSOR(settargetondeath, MF4_SETTARGETONDEATH, flags4), FLAG_ACCESSOR(slideroverthings,   MF4_SLIDEOVERTHINGS,    flags4), \
     FLAG_ACCESSOR(unsteppable,      MF4_UNSTEPPABLE,      flags4), FLAG_ACCESSOR(rangeeighth,        MF4_RANGEEIGHTH,        flags4), \
                                                                                                                                       \
-    FLAG_ACCESSOR(notautoaimed,     MF5_NOTAUTOAIMED,     flags5)
+    FLAG_ACCESSOR(notautoaimed,     MF5_NOTAUTOAIMED,     flags5), FLAG_ACCESSOR(fullvolsounds,      MF5_FULLVOLSOUNDS,      flags5), \
+    FLAG_ACCESSOR(actlikebridge,    MF5_ACTLIKEBRIDGE,    flags5)
 
 #define FLAG_ACCESSOR(name, flag, member) \
     { "bool get_" #name "() const property",         WRAP_OBJ_LAST((getFlag<flag, Mobj, &Mobj:: ##member>)) }, \
