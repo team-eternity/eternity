@@ -44,6 +44,7 @@ namespace fs = std::experimental::filesystem;
 #include "hal/i_platform.h"
 #include "m_collection.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "w_levels.h"
 
 #include "steam.h"
@@ -370,7 +371,7 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 //
 static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
-    const fs::directory_iterator itr(fs::u8path(base));
+    const fs::directory_iterator itr(fs::path(u8char(base)));
     for(const fs::directory_entry &ent : itr)
     {
         const auto filename = ent.path().filename().generic_u8string();
@@ -396,11 +397,11 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
     // add base/game paths
-    if(fs::is_directory(fs::u8path(basepath), ec))
+    if(fs::is_directory(fs::path(u8char(basepath)), ec))
         D_addSubDirectories(paths, basepath);
 
     // add user/game paths, if userpath != basepath
-    if(strcmp(basepath, userpath) && fs::is_directory(fs::u8path(userpath), ec))
+    if(strcmp(basepath, userpath) && fs::is_directory(fs::path(u8char(userpath)), ec))
         D_addSubDirectories(paths, userpath);
 
     paths.addNew() = D_DoomExeDir(); // executable directory
@@ -560,7 +561,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 void D_CheckPathForWADs(const qstring &path)
 {
-    if(std::error_code ec; !fs::is_directory(fs::u8path(path.constPtr()), ec))
+    if(std::error_code ec; !fs::is_directory(fs::path(path.constPtr8()), ec))
     {
         // check to see if this is just a regular .wad file
         const char *dot = path.findSubStrNoCase(".wad");
@@ -569,7 +570,7 @@ void D_CheckPathForWADs(const qstring &path)
         return;
     }
 
-    const fs::directory_iterator itr(fs::u8path(path.constPtr()));
+    const fs::directory_iterator itr(fs::path(path.constPtr8()));
     for(const fs::directory_entry &ent : itr)
     {
         const qstring filename =
@@ -622,9 +623,9 @@ static void D_checkForNoRest()
         nrvpath = path;
         nrvpath.removeFileSpec();
 
-        if(std::error_code ec; fs::is_directory(fs::u8path(nrvpath.constPtr()), ec))
+        if(std::error_code ec; fs::is_directory(fs::path(nrvpath.constPtr8()), ec))
         {
-            const fs::directory_iterator itr(fs::u8path(nrvpath.constPtr()));
+            const fs::directory_iterator itr(fs::path(nrvpath.constPtr8()));
             for(const fs::directory_entry &ent : itr)
             {
                 const qstring filename =

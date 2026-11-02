@@ -818,6 +818,7 @@ static void F_DrawPalettedEnd(const char *endpic, const char *endpal)
     case FinaleStage::artScreenPalettedFinished: //
         F_restoreControlWithTitleScreen();
         break;
+    default: break;
     }
 }
 

@@ -128,8 +128,8 @@ static MStructReader<ZCDE_t> centralDirReader([](MStructReader<ZCDE_t> &obj) {
     obj.addField(&ZCDE_t::localOffset);
 });
 
-static constexpr const char ZIP_END_OF_DIR_SIG[] = "PK\x5\x6";
-// static constexpr size_t     ZIP_END_OF_DIR_SIZE  = 22;
+// static constexpr const char ZIP_END_OF_DIR_SIG[] = "PK\x5\x6";
+//  static constexpr size_t     ZIP_END_OF_DIR_SIZE  = 22;
 
 struct ZIPEndOfCentralDir
 {

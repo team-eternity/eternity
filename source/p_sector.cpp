@@ -378,6 +378,7 @@ void P_SaveSectorPosition(const sector_t &sec, surf_e surf)
         if(sec.srf.ceiling.slope)
             si.prevslopezf.ceiling = sec.srf.ceiling.slope->of.z;
         break;
+    default: break;
     }
 }
 

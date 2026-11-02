@@ -404,10 +404,10 @@ template<typename T>
 inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void *data,
                                        bool (*func)(int x, int y, int groupid, void *data))
 {
-    int xl = (T(bbox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT;
-    int xh = (T(bbox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT;
-    int yl = (T(bbox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT;
-    int yh = (T(bbox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT;
+    int xl = static_cast<int>((T(bbox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT);
+    int xh = static_cast<int>((T(bbox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT);
+    int yl = static_cast<int>((T(bbox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT);
+    int yh = static_cast<int>((T(bbox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT);
 
     if(xl < 0)
         xl = 0;
@@ -510,10 +510,10 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
         movedBBox[BOXTOP]    += link->y;
         // Set the blocks to be visited.
         // The delta needs to be held in an int64_t as it can overflow otherwise.
-        int xl = (int64_t(movedBBox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT;
-        int xh = (int64_t(movedBBox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT;
-        int yl = (int64_t(movedBBox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT;
-        int yh = (int64_t(movedBBox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT;
+        int xl = static_cast<int>((int64_t(movedBBox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT);
+        int xh = static_cast<int>((int64_t(movedBBox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT);
+        int yl = static_cast<int>((int64_t(movedBBox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT);
+        int yh = static_cast<int>((int64_t(movedBBox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT);
 
         if(xl < 0)
             xl = 0;
@@ -627,9 +627,9 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
     if(!useportalgroups || full_demo_version < make_full_version(340, 48) || sector->groupid == mobj->groupid)
         return true;
-    fixed_t   topz = mobj->z + mobj->height;
+    fixed_t             topz = mobj->z + mobj->height;
     const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, sector->groupid);
-    v2fixed_t mpos = { mobj->x + link->x, mobj->y + link->y };
+    v2fixed_t           mpos = { mobj->x + link->x, mobj->y + link->y };
     if(topz < sector->srf.floor.getZAt(mpos) || mobj->z > sector->srf.ceiling.getZAt(mpos))
         return false;
     if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(sector->srf.floor, mpos))

@@ -240,10 +240,10 @@ static void MN_readSaveStrings()
     e_saveSlots.clear();
 
     // test for failure
-    if(std::error_code ec; !fs::is_directory(fs::u8path(basesavegame), ec))
+    if(std::error_code ec; !fs::is_directory(fs::path(u8char(basesavegame)), ec))
         return;
 
-    const fs::directory_iterator itr(fs::u8path(basesavegame));
+    const fs::directory_iterator itr(fs::path(u8char(basesavegame)));
     for(const fs::directory_entry &ent : itr)
     {
         size_t      len;
@@ -331,7 +331,7 @@ static void MN_readSaveStrings()
         for(int j = 0; j < MIN_MAXPLAYERS; j++)
             arc << bdummy;
 
-        auto foo = arc.getLoadFile()->itell();
+        /* auto foo = */ arc.getLoadFile()->itell();
 
         // Music num.
         if(arc.saveVersion() < 20)

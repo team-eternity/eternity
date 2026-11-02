@@ -154,7 +154,8 @@ void       *ZoneObject::newalloc;            // most recent ZoneObject alloc
 static void Z_IDCheckNB(bool err, const char *errmsg, const std::source_location loc = std::source_location::current())
 {
     if(err)
-        I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\n", errmsg, loc);
+        I_FatalError(I_ERR_KILL, "%s\nSource: %s#%s:%d\n", errmsg, loc.file_name(), loc.function_name(),
+                     (int)loc.line());
 }
 
 //
@@ -1015,9 +1016,8 @@ void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const std::source_loc
     ZoneHeapBase::freeTags(lowtag, hightag, loc);
 
     // Free up the same tags in all the context-specific heaps, too
-    R_ForEachContext([lowtag, hightag, loc](rendercontext_t &context) {
-        context.heap->freeTags(lowtag, hightag, loc);
-    });
+    R_ForEachContext(
+        [lowtag, hightag, loc](rendercontext_t &context) { context.heap->freeTags(lowtag, hightag, loc); });
 }
 
 void ZoneHeapThreadSafe::changeTag(void *ptr, int tag, const std::source_location loc)

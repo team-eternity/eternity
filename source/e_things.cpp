@@ -2832,7 +2832,7 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
         mobjinfo[i]->damagemod = cfg_getint(thingsec, ITEM_TNG_DAMAGEMOD);
         if(!mobjinfo[i]->damagemod)
         {
-            E_EDFLoggedErr(2, "E_ProcessThing: thing '%s': invalid zero damagemod %s\n", mobjinfo[i]->name, tempstr);
+            E_EDFLoggedErr(2, "E_ProcessThing: thing '%s': invalid zero damagemod\n", mobjinfo[i]->name);
         }
     }
 

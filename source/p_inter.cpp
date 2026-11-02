@@ -1432,7 +1432,7 @@ e_pickupfx_t *P_GetPickUpEffect(const Mobj *special)
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
     player_t           *player;
-    const e_pickupfx_t *pickup, *temp;
+    const e_pickupfx_t *pickup;
     bool                pickedup = false;
     const char         *message  = nullptr;
     const char         *sound    = nullptr;

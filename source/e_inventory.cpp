@@ -844,6 +844,7 @@ static void E_collectKeyItems()
 
 static PODCollection<itemeffect_t *> e_weaponsLookup;
 
+#if 0
 static size_t E_getNumWeaponItems()
 {
     return e_weaponsLookup.getLength();
@@ -853,6 +854,7 @@ static itemeffect_t *E_weaponItemForIndex(size_t idx)
 {
     return e_weaponsLookup[idx];
 }
+#endif
 
 static void E_collectWeaponTypes()
 {

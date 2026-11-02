@@ -350,7 +350,6 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
     const char *defsound; // haleyjd
     const char *sound;
     int         sidenum;
-    sector_t   *sector;
 
     if(!useAgain)
         line->special = 0;

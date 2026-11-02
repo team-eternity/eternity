@@ -105,6 +105,9 @@ public:
     //
     const char *constPtr() const { return buffer; }
 
+    // Necessary cast for file systems
+    const char8_t *constPtr8() const { return reinterpret_cast<const char8_t *>(buffer); }
+
     //
     // qstring::length
     //

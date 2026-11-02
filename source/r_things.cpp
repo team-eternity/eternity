@@ -80,8 +80,8 @@ extern int global_cmap_index; // haleyjd: NGCS
 //
 // Defines
 
-static constexpr fixed_t MINZ        = FRACUNIT * 4;
-static constexpr int     BASEYCENTER = 100;
+// static constexpr fixed_t MINZ        = FRACUNIT * 4;
+static constexpr int BASEYCENTER = 100;
 
 inline static bool IS_FULLBRIGHT(const Mobj *const actor)
 {

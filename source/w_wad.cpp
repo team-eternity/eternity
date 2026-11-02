@@ -766,7 +766,7 @@ int WadDirectory::addDirectory(const char *dirpath)
     PODCollection<dirfile_t> files;
     lumpinfo_t              *newlumps;
 
-    dir = fs::u8path(dirpath);
+    dir = fs::path(u8char(dirpath));
     if(!fs::exists(dir))
         return 0;
 
@@ -879,7 +879,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base, 
     qstring path(base);
     path.pathConcatenate(subpath);
 
-    fs::path dir(fs::u8path(path.constPtr()));
+    fs::path dir(fs::path(path.constPtr8()));
     if(!fs::exists(dir))
         return;
 
@@ -949,7 +949,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base, 
 bool WadDirectory::addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
     // Check if it's a directory
-    if(std::error_code ec; !fs::is_directory(fs::u8path(openData.filename), ec))
+    if(std::error_code ec; !fs::is_directory(fs::path(u8char(openData.filename)), ec))
     {
         handleOpenError(openData, addInfo, openData.filename);
         return false;

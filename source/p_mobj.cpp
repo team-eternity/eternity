@@ -994,8 +994,8 @@ void P_XYMovement(Mobj *mo)
     // moving corresponding player, except in old demos:
 
     if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED && mo->momy > -STOPSPEED && mo->momy < STOPSPEED &&
-       (!player || !(player->cmd.forwardmove | player->cmd.sidemove)
-           || (player->mo != mo && demo_version >= 203 && (comp[comp_voodooscroller] || !(mo->intflags & MIF_SCROLLING)))))
+       (!player || !(player->cmd.forwardmove | player->cmd.sidemove) ||
+        (player->mo != mo && demo_version >= 203 && (comp[comp_voodooscroller] || !(mo->intflags & MIF_SCROLLING)))))
     {
         // if in a walking frame, stop moving
 
@@ -1698,7 +1698,7 @@ inline static void P_checkMobjProjections(Mobj &mobj)
     if(useportalgroups && (mobj.z != mobj.sprojlast.pos.z || xychanged || spritecomp != mobj.sprojlast.sprite ||
                            mobj.yscale != mobj.sprojlast.yscale))
     {
-        bool checklines = gMapHasLinePortals && xychanged;
+        //        bool checklines = gMapHasLinePortals && xychanged;
         R_CheckMobjProjections(&mobj);
         mobj.sprojlast.pos.x  = mobj.x;
         mobj.sprojlast.pos.y  = mobj.y;
@@ -2708,8 +2708,8 @@ void P_RespawnSpecials()
     mapthing_t  *mthing;
     int          i;
 
-    if(!(dmflags & DM_ITEMRESPAWN) ||                   // only respawn items in deathmatch
-       iquehead == iquetail ||                          // nothing left to respawn?
+    if(!(dmflags & DM_ITEMRESPAWN) ||                        // only respawn items in deathmatch
+       iquehead == iquetail ||                               // nothing left to respawn?
        leveltime - itemrespawntime[iquetail] < 30 * TICRATE) // wait 30 seconds
         return;
 

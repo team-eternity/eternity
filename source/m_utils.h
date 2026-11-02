@@ -77,6 +77,12 @@ inline static int M_PositiveModPositiveRight(int op1, int op2)
 bool M_IsExMy(const char *name, int *episode, int *map);
 bool M_IsMAPxy(const char *name, int *map);
 
+// Type safe reinterpreting for file systems
+inline static const char8_t *u8char(const char *text)
+{
+    return reinterpret_cast<const char8_t *>(text);
+}
+
 #endif
 
 // EOF
