@@ -26,6 +26,7 @@
 
 #include "m_surf.h"
 
+class UDMFSetupSettings;
 struct line_t;
 struct pslope_t;
 struct rendersector_t;
@@ -71,6 +72,7 @@ void P_MakeLineNormal(line_t *line);
 // Creates one or more slopes based on the given line type and front/back
 // sectors.
 void P_SpawnSlope_Line(int linenum, int staticFn);
+void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings);
 
 //
 // P_CopySectorSlope

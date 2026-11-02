@@ -27,6 +27,7 @@
 #include "doomdef.h"
 #include "e_hash.h"
 #include "e_exdata.h"
+#include "e_udmf.h"
 #include "ev_specials.h"
 #include "i_system.h"
 #include "m_bbox.h"
@@ -52,6 +53,31 @@ struct midtexextras_t
 
 static EHashTable<midtexextras_t, EIntHashKey, &midtexextras_t::lineindex, &midtexextras_t::indexlink> pMidTexExtras;
 
+static void P_calcNormal(pslope_t *ret, surf_e type)
+{
+    v3float_t v1 = ret->of;
+
+    v3float_t v2 = { v1.x, v1.y + 10.0f, P_GetZAtf(ret, v2.x, v2.y) };
+
+    v3float_t v3 = { v1.x + 10.0f, v1.y, P_GetZAtf(ret, v3.x, v3.y) };
+
+    v3float_t d1, d2;
+    if(type == surf_ceil)
+    {
+        d1 = v1 - v3;
+        d2 = v2 - v3;
+    }
+    else
+    {
+        d1 = v1 - v2;
+        d2 = v3 - v2;
+    }
+
+    ret->normalf  = d1 % d2;
+    ret->normalf /= ret->normalf.abs();
+    ret->normal   = v3fixed_t::floatToFixed(ret->normalf);
+}
+
 //
 // P_MakeSlope
 //
@@ -71,35 +97,7 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
     ret->zdeltaf = zdelta;
     ret->zdelta  = M_FloatToFixed(ret->zdeltaf);
 
-    {
-        v3float_t v1 = o;
-
-        v3float_t v2;
-        v2.x = v1.x;
-        v2.y = v1.y + 10.0f;
-        v2.z = P_GetZAtf(ret, v2.x, v2.y);
-
-        v3float_t v3;
-        v3.x = v1.x + 10.0f;
-        v3.y = v1.y;
-        v3.z = P_GetZAtf(ret, v3.x, v3.y);
-
-        v3float_t d1, d2;
-        if(type == surf_ceil)
-        {
-            d1 = v1 - v3;
-            d2 = v2 - v3;
-        }
-        else
-        {
-            d1 = v1 - v2;
-            d2 = v3 - v2;
-        }
-
-        ret->normalf  = d1 % d2;
-        ret->normalf /= ret->normalf.abs();
-        ret->normal   = v3fixed_t::floatToFixed(ret->normalf);
-    }
+    P_calcNormal(ret, type);
 
     //
     // Setup the sector refs
@@ -113,6 +111,68 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d, const float
     ret->groupid = groupid;
 
     return ret;
+}
+
+static pslope_t *P_MakeSlope(const v3float_t &v1, const v3float_t &v2, const v3float_t &v3, const surface_t *surface,
+                             surf_e type, const int *groupid)
+{
+    // ax + by + cz + d = 0, where c is never zero, so instead let's have:
+    // ax + by + c = z
+    float delta = v1.x * v2.y + v2.x * v3.y + v3.x * v1.y - v3.x * v2.y - v2.x * v1.y - v1.x * v3.y;
+    if(!delta)
+    {
+        return nullptr;
+    }
+    float delta_a = v1.z * v2.y + v2.z * v3.y + v3.z * v1.y - v3.z * v2.y - v2.z * v1.y - v1.z * v3.y;
+    float delta_b = v1.x * v2.z + v2.x * v3.z + v3.x * v1.z - v3.x * v2.z - v2.x * v1.z - v1.x * v3.z;
+    float delta_c = v1.x * v2.y * v3.z + v2.x * v3.y * v1.z + v3.x * v1.y * v2.z - v3.x * v2.y * v1.z -
+                    v2.x * v1.y * v3.z - v1.x * v3.y * v2.z;
+
+    float a = delta_a / delta;
+    float b = delta_b / delta;
+    float c = delta_c / delta;
+
+    pslope_t *ret = ecalloctag(pslope_t *, 1, sizeof(pslope_t), PU_LEVEL, nullptr);
+
+    ret->of = v1;
+    ret->o  = v3fixed_t::floatToFixed(ret->of);
+
+    ret->df = v2float_t{ a, b }; // most slopes will be less than 1.0
+    if(!ret->df.x && !ret->df.y)
+        ret->df.x = 1.0f; // put some value for actually flat slopes
+    else
+    {
+        // Normalize it to 32 length
+        ret->df /= ret->df.abs();
+    }
+    ret->d = v2fixed_t::floatToFixed(ret->df);
+
+    ret->zdeltaf = a * ret->df.x + b * ret->df.y;
+    ret->zdelta  = M_FloatToFixed(ret->zdeltaf);
+
+    P_calcNormal(ret, type);
+    //
+    // Setup the sector refs
+    //
+    if(surface)
+    {
+        ret->surfaceZOffset  = ret->o.z - surface->height;
+        ret->surfaceZOffsetF = ret->of.z - surface->heightf;
+    }
+
+    ret->groupid = groupid;
+    return ret;
+}
+
+static pslope_t *P_MakeSlope(const vertex_t &v1, float zsurf1, const vertex_t &v2, float zsurf2, const vertex_t &v3,
+                             float zsurf3, const surface_t &surface, surf_e type, const int *groupid)
+{
+    v3float_t vectors[3] = {
+        { v1.fx, v1.fy, zsurf1 },
+        { v2.fx, v2.fy, zsurf2 },
+        { v3.fx, v3.fy, zsurf3 },
+    };
+    return P_MakeSlope(vectors[0], vectors[1], vectors[2], &surface, type, groupid);
 }
 
 //
@@ -584,6 +644,66 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
     if(!line->tag)
        return;
     */
+}
+
+void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings)
+{
+    if(!setupSettings.hasVertexData())
+        return; // early out for most maps
+    for(int i = 0; i < numsectors; ++i)
+    {
+        sector_t &sector = sectors[i];
+        if(sector.linecount != 3)
+            continue;
+        const vertex_t *sectorVertices[3];
+        int             numSectorVertices = 0;
+        for(int j = 0; j < sector.linecount; ++j)
+        {
+            const line_t *line = sector.lines[j];
+            for(const vertex_t *vertex : { line->v1, line->v2 })
+            {
+                for(int k = 0; k < numSectorVertices; ++k)
+                {
+                    if(sectorVertices[k] == vertex)
+                        goto nextVertex;
+                }
+                if(numSectorVertices == 3)
+                {
+                    // already 3 and we'd add another, so no good
+                    goto nextSector;
+                }
+                sectorVertices[numSectorVertices++] = vertex;
+            nextVertex:;
+            }
+        }
+        if(numSectorVertices != 3)
+            continue;
+        for(surf_e surf : SURFS)
+        {
+            bool   hasOffsets = false;
+            double zcoord[3];
+            int    numOffsets = 0;
+            for(const vertex_t *vertex : sectorVertices)
+            {
+                int           index  = eindex(vertex - ::vertexes);
+                const double *zvalue = setupSettings.getVertexSlopeZ(index, surf);
+                if(zvalue)
+                {
+                    hasOffsets = true;
+
+                    zcoord[numOffsets++] = *zvalue;
+                }
+                else
+                    zcoord[numOffsets++] = sector.srf[surf].heightf;
+            }
+            if(!hasOffsets)
+                continue;
+            sector.srf[surf].slope = P_MakeSlope(
+                *sectorVertices[0], static_cast<float>(zcoord[0]), *sectorVertices[1], static_cast<float>(zcoord[1]),
+                *sectorVertices[2], static_cast<float>(zcoord[2]), sector.srf[surf], surf, &sector.groupid);
+        }
+    nextSector:;
+    }
 }
 
 //

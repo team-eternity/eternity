@@ -198,6 +198,8 @@ enum token_e
     t_ypanningfloor,
     t_yscaleceiling,
     t_yscalefloor,
+    t_zceiling,
+    t_zfloor,
     t_zoneboundary,
 };
 
@@ -376,6 +378,8 @@ static keytoken_t gTokenList[] = {
     TOKEN(ypanningfloor),
     TOKEN(yscaleceiling),
     TOKEN(yscalefloor),
+    TOKEN(zceiling),
+    TOKEN(zfloor),
     TOKEN(zoneboundary),
 };
 

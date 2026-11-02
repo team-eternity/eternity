@@ -1703,6 +1703,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
         }
     }
 
+    P_SpawnVertexSlopes(setupSettings);
+
     // Also attach from setup settings
     P_attachSectors(setupSettings);
 

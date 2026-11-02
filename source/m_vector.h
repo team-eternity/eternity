@@ -24,6 +24,7 @@
 #ifndef M_VECTOR_H__
 #define M_VECTOR_H__
 
+#include <math.h>
 #include "m_fixed.h"
 
 struct cbviewpoint_t;
@@ -188,6 +189,25 @@ struct v2float_t
         x -= other.x;
         y -= other.y;
         return *this;
+    }
+
+    v2float_t &operator*=(float value)
+    {
+        x *= value;
+        y *= value;
+        return *this;
+    }
+
+    v2float_t &operator/=(float value)
+    {
+        x /= value;
+        y /= value;
+        return *this;
+    }
+
+    float abs() const
+    {
+        return sqrtf(powf(x, 2) + powf(y, 2));
     }
 
     //

@@ -5,6 +5,7 @@ For v4.07.00
 ------------
 
 Features:
+* Added vertex slopes in UDMF.
 * Added the comp_voodooscroller OPTIONS compatibility setting from the MBF21 updated standard.
 * Added "freeaim" and "jumping" from UMAPINFO. "Crouching" is recognized but does not enable the feature.
 * Added "enddemon" from UMAPINFO, and now "endbunny", "enddemon" and "endcast" when set to false will clear the finale.

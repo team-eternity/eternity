@@ -82,6 +82,13 @@ void UDMFSetupSettings::useLineCount()
     mLineInitData = estructalloc(lineinfo_t, ::numlines);
 }
 
+void UDMFSetupSettings::useVertexCount()
+{
+    if(mVertexInitData)
+        return;
+    mVertexInitData = estructalloc(vertexinfo_t, ::numvertexes);
+}
+
 //==============================================================================
 //
 // Collecting and processing
@@ -91,7 +98,7 @@ void UDMFSetupSettings::useLineCount()
 //
 // Reads the raw vertices and obtains final ones
 //
-void UDMFParser::loadVertices() const
+void UDMFParser::loadVertices(UDMFSetupSettings &setupSettings) const
 {
     numvertexes = (int)mVertices.getLength();
     vertexes    = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
@@ -102,6 +109,11 @@ void UDMFParser::loadVertices() const
         // SoM: Cardboard stores float versions of vertices.
         vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
         vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
+
+        if(mVertices[i].zfloorset)
+            setupSettings.setVertexSlopeZ(i, surf_floor, mVertices[i].zfloor);
+        if(mVertices[i].zceilingset)
+            setupSettings.setVertexSlopeZ(i, surf_ceil, mVertices[i].zceiling);
     }
 }
 
@@ -822,6 +834,22 @@ void UDMFParser::readVertexToken(uvertex_t *vertex, const keytoken_t *kt) const
         requireFixed(vertex->x, vertex->xset);
     else if(kt->token == t_y)
         requireFixed(vertex->y, vertex->yset);
+    else if(kt->token == t_zfloor)
+    {
+        if(mValue.type == Token::type_Number)
+        {
+            vertex->zfloor = mValue.number;
+            vertex->zfloorset = true;
+        }
+    }
+    else if(kt->token == t_zceiling)
+    {
+        if(mValue.type == Token::type_Number)
+        {
+            vertex->zceiling = mValue.number;
+            vertex->zceilingset = true;
+        }
+    }
 }
 
 //

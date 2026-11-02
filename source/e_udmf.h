@@ -27,6 +27,7 @@
 #ifndef E_UDMF_H_
 #define E_UDMF_H_
 
+#include <optional>
 #include "m_collection.h"
 #include "m_fixed.h"
 #include "m_qstr.h"
@@ -93,18 +94,26 @@ class UDMFSetupSettings : public ZoneObject
         int portal;
     };
 
-    sectorinfo_t *mSectorInitData;
-    lineinfo_t   *mLineInitData;
+    struct vertexinfo_t
+    {
+        std::optional<double> zfloor;
+        std::optional<double> zceiling;
+    };
+
+    sectorinfo_t *mSectorInitData = nullptr;
+    lineinfo_t   *mLineInitData   = nullptr;
+    vertexinfo_t *mVertexInitData = nullptr;
 
     void useSectorCount();
     void useLineCount();
+    void useVertexCount();
 
 public:
-    UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr) {}
     ~UDMFSetupSettings()
     {
         efree(mSectorInitData);
         efree(mLineInitData);
+        efree(mVertexInitData);
     }
 
     //
@@ -158,6 +167,26 @@ public:
         useSectorCount();
         return mSectorInitData[index].attach;
     }
+
+    void setVertexSlopeZ(int index, surf_e surf, fixed_t value)
+    {
+        useVertexCount();
+        if(surf == surf_floor)
+            mVertexInitData[index].zfloor = value;
+        else
+            mVertexInitData[index].zceiling = value;
+    }
+
+    const double *getVertexSlopeZ(int index, surf_e surf) const
+    {
+        if(!mVertexInitData)
+            return nullptr;
+        std::optional<double> vertexinfo_t::*field =
+            surf == surf_floor ? &vertexinfo_t::zfloor : &vertexinfo_t::zceiling;
+        return (mVertexInitData[index].*field).has_value() ? &(mVertexInitData[index].*field).value() : nullptr;
+    }
+
+    bool hasVertexData() const { return !!mVertexInitData; }
 };
 
 //==============================================================================
@@ -184,7 +213,7 @@ public:
         namespace_Eternity
     };
 
-    void loadVertices() const;
+    void loadVertices(UDMFSetupSettings &setupSettings) const;
     void loadSectors(UDMFSetupSettings &setupSettings) const;
     void loadSidedefs() const;
     bool loadLinedefs(UDMFSetupSettings &setupSettings);
@@ -321,6 +350,8 @@ private:
     {
         fixed_t x, y;
         bool    xset, yset;
+        double  zfloor, zceiling;
+        bool    zfloorset, zceilingset;
     };
 
     class USector : public ZoneObject
