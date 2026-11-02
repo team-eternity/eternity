@@ -262,11 +262,11 @@ namespace Aeon
 
         { "fixed_t radius",             asOFFSET(Mobj, radius)  },
         { "fixed_t height",             asOFFSET(Mobj, height)  },
-        { "vector3_t mom",              asOFFSET(Mobj, mom)     },
+        { "vector3_t mom",              asOFFSET(Mobj, momx)    }, // NOTE: This sucks.
 
         { "int health",                 asOFFSET(Mobj, health)  },
 
-        { "MobjFlags flags",            asOFFSET(Mobj, flagset) },
+        { "MobjFlags flags",            asOFFSET(Mobj, flags)   }, // NOTE: This sucks.
 
         { "Mobj @target",               asOFFSET(Mobj, target)  },
         { "Mobj @tracer",               asOFFSET(Mobj, tracer)  },
@@ -328,7 +328,7 @@ namespace Aeon
         { "const int gibhealth",     asOFFSET(mobjinfo_t, gibhealth)     },
         { "const int respawntime",   asOFFSET(mobjinfo_t, respawntime)   },
         { "const int respawnchance", asOFFSET(mobjinfo_t, respawnchance) },
-        { "const MobjFlags flags",   asOFFSET(mobjinfo_t, flagset)       },
+        { "const MobjFlags flags",   asOFFSET(mobjinfo_t, flags)         }, // NOTE: This sucks.
     };
 
     void ScriptObjMobj::PreInit()

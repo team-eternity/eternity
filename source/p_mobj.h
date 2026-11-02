@@ -268,16 +268,9 @@ public:
     fixed_t height;
 
     // Momentums, used to update position.
-    union
-    {
-        v3fixed_t mom;
-        struct
-        {
-            fixed_t momx;
-            fixed_t momy;
-            fixed_t momz;
-        };
-    };
+    fixed_t momx;
+    fixed_t momy;
+    fixed_t momz;
 
     // If == validcount, already checked.
     int validcount;
@@ -296,19 +289,12 @@ public:
 
     int          tics; // state tic counter
     state_t     *state;
-    union
-    {
-        // If you ever need to add to this then you MUST add to mobjflagset_t.
-        struct
-        {
-            unsigned int flags;
-            unsigned int flags2; // haleyjd 04/09/99: I know, kill me now
-            unsigned int flags3; // haleyjd 11/03/02
-            unsigned int flags4; // haleyjd 09/13/09
-            unsigned int flags5; // MaxW: 2021/02/14: flags5
-        };
-        mobjflagset_t flagset;
-    };
+    // If you ever need to add to this then you MUST add to mobjflagset_t.
+    unsigned int flags;
+    unsigned int flags2;   // haleyjd 04/09/99: I know, kill me now
+    unsigned int flags3;   // haleyjd 11/03/02
+    unsigned int flags4;   // haleyjd 09/13/09
+    unsigned int flags5;   // MaxW: 2021/02/14: flags5
     int          intflags; // killough 9/15/98: internal flags
     int          health;
 
