@@ -54,8 +54,8 @@ extern int p_lastenemyroar;
 bool P_CheckMissileRange(Mobj *actor);
 bool P_HelpFriend(Mobj *actor);
 bool P_HitFriend(Mobj *actor);
-bool P_LookForPlayers(Mobj *actor, int allaround);
-bool P_LookForTargets(Mobj *actor, int allaround);
+bool P_LookForPlayers(Mobj *actor, angle_t fov);
+bool P_LookForTargets(Mobj *actor, angle_t fov);
 int  P_Move(Mobj *actor, const dropoffType_e dropoff); // killough 9/12/98
 void P_NewChaseDir(Mobj *actor);
 bool P_SmartMove(Mobj *actor);

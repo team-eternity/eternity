@@ -986,12 +986,10 @@ void P_NewChaseDir(Mobj *actor)
 }
 
 //
-// P_IsVisible
-//
 // killough 9/9/98: whether a target is visible to a monster
 // ioanch 20151229: made portal aware
 //
-static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
+static bool P_IsVisible(Mobj *actor, Mobj *mo, const angle_t fov)
 {
     if(mo->flags4 & MF4_TOTALINVISIBLE)
         return 0; // haleyjd: total invisibility!
@@ -1014,10 +1012,12 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
             return false;
     }
 
-    if(!allaround)
+    if(fov != ANG360)
     {
-        const angle_t an = P_PointToAngle(actor->x, actor->y, mox, moy) - actor->angle;
-        if(an > ANG90 && an < ANG270 && P_AproxDistance(mox - actor->x, moy - actor->y) > WAKEUPRANGE)
+        const angle_t halffov = fov >> 1;
+        const angle_t an        = P_PointToAngle(actor->x, actor->y, mox, moy) - actor->angle;
+        if(an > (ANG180 - halffov) && an < (ANG180 + halffov) &&
+           P_AproxDistance(mox - actor->x, moy - actor->y) > WAKEUPRANGE)
             return false;
     }
 
@@ -1047,10 +1047,8 @@ static void P_LastEnemyRoar(Mobj *actor)
         P_MakeSeeSound(actor, pr_misc); // don't affect the play sim.
 }
 
-static int current_allaround;
+static angle_t current_fov;
 
-//
-// PIT_FindTarget
 //
 // killough 9/5/98
 //
@@ -1073,7 +1071,7 @@ static bool PIT_FindTarget(Mobj *mo, void *context)
         return true;
     }
 
-    if(!P_IsVisible(actor, mo, current_allaround))
+    if(!P_IsVisible(actor, mo, current_fov))
         return true;
 
     P_SetTarget<Mobj>(&actor->lastenemy, actor->target); // Remember previous target
@@ -1134,12 +1132,10 @@ static bool P_HereticMadMelee(Mobj *actor)
 }
 
 //
-// P_LookForPlayers
-//
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-bool P_LookForPlayers(Mobj *actor, int allaround)
+bool P_LookForPlayers(Mobj *actor, angle_t fov)
 {
     player_t *player;
     int       stop, stopc, c;
@@ -1149,7 +1145,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
         int anyone;
 
 #if 0
-      if(!allaround) // If you want friendly monsters not to awaken unprovoked
+      if(fov != ANG360) // If you want friendly monsters not to awaken unprovoked
          return false;
 #endif
 
@@ -1159,7 +1155,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
             for(c = 0; c < MAXPLAYERS; ++c)
             {
                 if(playeringame[c] && players[c].playerstate == PST_LIVE &&
-                   (anyone || P_IsVisible(actor, players[c].mo, allaround)))
+                   (anyone || P_IsVisible(actor, players[c].mo, fov)))
                 {
                     P_SetTarget<Mobj>(&actor->target, players[c].mo);
 
@@ -1230,7 +1226,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
         if(player->health <= 0)
             continue; // dead
 
-        if(unseen[actor->lastlook] || !P_IsVisible(actor, player->mo, allaround))
+        if(unseen[actor->lastlook] || !P_IsVisible(actor, player->mo, fov))
         {
             unseen[actor->lastlook] = true;
             continue;
@@ -1248,15 +1244,13 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
 }
 
 //
-// P_LookForMonsters
-//
 // Friendly monsters, by Lee Killough 7/18/98
 //
 // Friendly monsters go after other monsters first, but
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-static bool P_LookForMonsters(Mobj *actor, int allaround)
+static bool P_LookForMonsters(Mobj *actor, angle_t fov)
 {
     Thinker *cap, *th;
 
@@ -1287,8 +1281,8 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
         int y = (actor->y - bmaporgy) >> MAPBLOCKSHIFT;
         int d;
 
-        current_actor     = actor;
-        current_allaround = allaround;
+        current_actor = actor;
+        current_fov   = fov;
 
         // Search first in the immediate vicinity.
 
@@ -1342,18 +1336,14 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
 }
 
 //
-// P_LookForTargets
-//
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
-bool P_LookForTargets(Mobj *actor, int allaround)
+bool P_LookForTargets(Mobj *actor, angle_t fov)
 {
-    return actor->flags & MF_FRIEND ? P_LookForMonsters(actor, allaround) || P_LookForPlayers(actor, allaround) :
-                                      P_LookForPlayers(actor, allaround) || P_LookForMonsters(actor, allaround);
+    return actor->flags & MF_FRIEND ? P_LookForMonsters(actor, fov) || P_LookForPlayers(actor, fov) :
+                                      P_LookForPlayers(actor, fov) || P_LookForMonsters(actor, fov);
 }
 
-//
-// P_HelpFriend
 //
 // killough 9/8/98: Help friends in danger of dying
 //
@@ -1365,8 +1355,8 @@ bool P_HelpFriend(Mobj *actor)
     if(actor->health * 3 < actor->getModifiedSpawnHealth())
         return false;
 
-    current_actor     = actor;
-    current_allaround = true;
+    current_actor = actor;
+    current_fov   = ANG360;
 
     // Possibly help a friend under 50% health
     cap = &thinkerclasscap[actor->flags & MF_FRIEND ? th_friends : th_enemies];

@@ -100,9 +100,9 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
 //
 void A_Look(actionargs_t *actionargs)
 {
-    Mobj *actor     = actionargs->actor;
-    Mobj *sndtarget = actor->subsector->sector->soundtarget;
-    bool  allaround = false;
+    Mobj   *actor     = actionargs->actor;
+    Mobj   *sndtarget = actor->subsector->sector->soundtarget;
+    angle_t fov       = ANG180;
 
     // killough 7/18/98:
     // Friendly monsters go after other monsters first, but
@@ -112,18 +112,18 @@ void A_Look(actionargs_t *actionargs)
     actor->threshold = actor->pursuecount = 0;
 
     if(actor->flags4 & MF4_LOOKALLAROUND)
-        allaround = true;
+        fov = ANG360;
 
     // If a friend, look for targets immediately.
     // If a monster, go on to check soundtarget first.
-    if(!(actor->flags & MF_FRIEND) || !P_LookForTargets(actor, allaround))
+    if(!(actor->flags & MF_FRIEND) || !P_LookForTargets(actor, fov))
     {
         if(!sndtarget || !(sndtarget->flags & MF_SHOOTABLE))
         {
             // There is no valid soundtarget.
             // If a friend, return.
             // If a monster, look for players.
-            if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
+            if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, fov))
                 return;
         }
         else
@@ -142,7 +142,7 @@ void A_Look(actionargs_t *actionargs)
                 // We couldn't see the soundtarget.
                 // If a friend, return.
                 // If a monster, look for other players.
-                if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
+                if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, fov))
                     return;
             }
         }
@@ -295,7 +295,7 @@ void A_Chase(actionargs_t *actionargs)
 
     if(!actor->target || !(actor->target->flags & MF_SHOOTABLE))
     {
-        if(!P_LookForTargets(actor, true))                  // look for a new target
+        if(!P_LookForTargets(actor, ANG360))                // look for a new target
             P_SetMobjState(actor, actor->info->spawnstate); // no new target
         return;
     }
@@ -346,7 +346,7 @@ void A_Chase(actionargs_t *actionargs)
         if(demo_version < 203)
         {
             // killough 9/9/98: for backward demo compatibility
-            if(netgame && !P_CheckSight(actor, actor->target) && P_LookForPlayers(actor, true))
+            if(netgame && !P_CheckSight(actor, actor->target) && P_LookForPlayers(actor, ANG360))
                 return;
         }
         else // killough 7/18/98, 9/9/98: new monster AI
@@ -383,9 +383,9 @@ void A_Chase(actionargs_t *actionargs)
 
                     if(actor->info->missilestate == NullStateNum && actor->flags & MF_FRIEND)
                     {
-                        if(actor->flags & MF_JUSTHIT)          // if recent action,
-                            actor->flags &= ~MF_JUSTHIT;       // keep fighting
-                        else if(P_LookForPlayers(actor, true)) // else return to player
+                        if(actor->flags & MF_JUSTHIT)            // if recent action,
+                            actor->flags &= ~MF_JUSTHIT;         // keep fighting
+                        else if(P_LookForPlayers(actor, ANG360)) // else return to player
                             return;
                     }
                 }

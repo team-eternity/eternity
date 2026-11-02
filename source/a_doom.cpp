@@ -1618,7 +1618,7 @@ void A_SpawnFly(actionargs_t *actionargs)
     // killough 8/29/98: add to appropriate thread
     newmobj->updateThinker();
 
-    if(P_LookForTargets(newmobj, true)) // killough 9/4/98
+    if(P_LookForTargets(newmobj, ANG360)) // killough 9/4/98
         P_SetMobjState(newmobj, newmobj->info->seestate);
 
     // telefrag anything in this spot
