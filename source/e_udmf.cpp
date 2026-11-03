@@ -834,20 +834,23 @@ void UDMFParser::readVertexToken(uvertex_t *vertex, const keytoken_t *kt) const
         requireFixed(vertex->x, vertex->xset);
     else if(kt->token == t_y)
         requireFixed(vertex->y, vertex->yset);
-    else if(kt->token == t_zfloor)
+    else if(mNamespace == namespace_Eternity)
     {
-        if(mValue.type == Token::type_Number)
+        if(kt->token == t_zfloor)
         {
-            vertex->zfloor = mValue.number;
-            vertex->zfloorset = true;
+            if(mValue.type == Token::type_Number)
+            {
+                vertex->zfloor = mValue.number;
+                vertex->zfloorset = true;
+            }
         }
-    }
-    else if(kt->token == t_zceiling)
-    {
-        if(mValue.type == Token::type_Number)
+        else if(kt->token == t_zceiling)
         {
-            vertex->zceiling = mValue.number;
-            vertex->zceilingset = true;
+            if(mValue.type == Token::type_Number)
+            {
+                vertex->zceiling = mValue.number;
+                vertex->zceilingset = true;
+            }
         }
     }
 }

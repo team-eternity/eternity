@@ -357,96 +357,90 @@ private:
     class USector : public ZoneObject
     {
     public:
-        int     heightfloor;
-        int     heightceiling;
-        fixed_t xpanningfloor;
-        fixed_t ypanningfloor;
-        fixed_t xpanningceiling;
-        fixed_t ypanningceiling;
-        double  xscalefloor;
-        double  yscalefloor;
-        double  xscaleceiling;
-        double  yscaleceiling;
-        double  rotationfloor;
-        double  rotationceiling;
+        int     heightfloor     = 0;
+        int     heightceiling   = 0;
+        fixed_t xpanningfloor   = 0;
+        fixed_t ypanningfloor   = 0;
+        fixed_t xpanningceiling = 0;
+        fixed_t ypanningceiling = 0;
+        double  xscalefloor     = 1.0;
+        double  yscalefloor     = 1.0;
+        double  xscaleceiling   = 1.0;
+        double  yscaleceiling   = 1.0;
+        double  rotationfloor   = 0.0;
+        double  rotationceiling = 0.0;
 
         // Brand new UDMF scroller properties
-        double  scroll_ceil_x;
-        double  scroll_ceil_y;
-        qstring scroll_ceil_type;
+        double  scroll_ceil_x    = 0.0;
+        double  scroll_ceil_y    = 0.0;
+        qstring scroll_ceil_type = qstring("none");
 
-        double  scroll_floor_x;
-        double  scroll_floor_y;
-        qstring scroll_floor_type;
+        double  scroll_floor_x    = 0.0;
+        double  scroll_floor_y    = 0.0;
+        qstring scroll_floor_type = qstring("none");
 
-        bool secret;
-        int  friction;
+        bool secret   = false;
+        int  friction = -1;
 
-        int     leakiness;
-        int     damageamount;
-        int     damageinterval;
-        bool    damage_endgodmode;
-        bool    damage_exitlevel;
-        bool    damageterraineffect;
-        qstring damagetype;
-        qstring floorterrain;
-        qstring ceilingterrain;
+        int     leakiness           = 0;
+        int     damageamount        = 0;
+        int     damageinterval      = 32;
+        bool    damage_endgodmode   = false;
+        bool    damage_exitlevel    = false;
+        bool    damageterraineffect = false;
+        qstring damagetype          = qstring("Unknown");
+        qstring floorterrain        = qstring("@flat");
+        qstring ceilingterrain      = qstring("@flat");
 
-        int  lightfloor;
-        int  lightceiling;
-        bool lightfloorabsolute;
-        bool lightceilingabsolute;
-        bool phasedlight;
-        bool lightsequence;
-        bool lightseqalt;
+        int  lightfloor           = 0;
+        int  lightceiling         = 0;
+        bool lightfloorabsolute   = false;
+        bool lightceilingabsolute = false;
+        bool phasedlight          = false;
+        bool lightsequence        = false;
+        bool lightseqalt          = false;
 
-        qstring colormaptop;
-        qstring colormapmid;
-        qstring colormapbottom;
+        qstring colormaptop    = qstring("@default");
+        qstring colormapmid    = qstring("@default");
+        qstring colormapbottom = qstring("@default");
 
         qstring texturefloor;
         qstring textureceiling;
-        int     lightlevel;
-        int     special;
-        int     identifier;
+        int     lightlevel = 160;
+        int     special    = 0;
+        int     identifier = 0;
 
-        int floorid, ceilingid;
-        int attachfloor, attachceiling;
+        int floorid = 0, ceilingid = 0;
+        int attachfloor = 0, attachceiling = 0;
 
         qstring soundsequence;
 
-        bool tfloorset, tceilset;
+        bool tfloorset = false, tceilset = false;
 
         // ED's portalflags.ceiling, and overlayalpha.ceiling
-        bool    portal_ceil_disabled;
-        bool    portal_ceil_norender;
-        bool    portal_ceil_nopass;
-        bool    portal_ceil_blocksound;
-        bool    portal_ceil_useglobaltex;
-        qstring portal_ceil_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
-        bool    portal_ceil_attached;
-        double  alphaceiling;
+        bool portal_ceil_disabled     = false;
+        bool portal_ceil_norender     = false;
+        bool portal_ceil_nopass       = false;
+        bool portal_ceil_blocksound   = false;
+        bool portal_ceil_useglobaltex = false;
+        // OVERLAY and ADDITIVE consolidated into a single property
+        qstring portal_ceil_overlaytype = qstring("none");
+        bool    portal_ceil_attached    = false;
+        double  alphaceiling            = 1.0;
 
         // ED's portalflags.floor, and overlayalpha.floor
-        bool    portal_floor_disabled;
-        bool    portal_floor_norender;
-        bool    portal_floor_nopass;
-        bool    portal_floor_blocksound;
-        bool    portal_floor_useglobaltex;
-        qstring portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
-        bool    portal_floor_attached;
-        double  alphafloor;
+        bool portal_floor_disabled     = false;
+        bool portal_floor_norender     = false;
+        bool portal_floor_nopass       = false;
+        bool portal_floor_blocksound   = false;
+        bool portal_floor_useglobaltex = false;
+        // OVERLAY and ADDITIVE consolidated into a single property
+        qstring portal_floor_overlaytype = qstring("none");
+        bool    portal_floor_attached    = false;
+        double  alphafloor               = 1.0;
 
-        int portalceiling; // floor portal id
-        int portalfloor;   // floor portal id
-
-        USector()
-            : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0), scroll_ceil_type("none"),
-              scroll_floor_type("none"), friction(-1), damageinterval(32), damagetype("Unknown"), floorterrain("@flat"),
-              ceilingterrain("@flat"), colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
-              lightlevel(160), portal_ceil_overlaytype("none"), alphaceiling(1.0), portal_floor_overlaytype("none"),
-              alphafloor(1.0)
-        {}
+        int portalceiling = 0; // floor portal id
+        int portalfloor   = 0; // floor portal id
     };
 
     struct uthing_t
