@@ -194,6 +194,12 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
 
             setupSettings.setSectorPortals(i, us.portalceiling, us.portalfloor);
             setupSettings.getAttachInfo(i) = udmfattach_t{ us.floorid, us.ceilingid, us.attachfloor, us.attachceiling };
+
+            // plane equations
+            setupSettings.setSectorPlane(i, surf_floor, us.floorplane_a, us.floorplane_b, us.floorplane_c,
+                                         us.floorplane_d);
+            setupSettings.setSectorPlane(i, surf_ceil, us.ceilingplane_a, us.ceilingplane_b, us.ceilingplane_c,
+                                         us.ceilingplane_d);
         }
         else
         {
@@ -948,6 +954,16 @@ void UDMFParser::readSectorToken(USector *sector, const keytoken_t *kt) const
 
             READ_NUMBER(sector, portalceiling);
             READ_NUMBER(sector, portalfloor);
+
+                READ_NUMBER(sector, floorplane_a);
+                READ_NUMBER(sector, floorplane_b);
+                READ_NUMBER(sector, floorplane_c);
+                READ_NUMBER(sector, floorplane_d);
+                READ_NUMBER(sector, ceilingplane_a);
+                READ_NUMBER(sector, ceilingplane_b);
+                READ_NUMBER(sector, ceilingplane_c);
+                READ_NUMBER(sector, ceilingplane_d);
+
             default:
                 break;
         }

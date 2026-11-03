@@ -1546,6 +1546,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
     P_FindPolyobjectSectorCouples();
 
+    P_SpawnSectorPlaneEquationSlopes(setupSettings);
+
     for(int i = 0; i < numlines; i++)
     {
         line_t *line     = &lines[i];

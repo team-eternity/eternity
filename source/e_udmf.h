@@ -81,12 +81,19 @@ struct udmfattach_t
 //
 class UDMFSetupSettings : public ZoneObject
 {
+    struct planeeq_t
+    {
+        double a, b, c, d; // plane coefficients: ax + by + cz + d = 0
+    };
+
     struct sectorinfo_t
     {
         unsigned     flags;
         int          portalceiling;
         int          portalfloor;
         udmfattach_t attach;
+
+        Surfaces<planeeq_t> plane;
     };
 
     struct lineinfo_t
@@ -146,6 +153,29 @@ public:
         portalceiling = 0;
         portalfloor   = 0;
     }
+    void setSectorPlane(int index, surf_e surf, double a, double b, double c, double d)
+    {
+        useSectorCount();
+        mSectorInitData[index].plane[surf].a = a;
+        mSectorInitData[index].plane[surf].b = b;
+        mSectorInitData[index].plane[surf].c = c;
+        mSectorInitData[index].plane[surf].d = d;
+    }
+    void getSectorPlane(int index, surf_e surf, double &a, double &b, double &c, double &d) const
+    {
+        if(!mSectorInitData)
+        {
+            a = 0;
+            b = 0;
+            c = 0;
+            d = 0;
+            return;
+        }
+        a = mSectorInitData[index].plane[surf].a;
+        b = mSectorInitData[index].plane[surf].b;
+        c = mSectorInitData[index].plane[surf].c;
+        d = mSectorInitData[index].plane[surf].d;
+    }
 
     void setLinePortal(int index, int portal)
     {
@@ -187,6 +217,7 @@ public:
     }
 
     bool hasVertexData() const { return !!mVertexInitData; }
+    bool hasSectorData() const { return !!mSectorInitData; }
 };
 
 //==============================================================================
@@ -441,6 +472,15 @@ private:
 
         int portalceiling = 0; // floor portal id
         int portalfloor   = 0; // floor portal id
+
+        double ceilingplane_a = 0.0;
+        double ceilingplane_b = 0.0;
+        double ceilingplane_c = 0.0;
+        double ceilingplane_d = 0.0;
+        double floorplane_a   = 0.0;
+        double floorplane_b   = 0.0;
+        double floorplane_c   = 0.0;
+        double floorplane_d   = 0.0;
     };
 
     struct uthing_t

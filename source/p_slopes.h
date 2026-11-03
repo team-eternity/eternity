@@ -72,6 +72,7 @@ void P_MakeLineNormal(line_t *line);
 // Creates one or more slopes based on the given line type and front/back
 // sectors.
 void P_SpawnSlope_Line(int linenum, int staticFn);
+void P_SpawnSectorPlaneEquationSlopes(const UDMFSetupSettings &setupSettings);
 void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings);
 
 //

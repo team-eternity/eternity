@@ -646,6 +646,42 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
     */
 }
 
+void P_SpawnSectorPlaneEquationSlopes(const UDMFSetupSettings &setupSettings)
+{
+    if(!setupSettings.hasSectorData())
+        return;
+    for(int i = 0; i < numsectors; ++i)
+    {
+        sector_t &sector = sectors[i];
+        if(!sector.linecount)   // phantom sectors don't matter; we use a line
+            continue;
+        for(surf_e surf : SURFS)
+        {
+            double a, b, c, d;
+            setupSettings.getSectorPlane(i, surf, a, b, c, d);
+            if(!c || (!a && !b))
+                continue;
+            // ax + by + cz + d = 0
+            // z = mx + ny + p
+            // where: m = -a/c, n = -b/c, p = -d/c
+
+            const double m = -a / c, n = -b / c, p = -d / c;
+            
+            
+            // Pick a vertex for the origin
+            const vertex_t *vertex = sector.lines[0]->v1;
+            v3float_t       origin = { .x = vertex->fx, .y = vertex->fy };
+
+            origin.z = m * origin.x + n * origin.y + p;
+            v2float_t direction = { (float)m, (float)n };
+            direction           /= direction.abs();
+            const float zdelta   = m * direction.x + n * direction.y;
+
+            sector.srf[surf].slope = P_MakeSlope(origin, direction, zdelta, &sector.srf[surf], surf, &sector.groupid);
+        }
+    }
+}
+
 void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings)
 {
     if(!setupSettings.hasVertexData())
