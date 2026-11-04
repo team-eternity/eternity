@@ -72,10 +72,13 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        arch: [x86_64, arm64]
-        include:
-          - extra-cmake-arg: -DPNG_INTEL_SSE=on
-            arch: x86_64
+        config:
+          - arch: x86_64
+            nicename: intel
+            extra-cmake-arg: -DPNG_INTEL_SSE=on
+          - arch: arm64
+            nicename: applesilicon
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6.0.3
@@ -140,12 +143,7 @@ jobs:
 
       - name: build DMG
         run: |
-          if [ ${{ matrix.arch }} == x86_64 ]; then
-            nicename=intel
-          fi
-          if [ ${{ matrix.arch }} == arm64 ]; then
-            nicename=applesilicon
-          fi
+          nicename=${{ matrix.config.nicename }}
           hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-$nicename" -fs HFS+ -format UDZO ee-$(git describe --tags)-$nicename.dmg
 
       - name: Archive release build
@@ -164,5 +162,5 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: EternityEngine_${{ env.VERSION }}_MacOS
+          name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.nicename }}
           path: "*.dmg"
