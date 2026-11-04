@@ -42,7 +42,6 @@ jobs:
         cmake --build ${{ matrix.config.bname }} --config Release
 
     - name: Add text files
-      if: github.event_name == 'workflow_dispatch'
       run: |
         Copy-Item AUTHORS ${{ matrix.config.bname }}/eternity/Release/AUTHORS.txt
         Copy-Item COPYING ${{ matrix.config.bname }}/eternity/Release/COPYING.txt
@@ -57,14 +56,29 @@ jobs:
         path: "*.zip"
         archive: false
 
+    - name: Extract Version Number (Development)
+      if: github.event_name != 'workflow_dispatch'
+      shell: bash
+      run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: Upload dev build
+      if: github.event_name != 'workflow_dispatch'
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.name }}
+        path: "*.zip"
+
   build-macos:
     runs-on: macos-latest
     strategy:
       matrix:
-        arch: [x86_64, arm64]
-        include:
-          - extra-cmake-arg: -DPNG_INTEL_SSE=on
-            arch: x86_64
+        config:
+          - arch: x86_64
+            nicename: intel
+            extra-cmake-arg: -DPNG_INTEL_SSE=on
+          - arch: arm64
+            nicename: applesilicon
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6.0.3
@@ -121,7 +135,6 @@ jobs:
           xcrun stapler staple "build/macosx/launcher/Release/Eternity Engine.app"
 
       - name: Add text files
-        if: github.event_name == 'workflow_dispatch'
         run: |
           cp AUTHORS build/macosx/launcher/Release/AUTHORS.txt
           cp COPYING build/macosx/launcher/Release/COPYING.txt
@@ -129,14 +142,8 @@ jobs:
           cp docs/readme.txt "build/macosx/launcher/Release/ee-$(git describe --tags).txt"
 
       - name: build DMG
-        if: github.event_name == 'workflow_dispatch'
         run: |
-          if [ ${{ matrix.arch }} == x86_64 ]; then
-            nicename=intel
-          fi
-          if [ ${{ matrix.arch }} == arm64 ]; then
-            nicename=applesilicon
-          fi
+          nicename=${{ matrix.config.nicename }}
           hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-$nicename" -fs HFS+ -format UDZO ee-$(git describe --tags)-$nicename.dmg
 
       - name: Archive release build
@@ -145,3 +152,15 @@ jobs:
         with:
           path: "*.dmg"
           archive: false
+
+      - name: Extract Version Number (Development)
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Upload dev build
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.nicename }}
+          path: "*.dmg"
