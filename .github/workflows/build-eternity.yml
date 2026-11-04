@@ -57,6 +57,18 @@ jobs:
         path: "*.zip"
         archive: false
 
+    - name: Extract Version Number (Development)
+      if: github.event_name != 'workflow_dispatch'
+      shell: bash
+      run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: Upload dev build
+      if: github.event_name != 'workflow_dispatch'
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.bname }}
+        path: "*.zip"
+
   build-macos:
     runs-on: macos-latest
     strategy:
@@ -145,3 +157,15 @@ jobs:
         with:
           path: "*.dmg"
           archive: false
+
+      - name: Extract Version Number (Development)
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Upload dev build
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: EternityEngine_${{ env.VERSION }}_MacOS
+          path: "*.dmg"
