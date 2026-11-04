@@ -42,7 +42,6 @@ jobs:
         cmake --build ${{ matrix.config.bname }} --config Release
 
     - name: Add text files
-      if: github.event_name == 'workflow_dispatch'
       run: |
         Copy-Item AUTHORS ${{ matrix.config.bname }}/eternity/Release/AUTHORS.txt
         Copy-Item COPYING ${{ matrix.config.bname }}/eternity/Release/COPYING.txt
@@ -95,7 +94,6 @@ jobs:
 
       # https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
       - name: Codesign app bundle
-        if: github.event_name == 'workflow_dispatch'
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_BUILD_CERTIFICATE_BASE64 }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_P12_PASSWORD }}
@@ -114,7 +112,6 @@ jobs:
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app/Contents/Resources/SDL2_mixer.framework/Versions/A/SDL2_mixer" -v
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime "build/macosx/launcher/Release/Eternity Engine.app" -v
       - name: Notarize app bundle
-        if: github.event_name == 'workflow_dispatch'
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARY_USER }}
           PROD_MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
@@ -133,7 +130,6 @@ jobs:
           xcrun stapler staple "build/macosx/launcher/Release/Eternity Engine.app"
 
       - name: Add text files
-        if: github.event_name == 'workflow_dispatch'
         run: |
           cp AUTHORS build/macosx/launcher/Release/AUTHORS.txt
           cp COPYING build/macosx/launcher/Release/COPYING.txt
@@ -141,7 +137,6 @@ jobs:
           cp docs/readme.txt "build/macosx/launcher/Release/ee-$(git describe --tags).txt"
 
       - name: build DMG
-        if: github.event_name == 'workflow_dispatch'
         run: |
           if [ ${{ matrix.arch }} == x86_64 ]; then
             nicename=intel
