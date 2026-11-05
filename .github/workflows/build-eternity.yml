@@ -61,10 +61,10 @@ jobs:
       matrix:
         config:
           - arch: x86_64
-            nicename: intel
+            nicename: macos-intel
             extra-cmake-arg: -DPNG_INTEL_SSE=on
           - arch: arm64
-            nicename: applesilicon
+            nicename: macos-applesilicon
 
     steps:
       - name: Checkout code
