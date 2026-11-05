@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      - macos-ci
   pull_request:
     branches:
       - master
@@ -49,24 +48,11 @@ jobs:
         Copy-Item docs/readme.txt "${{ matrix.config.bname }}/eternity/Release/ee-$(git describe --tags).txt"
         Compress-Archive -path ${{ matrix.config.bname }}\eternity\Release\* -destinationPath "ee-$(git describe --tags)-${{ matrix.config.sname }}.zip"
 
-    - name: Archive release build
-      if: github.event_name == 'workflow_dispatch'
+    - name: Upload build
       uses: actions/upload-artifact@v7.0.1
       with:
         path: "*.zip"
         archive: false
-
-    - name: Extract Version Number (Development)
-      if: github.event_name != 'workflow_dispatch'
-      shell: bash
-      run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-    - name: Upload dev build
-      if: github.event_name != 'workflow_dispatch'
-      uses: actions/upload-artifact@v7.0.1
-      with:
-        name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.name }}
-        path: "*.zip"
 
   build-macos:
     runs-on: macos-latest
@@ -74,10 +60,10 @@ jobs:
       matrix:
         config:
           - arch: x86_64
-            nicename: intel
+            nicename: macos-intel
             extra-cmake-arg: -DPNG_INTEL_SSE=on
           - arch: arm64
-            nicename: applesilicon
+            nicename: macos-applesilicon
 
     steps:
       - name: Checkout code
@@ -146,21 +132,8 @@ jobs:
           nicename=${{ matrix.config.nicename }}
           hdiutil create -srcfolder build/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-$nicename" -fs HFS+ -format UDZO ee-$(git describe --tags)-$nicename.dmg
 
-      - name: Archive release build
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload build
         uses: actions/upload-artifact@v7.0.1
         with:
           path: "*.dmg"
           archive: false
-
-      - name: Extract Version Number (Development)
-        if: github.event_name != 'workflow_dispatch'
-        shell: bash
-        run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Upload dev build
-        if: github.event_name != 'workflow_dispatch'
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: EternityEngine_${{ env.VERSION }}_${{ matrix.config.nicename }}
-          path: "*.dmg"
