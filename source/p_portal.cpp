@@ -1397,6 +1397,11 @@ fixed_t P_PortalZ(const surface_t &surface)
                surface.portal->data.link.planez;
 }
 
+fixed_t P_PortalOrSurfZ(const surface_t &surface, v2fixed_t pos)
+{
+    return surface.pflags & PS_PASSABLE ? P_PortalZ(surface, pos.x, pos.y) : surface.getZAt(pos);
+}
+
 //
 // Builds the sector group mappings
 //

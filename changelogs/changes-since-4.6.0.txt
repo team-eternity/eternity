@@ -33,6 +33,9 @@ Bug fixes:
 * Fixed polyobjects losing rotation information after running ACS SetPolyobjXY on them.
 * Fixed a potential soft lock in Heartland MAP02 when the blue key should become available
   (Doomworld thread #160390).
+* Fixed a bug where polyobjects placed over portals (valid use case if player can't see the
+  polyobject from below portal) gets blocked by things below despite not touching it. This affects
+  Heartland MAP06 (Doomworld thread #160390).
 
 Side effects:
 * Minimum macOS deployment version is now 12, due to system toolchain changes. Development is being

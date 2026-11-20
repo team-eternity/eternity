@@ -174,6 +174,8 @@ inline static fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
     return P_PortalZ(sector.srf[surf]);
 }
 
+fixed_t P_PortalOrSurfZ(const surface_t &surface, v2fixed_t pos);
+
 // Group mappings
 void       P_BuildSectorGroupMappings();
 const int *P_GetSectorsWithGroupId(int groupid, int *count);

@@ -650,10 +650,16 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 // Returns the sector that's reached, or nullptr if group is not reached
 //
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz, int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint, surf_e *surf)
+                                        sector_t *csector, fixed_t midzhint, surf_e *surf, v2fixed_t *destpos)
 {
     if(cgroupid == tgroupid)
+    {
+        if(destpos)
+        {
+            *destpos = { cx, cy };
+        }
         return csector;
+    }
 
     static bool *groupVisit;
     if(!groupVisit)
@@ -698,6 +704,10 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz, i
             {
                 if(surf)
                     *surf = surfs[i];
+                if(destpos)
+                {
+                    *destpos = { x, y };
+                }
                 return sector;
             }
             if(groupVisit[groupid])
@@ -708,10 +718,10 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz, i
     return nullptr;
 }
 
-sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint)
+sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint, v2fixed_t *destpos)
 {
     return P_PointReachesGroupVertically(mo->x, mo->y, mo->z + mo->height / 2, //
-                                         mo->groupid, groupid, mo->subsector->sector, midzhint);
+                                         mo->groupid, groupid, mo->subsector->sector, midzhint, nullptr, destpos);
 }
 
 // EOF

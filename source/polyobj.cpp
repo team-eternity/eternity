@@ -999,10 +999,19 @@ static bool PolyobjIT_clipThings(int x, int y, int groupid, void *data)
         next = mo->bnext;
 
         // always push players even if not solid
-        if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&context->line, mo) || mo->groupid != groupid ||
-           !P_ThingReachesGroupVertically(mo, context->line.frontsector->groupid,
-                                          linesector.srf.floor.getZAt(mo->x, mo->y) / 2 +
-                                              linesector.srf.ceiling.getZAt(mo->x, mo->y) / 2))
+        if(mo->groupid != groupid || !Polyobj_canPushThing(*mo) || Polyobj_untouched(&context->line, mo))
+            continue;
+
+        v2fixed_t destpos = {};
+
+        const sector_t *thingReachedSector = P_ThingReachesGroupVertically(
+            mo, context->line.frontsector->groupid,
+            linesector.srf.floor.getZAt(mo->x, mo->y) / 2 + linesector.srf.ceiling.getZAt(mo->x, mo->y) / 2, &destpos);
+        if(!thingReachedSector)
+            continue;
+        if(demo_version >= 407 && mo->groupid != context->line.frontsector->groupid &&
+           (mo->z + mo->height <= P_PortalOrSurfZ(thingReachedSector->srf.floor, destpos) ||
+            mo->z >= P_PortalOrSurfZ(thingReachedSector->srf.ceiling, destpos)))
         {
             continue;
         }

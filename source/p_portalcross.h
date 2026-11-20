@@ -101,8 +101,9 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 
 // ioanch 20160222
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz, int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint, surf_e *surf = nullptr);
-sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint);
+                                        sector_t *csector, fixed_t midzhint, surf_e *surf = nullptr,
+                                        v2fixed_t *destpos = nullptr);
+sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint, v2fixed_t *destpos = nullptr);
 
 #endif
 
