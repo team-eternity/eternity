@@ -195,8 +195,10 @@ int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node)
     if(!node->dy)
         return y <= node->y ? node->dx < 0 : node->dx > 0;
 
-    x -= node->x;
-    y -= node->y;
+    // Prevent undefined behavior of signed integer difference overflow. Unsigned difference is well
+    // defined
+    x = static_cast<fixed_t>(static_cast<uint32_t>(x) - static_cast<uint32_t>(node->x));
+    y = static_cast<fixed_t>(static_cast<uint32_t>(y) - static_cast<uint32_t>(node->y));
 
     // Try to quickly decide by looking at sign bits.
     if((node->dy ^ node->dx ^ x ^ y) < 0)
@@ -216,8 +218,10 @@ int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node)
     if(!node->dy)
         return y <= node->y ? node->dx < 0 : node->dx > 0;
 
-    x -= node->x;
-    y -= node->y;
+    // Prevent undefined behavior of signed integer difference overflow. Unsigned difference is well
+    // defined
+    x = static_cast<fixed_t>(static_cast<uint32_t>(x) - static_cast<uint32_t>(node->x));
+    y = static_cast<fixed_t>(static_cast<uint32_t>(y) - static_cast<uint32_t>(node->y));
 
     // Try to quickly decide by looking at sign bits.
     if((node->dy ^ node->dx ^ x ^ y) < 0)
