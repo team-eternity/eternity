@@ -820,7 +820,8 @@ install(TARGETS eternity
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/base
         DESTINATION ${SHARE_DIR}
         PATTERN "delete.me" EXCLUDE
-        PATTERN ".svn" EXCLUDE)
+        PATTERN ".svn" EXCLUDE
+        PATTERN "res" EXCLUDE)   # exclude the Eternity WAD source data
 
 ## EOF
 

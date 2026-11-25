@@ -35,6 +35,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "
 
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
+   # do NOT preserve backslashes in invocation arguments (for how we set the source groups)
+   cmake_policy(SET CMP0219 OLD)
 endif(COMMAND cmake_policy)
 if(${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
    message(FATAL_ERROR "In-tree Builds are NOT supported.")
@@ -110,12 +112,15 @@ include_directories(libpng)
 include_directories(zlib)
 include_directories(adlmidi/include)
 
+set(ACSVM_INSTALL_API OFF)
+set(ACSVM_INSTALL_EXE OFF)
+set(ACSVM_INSTALL_LIB OFF)
 set(ACSVM_NOFLAGS ON)
 set(ACSVM_SHARED OFF)
 add_subdirectory(acsvm)
 
 set(WITH_CPP_EXTRAS ON)
-add_subdirectory(adlmidi)
+add_subdirectory(adlmidi EXCLUDE_FROM_ALL)   # prevent ADLMidi from installing with EE
 
 if(NOT APPLE)  # Due to ongoing CI problems, stick to the system zlib on Mac.
    add_subdirectory(zlib)

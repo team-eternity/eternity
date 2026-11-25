@@ -30,6 +30,12 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine is Team Eternity's fl
 set(CPACK_DEBIAN_PACKAGE_SECTION "games")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.11.0), libgcc1 (>= 1:4.4.3), libsdl2-2.0-0 (>=2.0.7), libsdl2-mixer-2.0-0 (>=2.0.2), libsdl2-net-2.0-0 (>=2.0.1), bash")
 set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "freedoom, game-data-packager")
+
+# These need to be set, otherwise we get blanks
+set(CPACK_PACKAGE_VERSION_MAJOR "${CMAKE_PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${CMAKE_PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${CMAKE_PROJECT_VERSION_PATCH}")
+
 set(BUILD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686")
         set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
