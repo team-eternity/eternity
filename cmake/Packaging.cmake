@@ -1,5 +1,7 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
+## Copyright (C) 2020 Max Waine
+## Copyright (C) 2026 Ioan Chera
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
