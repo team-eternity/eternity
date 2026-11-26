@@ -144,6 +144,11 @@ add_subdirectory(libpng)
 # WARNING: add_subdirectory(source) must be below libpng, otherwise the png_static isn't found on Mac.
 add_subdirectory(source)
 
+install(FILES AUTHORS DESTINATION ${SHARE_DIR} RENAME AUTHORS.txt)
+install(FILES COPYING DESTINATION ${SHARE_DIR} RENAME COPYING.txt)
+install(FILES COPYING-EE DESTINATION ${SHARE_DIR} RENAME COPYING-EE.txt)
+execute_process(COMMAND git describe --tags OUTPUT_VARIABLE GIT_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE)
+install(FILES docs/readme.txt DESTINATION ${SHARE_DIR} RENAME "ee-${GIT_REVISION}.txt")
 
 if(WIN32 AND MSVC)
    find_package(MFC)
