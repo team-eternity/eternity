@@ -164,6 +164,7 @@ keyaction_t keyactions[NUMKEYACTIONS] = {
     { "map_clear",         kac_map,     at_variable },
     { "map_grid",          kac_map,     at_variable },
     { "map_overlay",       kac_map,     at_variable },
+    { "map_portaloverlay", kac_map,     at_variable },
 
     // Console Actions
 
