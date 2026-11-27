@@ -44,14 +44,13 @@
 class DWFILE
 {
 protected:
-    int   type;
-    byte *inp, *lump, *data; // Pointer to lump, FILE, or data
-    int   size;
-    int   origsize; // for ungetc
-    int   lumpnum;  // haleyjd 03/08/06: need to save this
+    int   type = 0;
+    byte *inp = nullptr, *lump = nullptr, *data = nullptr; // Pointer to lump, FILE, or data
+    int   size     = 0;
+    int   origsize = 0; // for ungetc
+    int   lumpnum  = 0; // haleyjd 03/08/06: need to save this
 
 public:
-    DWFILE();
     ~DWFILE();
 
     char  *getStr(char *buf, size_t n);

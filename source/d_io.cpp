@@ -37,11 +37,6 @@
 #include "w_wad.h"
 
 //
-// Constructor
-//
-DWFILE::DWFILE() : type(0), inp(nullptr), lump(nullptr), data(nullptr), size(0), origsize(0), lumpnum(0) {}
-
-//
 // Destructor
 //
 DWFILE::~DWFILE()
