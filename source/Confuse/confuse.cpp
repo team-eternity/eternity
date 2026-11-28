@@ -765,24 +765,24 @@ enum
 // haleyjd: parser state structure
 struct cfg_pstate_t
 {
-    int   state;         // current state
-    int   next_state;    // next state to visit, in some circumstances
-    char *opttitle;      // cached option title, for sections
-    bool  append_value;  // += has been used for assignment
-    bool  found_func;    // found "lookfor" function
-    bool  list_nobraces; // list has been defined without braces
-    int   tok;           // current token value
-    int   skip_token;    // skip the next token if > 0
-    int   propindex;     // index within current mvprop option
+    int   state         = 0;       // current state
+    int   next_state    = 0;       // next state to visit, in some circumstances
+    char *opttitle      = nullptr; // cached option title, for sections
+    bool  append_value  = false;   // += has been used for assignment
+    bool  found_func    = false;   // found "lookfor" function
+    bool  list_nobraces = false;   // list has been defined without braces
+    int   tok           = 0;       // current token value
+    int   skip_token    = 0;       // skip the next token if > 0
+    int   propindex     = 0;       // index within current mvprop option
 
     // Data needed to parse title options
-    cfg_value_t *titleParentVal; // remembered parent section value
-    cfg_opt_t   *backupOpt;      // remembered option
-    int          mv_exit_state;  // state to return to from MVPROPS loop
+    cfg_value_t *titleParentVal = nullptr; // remembered parent section value
+    cfg_opt_t   *backupOpt      = nullptr; // remembered option
+    int          mv_exit_state  = 0;       // state to return to from MVPROPS loop
 
-    cfg_opt_t   *opt;     // current option
-    cfg_value_t *val;     // current value
-    cfg_opt_t    funcopt; // dummy option, for function call parsing
+    cfg_opt_t   *opt     = nullptr;              // current option
+    cfg_value_t *val     = nullptr;              // current value
+    cfg_opt_t    funcopt = { .type = CFGT_STR }; // dummy option, for function call parsing
 
     ~cfg_pstate_t()
     {
@@ -796,17 +796,6 @@ struct cfg_pstate_t
 
 // Forward declaration required for recursion.
 static int cfg_parse_internal(cfg_t *cfg, int level);
-
-//
-// cfg_init_pstate
-//
-// Initialize parser state variables.
-//
-static void cfg_init_pstate(cfg_pstate_t *pstate)
-{
-    memset(pstate, 0, sizeof(*pstate));
-    pstate->funcopt.type = CFGT_STR;
-}
 
 // haleyjd: parser state handler function signature
 using cfg_pstate_func = int (*)(cfg_t *, int, cfg_pstate_t &);
@@ -1335,9 +1324,6 @@ static cfg_pstate_func cfg_pstates[CFG_NUM_PSTATES] = {
 static int cfg_parse_internal(cfg_t *cfg, int level)
 {
     cfg_pstate_t pstate;
-
-    // initialize parser state
-    cfg_init_pstate(&pstate);
 
     while(1)
     {
