@@ -1,6 +1,7 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
 ## Copyright (C) 2020 Max Waine
+## Copyright (C) 2026 Ioan Chera
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -35,8 +36,11 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "
 
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
-   # do NOT preserve backslashes in invocation arguments (for how we set the source groups)
-   cmake_policy(SET CMP0219 OLD)
+   if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.4")
+      # do NOT preserve backslashes in invocation arguments (for how we set the source groups). This is to avoid a
+      # warning.
+      cmake_policy(SET CMP0219 OLD)
+   endif()
 endif(COMMAND cmake_policy)
 if(${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
    message(FATAL_ERROR "In-tree Builds are NOT supported.")
