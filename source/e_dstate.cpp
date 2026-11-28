@@ -59,7 +59,7 @@
 //
 
 // enumeration for estatebuf types
-enum
+enum estatebuftype_e
 {
     BUF_LABEL,
     BUF_STATE,
@@ -77,7 +77,8 @@ struct estatebuf_t
 {
     DLListItem<estatebuf_t> links; // linked list links
 
-    int   type;    // type of entry (label, state, etc.)
+    estatebuftype_e type; // type of entry (label, state, etc.)
+
     int   linenum; // origin line number
     char *name;    // name when needed
 
@@ -113,12 +114,12 @@ struct edecparser_t
 
     // counts - incremented during the principals pass and used
     // to pre-allocate a sufficient number of entities for the main pass
-    int numdeclabels;  // number of labels counted
-    int numdecstates;  // number of states counted
-    int numkeywords;   // number of keywords counted
-    int numgotos;      // number of goto's counted
-    int numgotostates; // number of goto's that are also independent states
-    int numstops;      // number of states being removed by stop keywords
+    int  numdeclabels;  // number of labels counted
+    int  numdecstates;  // number of states counted
+    int  numkeywords;   // number of keywords counted
+    int  numgotos;      // number of goto's counted
+    int  numgotostates; // number of goto's that are also independent states
+    bool hasstatestops; // if there are states being removed by stop keywords
 
     // state_t indices - these are relative to states[].
     // only valid during the main pass.
@@ -145,7 +146,7 @@ static edecparser_t DSP;
 //
 // Caches data in the statebuffer list.
 //
-static void E_AddBufferedState(int type, const char *name, int linenum)
+static void E_AddBufferedState(estatebuftype_e type, const char *name, int linenum)
 {
     estatebuf_t *newbuf = estructalloc(estatebuf_t, 1);
 
@@ -932,8 +933,11 @@ static void doKeyword(pstate_t *ps)
 
         // if the keyword is "stop" and the previous buffered object is a label,
         // this is a "kill state"
-        if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL && !ps->tokenbuffer->strCaseCmp("stop"))
-            DSP.numstops++;
+        if(!DSP.hasstatestops && DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
+           !ps->tokenbuffer->strCaseCmp("stop"))
+        {
+            DSP.hasstatestops = true;
+        }
 
         // make a keyword object
         E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->constPtr(), ps->linenum);
@@ -2039,11 +2043,11 @@ static edecstateout_t *E_DecoratePrincipals(const char *owner, const char *input
         DSP.numinternalgotosalloc = DSP.numgotos;
     }
 
-    // We have counted the number of stops after labels exactly.
-    if(DSP.numstops)
+    // We have stops after labels exactly. Allocate for states to "kill"
+    if(DSP.hasstatestops)
     {
-        newdso->killstates    = estructalloc(ekillstate_t, DSP.numstops);
-        newdso->numkillsalloc = DSP.numstops;
+        newdso->killstates    = estructalloc(ekillstate_t, DSP.numdeclabels);
+        newdso->numkillsalloc = DSP.numdeclabels;
     }
 
     return newdso;
