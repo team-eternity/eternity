@@ -1,7 +1,9 @@
 /* Configuration file parser -*- tab-width: 4; -*-
  *
  * Copyright (c) 2002, Martin Hedenfalk <mhe@home.se>
- * Modifications for Eternity Copyright (c) 2003 James Haley
+ * Modifications for Eternity:
+ *   Copyright (c) 2003 James Haley
+ *   Copyright (c) 2026 Ioan Chera
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -639,6 +641,11 @@ int mylex(cfg_t *cfg)
     ls.cfg        = cfg;
 
 include:
+    // It's possible we reach EOF prematurely when reading from a deeper level, so error
+    // out when detected.
+    if(!lexbuffer || !bufferpos)
+        lexer_error(cfg, "premature end of file");
+
     while((ls.c = *bufferpos++))
     {
         if(ls.c != '\r') // keep reading on \r's
