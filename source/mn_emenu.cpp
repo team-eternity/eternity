@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley et al.
+// Copyright (C) 2026 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,11 +26,10 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "d_dehtbl.h"
+#include "m_compare.h"
 #include "mn_engin.h"
 #include "v_misc.h"
-#include "v_video.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -220,11 +219,11 @@ static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items, const char *p
 // Given an EDF menu section, returns an array of menu items.
 // Returns nullptr if an error occurs.
 //
-static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
+static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec, unsigned &itemCount)
 {
     menuitem_t  *items;
     unsigned int i;
-    unsigned int itemCount = cfg_size(menuSec, ITEM_MENU_ITEM);
+    itemCount = cfg_size(menuSec, ITEM_MENU_ITEM);
 
     // woops! menus need at least one real item.
     if(itemCount == 0)
@@ -319,13 +318,15 @@ static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
     menuitem_t  *items;
 
     // first: process items
-    if(!(items = MN_CreateMenuItems(menuSec)))
+    unsigned itemCount = 0;
+    if(!(items = MN_CreateMenuItems(menuSec, itemCount)))
         E_EDFLoggedErr(2, "MN_ProcessMenu: menu %s is empty\n", menu->name);
 
     // process integer items
-    x     = cfg_getint(menuSec, ITEM_MENU_X);
-    y     = cfg_getint(menuSec, ITEM_MENU_Y);
-    first = cfg_getint(menuSec, ITEM_MENU_FIRST);
+    x = cfg_getint(menuSec, ITEM_MENU_X);
+    y = cfg_getint(menuSec, ITEM_MENU_Y);
+    // NOTE: itemCount can't be zero here; at least 1
+    first = eclamp(cfg_getint(menuSec, ITEM_MENU_FIRST), 0, (int)itemCount - 1);
 
     // process string items
     prev = cfg_getstr(menuSec, ITEM_MENU_PREVPAGE);
