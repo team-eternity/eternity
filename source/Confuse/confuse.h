@@ -1,7 +1,9 @@
 /* Configuration file parser -*- tab-width: 4; -*-
  *
  * Copyright (c) 2002-2003, Martin Hedenfalk <mhe@home.se>
- * Modifications for Eternity (c) 2003 James Haley
+ * Modifications for Eternity:
+ *   (c) 2003 James Haley
+ *   (c) 2026 Ioan Chera
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -679,13 +681,6 @@ cfg_t *cfg_gettitleprops(cfg_t *cfg);
 extern const char *confuse_copyright;
 extern const char *confuse_version;
 extern const char *confuse_author;
-
-/** Predefined include-function. This function can be used in the
- * options passed to cfg_init() to specify a function for including
- * other configuration files in the parsing. For example:
- * CFG_FUNC("include", &cfg_include)
- */
-int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv);
 
 char *cfg_tilde_expand(const char *filename);
 

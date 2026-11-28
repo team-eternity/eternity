@@ -1,7 +1,9 @@
 /* Configuration file parser -*- tab-width: 4; -*-
  *
  * Copyright (c) 2002-2003, Martin Hedenfalk <mhe@home.se>
- * Modifications for Eternity Copyright (c) 2012 James Haley
+ * Modifications for Eternity:
+ *   Copyright (c) 2012 James Haley
+ *   Copyright (c) 2026 Ioan Chera
  *
  *
  * This program is free software: you can redistribute it and/or modify
@@ -1487,22 +1489,6 @@ void cfg_free(cfg_t *cfg)
         efree(cfg->filename);
 
     efree(cfg);
-}
-
-int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
-{
-    char *data;
-
-    if(argc != 1)
-    {
-        cfg_error(cfg, "wrong number of arguments to cfg_include()\n");
-        return 1;
-    }
-
-    if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, nullptr)))
-        return 1;
-
-    return cfg_lexer_include(cfg, data, argv[0], -1);
 }
 
 //=============================================================================

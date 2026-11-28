@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley et al.
+// Copyright (C) 2026 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -220,8 +220,8 @@ static int E_findFileInclude(cfg_t *src, const char *name)
     qname.replace("\\", '/');
     if(qname[0] != '/')
     {
-        qstring parentdir = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(src->filename);
-        size_t lastslashloc = parentdir.findLastOf('/');
+        qstring parentdir    = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(src->filename);
+        size_t  lastslashloc = parentdir.findLastOf('/');
         parentdir.truncate(lastslashloc + 1);
 
         includepath << parentdir;
@@ -307,8 +307,10 @@ int E_SetDialect(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 // E_Include
 //
-// The normal include function. cfg_include is insufficient since it
-// looks in the current working directory unless provided a full path.
+// The normal include function. cfg_include was insufficient since it
+// looked in the current working directory unless provided a full path,
+// so we removed it.
+//
 // This function interprets paths relative to the current file when
 // called from a physical input file, and uses the argument as a lump
 // name otherwise.
