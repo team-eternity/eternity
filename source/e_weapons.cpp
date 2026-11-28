@@ -1341,7 +1341,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *const weaponsec, cfg_t *pcfg,
     if(cfg_size(weaponsec, ITEM_WPN_SLOTNUM) > 0)
     {
         tempint = cfg_getint(weaponsec, ITEM_WPN_SLOTNUM) - 1;
-        if(tempint < 0 || tempint > NUMWEAPONSLOTS)
+        if(tempint < 0 || tempint >= NUMWEAPONSLOTS)
         {
             E_EDFLoggedWarning(2, "E_processWeapon: invalid slotnumber in weaponinfo '%s'\n", wp.name);
         }
