@@ -686,7 +686,11 @@ include:
         else
         {
             // done with an include file
-            efree(cfg->filename);
+
+            // Dynamically allocated sub-configs (sections or mvprops) don't own their filename strings.
+            // This can happen if the included file starts a section without ending it
+            if(!is_set(CFGF_ALLOCATED, cfg->flags))
+                efree(cfg->filename);
             lexer_free_buffer();
             lexbuffer      = include_stack[include_stack_ptr].buffer;
             bufferpos      = include_stack[include_stack_ptr].pos;
