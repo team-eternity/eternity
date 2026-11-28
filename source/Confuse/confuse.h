@@ -232,13 +232,13 @@ struct cfg_opt_t
  */
 constexpr cfg_opt_t CFG_STR(const char *const name, const char *const def, const cfg_flag_t flags)
 {
-    return { name, CFGT_STR, 0, nullptr, flags, nullptr, 0, def, false, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_STR, .flags = flags, .sdef = def };
 }
 
 constexpr cfg_opt_t CFG_STR_CB(const char *const name, const char *const def, const cfg_flag_t flags,
                                const cfg_callback_t cb)
 {
-    return { name, CFGT_STR, 0, nullptr, flags, nullptr, 0, def, false, 0, nullptr, nullptr, cb };
+    return { .name = name, .type = CFGT_STR, .flags = flags, .sdef = def, .cb = cb };
 }
 
 /** Initialize a "simple" string option.
@@ -268,39 +268,39 @@ constexpr cfg_opt_t CFG_STR_CB(const char *const name, const char *const def, co
  */
 constexpr cfg_opt_t CFG_SIMPLE_STR(const char *const name, void *const value)
 {
-    return { name, CFGT_STR, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+    return { .name = name, .type = CFGT_STR, .simple_value = value };
 }
 
 /** Initialize an integer option
  */
 constexpr cfg_opt_t CFG_INT(const char *const name, const int def, const cfg_flag_t flags)
 {
-    return { name, CFGT_INT, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_INT, .flags = flags, .idef = def };
 }
 
 constexpr cfg_opt_t CFG_INT_CB(const char *const name, const int def, const cfg_flag_t flags, const cfg_callback_t cb)
 {
-    return { name, CFGT_INT, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, cb };
+    return { .name = name, .type = CFGT_INT, .flags = flags, .idef = def, .cb = cb };
 }
 
 /** Initialize a "simple" integer option.
  */
 constexpr cfg_opt_t CFG_SIMPLE_INT(const char *const name, void *const value)
 {
-    return { name, CFGT_INT, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+    return { .name = name, .type = CFGT_INT, .simple_value = value };
 }
 
 /** Initialize a floating point option
  */
 constexpr cfg_opt_t CFG_FLOAT(const char *const name, const double def, const cfg_flag_t flags)
 {
-    return { name, CFGT_FLOAT, 0, nullptr, flags, nullptr, 0, nullptr, false, def, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_FLOAT, .flags = flags, .fpdef = def };
 }
 
 constexpr cfg_opt_t CFG_FLOAT_CB(const char *const name, const double def, const cfg_flag_t flags,
                                  const cfg_callback_t cb)
 {
-    return { name, CFGT_FLOAT, 0, nullptr, flags, nullptr, 0, nullptr, false, (double)def, nullptr, nullptr, cb };
+    return { .name = name, .type = CFGT_FLOAT, .flags = flags, .fpdef = def, .cb = cb };
 }
 
 /** Initialize a "simple" floating point option (see documentation for
@@ -308,26 +308,26 @@ constexpr cfg_opt_t CFG_FLOAT_CB(const char *const name, const double def, const
  */
 constexpr cfg_opt_t CFG_SIMPLE_FLOAT(const char *const name, void *const value)
 {
-    return { name, CFGT_FLOAT, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+    return { .name = name, .type = CFGT_FLOAT, .simple_value = value };
 }
 
 /** Initialize a boolean option
  */
 constexpr cfg_opt_t CFG_BOOL(const char *const name, const bool def, const cfg_flag_t flags)
 {
-    return { name, CFGT_BOOL, 0, nullptr, flags, nullptr, 0, nullptr, def, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_BOOL, .flags = flags, .bdef = def };
 }
 
 constexpr cfg_opt_t CFG_BOOL_CB(const char *const name, const bool def, const cfg_flag_t flags, const cfg_callback_t cb)
 {
-    return { name, CFGT_BOOL, 0, nullptr, flags, nullptr, 0, nullptr, def, 0, nullptr, nullptr, cb };
+    return { .name = name, .type = CFGT_BOOL, .flags = flags, .bdef = def, .cb = cb };
 }
 
 /** Initialize a "simple" boolean option.
  */
 constexpr cfg_opt_t CFG_SIMPLE_BOOL(const char *const name, void *const value)
 {
-    return { name, CFGT_BOOL, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+    return { .name = name, .type = CFGT_BOOL, .simple_value = value };
 }
 
 /** Initialize a section
@@ -341,7 +341,7 @@ constexpr cfg_opt_t CFG_SIMPLE_BOOL(const char *const name, void *const value)
  */
 constexpr cfg_opt_t CFG_SEC(const char *const name, cfg_opt_t *const opts, const cfg_flag_t flags)
 {
-    return { name, CFGT_SEC, 0, nullptr, flags, opts, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_SEC, .flags = flags, .subopts = opts };
 }
 
 /** Initialize a function
@@ -352,7 +352,7 @@ constexpr cfg_opt_t CFG_SEC(const char *const name, cfg_opt_t *const opts, const
  */
 constexpr cfg_opt_t CFG_FUNC(const char *const name, const cfg_func_t func)
 {
-    return { name, CFGT_FUNC, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, func, nullptr, nullptr };
+    return { .name = name, .type = CFGT_FUNC, .func = func };
 }
 
 /** Initialize a function-valued string option.
@@ -362,7 +362,7 @@ constexpr cfg_opt_t CFG_FUNC(const char *const name, const cfg_func_t func)
  */
 constexpr cfg_opt_t CFG_STRFUNC(const char *const name, const char *const def, const cfg_func_t func)
 {
-    return { name, CFGT_STRFUNC, 0, nullptr, CFGF_NONE, nullptr, 0, def, false, 0, func, nullptr, nullptr };
+    return { .name = name, .type = CFGT_STRFUNC, .sdef = def, .func = func };
 }
 
 /**
@@ -374,7 +374,7 @@ constexpr cfg_opt_t CFG_STRFUNC(const char *const name, const char *const def, c
  */
 constexpr cfg_opt_t CFG_MVPROP(const char *const name, cfg_opt_t *const opts, const cfg_flag_t flags)
 {
-    return { name, CFGT_MVPROP, 0, nullptr, flags, opts, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_MVPROP, .flags = flags, .subopts = opts };
 }
 
 /**
@@ -389,8 +389,7 @@ constexpr cfg_opt_t CFG_MVPROP(const char *const name, cfg_opt_t *const opts, co
  */
 constexpr cfg_opt_t CFG_TPROPS(cfg_opt_t *const opts, const cfg_flag_t flags)
 {
-    return { "#title", CFGT_MVPROP, 0,       nullptr, (flags) | CFGF_TITLEPROPS, opts, 0, nullptr, false,
-             0,        nullptr,     nullptr, nullptr };
+    return { .name = "#title", .type = CFGT_MVPROP, .flags = flags | CFGF_TITLEPROPS, .subopts = opts };
 }
 
 /**
@@ -398,12 +397,12 @@ constexpr cfg_opt_t CFG_TPROPS(cfg_opt_t *const opts, const cfg_flag_t flags)
  */
 constexpr cfg_opt_t CFG_FLAG(const char *const name, const bool def, const cfg_flag_t flags)
 {
-    return { name, CFGT_FLAG, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, nullptr };
+    return { .name = name, .type = CFGT_FLAG, .flags = flags, .idef = def };
 }
 
 constexpr cfg_opt_t CFG_FLAG_CB(const char *const name, const bool def, const cfg_flag_t flags, const cfg_callback_t cb)
 {
-    return { name, CFGT_FLAG, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, cb };
+    return { .name = name, .type = CFGT_FLAG, .flags = flags, .idef = def, .cb = cb };
 }
 
 /**
@@ -412,7 +411,7 @@ constexpr cfg_opt_t CFG_FLAG_CB(const char *const name, const bool def, const cf
  */
 constexpr cfg_opt_t CFG_END()
 {
-    return { nullptr, CFGT_NONE, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+    return {};
 }
 
 /** Create and initialize a cfg_t structure. This should be the first
