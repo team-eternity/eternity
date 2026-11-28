@@ -749,7 +749,7 @@ int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int lumpnu
     include_stack[include_stack_ptr].dialect  = currentDialect;
     include_stack_ptr++;
 
-    cfg->filename = cfg_tilde_expand(filename);
+    cfg->filename = estrdup(filename);
     cfg->line     = 1;
     cfg->lumpnum  = lumpnum;
 

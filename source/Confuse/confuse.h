@@ -626,8 +626,6 @@ extern const char *confuse_copyright;
 extern const char *confuse_version;
 extern const char *confuse_author;
 
-char *cfg_tilde_expand(const char *filename);
-
 /** Parse a boolean option string. Accepted "true" values are "true",
  * "on" and "yes", and accepted "false" values are "false", "off" and
  * "no".

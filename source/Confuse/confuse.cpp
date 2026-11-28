@@ -1365,27 +1365,15 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
 
     cfg = estructalloc(cfg_t, 1);
     cfg_assert(cfg);
-    memset(cfg, 0, sizeof(cfg_t));
 
-    cfg->name     = "root";
-    cfg->opts     = opts;
-    cfg->flags    = flags;
-    cfg->filename = nullptr;
-    cfg->line     = 0;
-    cfg->lumpnum  = -1; // haleyjd
-    cfg->errfunc  = nullptr;
-    cfg->lexfunc  = nullptr; // haleyjd
-    cfg->lookfor  = nullptr; // haleyjd
+    cfg->name    = "root";
+    cfg->opts    = opts;
+    cfg->flags   = flags;
+    cfg->lumpnum = -1; // haleyjd
 
     // haleyjd: removed ENABLE_NLS
 
     return cfg;
-}
-
-char *cfg_tilde_expand(const char *filename)
-{
-    // haleyjd 03/08/03: removed tilde expansion for eternity
-    return estrdup(filename);
 }
 
 int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
@@ -1395,10 +1383,9 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
     cfg_assert(cfg && filename);
 
     // haleyjd 07/11/03: CVS fix
-    if(cfg->filename)
-        efree(cfg->filename);
+    efree(cfg->filename);
 
-    cfg->filename = cfg_tilde_expand(filename);
+    cfg->filename = estrdup(filename);
     if(cfg->filename == nullptr)
     {
         cfg_error(cfg, "%s: can't expand home directory\n", filename);
