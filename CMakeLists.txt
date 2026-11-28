@@ -32,6 +32,8 @@ project("Eternity Engine"
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
+option(ENABLE_ADDRESS_SANITIZER "Enable the Address Sanitizer feature" OFF)
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "eternity")
 
 if(COMMAND cmake_policy)

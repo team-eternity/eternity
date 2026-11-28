@@ -1,5 +1,6 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2020 Max Waine
+## Copyright (C) 2026 Ioan Chera
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -797,13 +798,18 @@ if(MSVC)
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"
                        "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>"
                        "$<$<CONFIG:Release>:/DEBUG>")
-
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++20")
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
    target_link_libraries(eternity stdc++fs pthread)
 endif()
+
+if(ENABLE_ADDRESS_SANITIZER)
+   target_compile_options(eternity PUBLIC -fsanitize=address)
+   target_link_options(eternity PUBLIC -fsanitize=address)
+endif()
+
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    target_link_libraries(eternity version)
