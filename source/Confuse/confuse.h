@@ -208,23 +208,20 @@ union cfg_value_t
  */
 struct cfg_opt_t
 {
-    const char   *name;      /**< The name of the option */
-    cfg_type_t    type;      /**< Type of option */
-    unsigned int  nvalues;   /**< Number of values parsed */
-    cfg_value_t **values;    /**< Array of found values */
-    cfg_flag_t    flags;     /**< Flags */
-    cfg_opt_t    *subopts;   /**< Suboptions (only applies to sections) */
-    int           idef;      /**< Default integer value */
-    const char   *sdef;      /**< Default string value */
-    bool          bdef;      /**< Default boolean value */
-    double        fpdef;     /**< Default value for CFGT_FLOAT options
-                              * (blargh!, I want a union here, but
-                              * unions can't be statically initialized) */
-    cfg_func_t func;         /**< Function callback for CFGT_FUNC options */
-    void      *simple_value; /**< Pointer to user-specified variable to
-                              * store simple values (created with the
-                              * CFG_SIMPLE_* initializers) */
-    cfg_callback_t cb;       /**< Value parsing callback function */
+    const char   *name;    /**< The name of the option */
+    cfg_type_t    type;    /**< Type of option */
+    unsigned int  nvalues; /**< Number of values parsed */
+    cfg_value_t **values;  /**< Array of found values */
+    cfg_flag_t    flags;   /**< Flags */
+    cfg_opt_t    *subopts; /**< Suboptions (only applies to sections) */
+    int           idef;    /**< Default integer value */
+    const char   *sdef;    /**< Default string value */
+    bool          bdef;    /**< Default boolean value */
+    double        fpdef;   /**< Default value for CFGT_FLOAT options
+                            * (blargh!, I want a union here, but
+                            * unions can't be statically initialized) */
+    cfg_func_t     func;   /**< Function callback for CFGT_FUNC options */
+    cfg_callback_t cb;     /**< Value parsing callback function */
 };
 
 /**
@@ -241,36 +238,6 @@ constexpr cfg_opt_t CFG_STR_CB(const char *const name, const char *const def, co
     return { .name = name, .type = CFGT_STR, .flags = flags, .sdef = def, .cb = cb };
 }
 
-/** Initialize a "simple" string option.
- *
- * "Simple" options (in lack of a better expression) does not support
- * lists of values. LibConfuse will store the value of a simple option
- * in the user-defined location specified by the value parameter in
- * the initializer. Simple options are not stored in the cfg_t context
- * (you can thus not use the cfg_get* functions to get the
- * value). Sections can not be initialized as a "simple" option.
- *
- * @param name name of the option
- * @param value pointer to a character pointer (a char **). This value
- * must be initalized either to nullptr or to a malloc()'ed string. You
- * can't use CFG_SIMPLE_STR("user", "joe"), since libConfuse will try to
- * free the static string "joe" (which is an error) if a "user" option
- * is found. Rather, use the following code snippet:
- *
- * <pre>
- * char *user = strdup("joe");
- * ...
- * cfg_opt_t opts[] = {
- *      CFG_SIMPLE_STR("user", &user),
- * ...
- * </pre>
- *
- */
-constexpr cfg_opt_t CFG_SIMPLE_STR(const char *const name, void *const value)
-{
-    return { .name = name, .type = CFGT_STR, .simple_value = value };
-}
-
 /** Initialize an integer option
  */
 constexpr cfg_opt_t CFG_INT(const char *const name, const int def, const cfg_flag_t flags)
@@ -281,13 +248,6 @@ constexpr cfg_opt_t CFG_INT(const char *const name, const int def, const cfg_fla
 constexpr cfg_opt_t CFG_INT_CB(const char *const name, const int def, const cfg_flag_t flags, const cfg_callback_t cb)
 {
     return { .name = name, .type = CFGT_INT, .flags = flags, .idef = def, .cb = cb };
-}
-
-/** Initialize a "simple" integer option.
- */
-constexpr cfg_opt_t CFG_SIMPLE_INT(const char *const name, void *const value)
-{
-    return { .name = name, .type = CFGT_INT, .simple_value = value };
 }
 
 /** Initialize a floating point option
@@ -303,14 +263,6 @@ constexpr cfg_opt_t CFG_FLOAT_CB(const char *const name, const double def, const
     return { .name = name, .type = CFGT_FLOAT, .flags = flags, .fpdef = def, .cb = cb };
 }
 
-/** Initialize a "simple" floating point option (see documentation for
- * CFG_SIMPLE_STR for more information).
- */
-constexpr cfg_opt_t CFG_SIMPLE_FLOAT(const char *const name, void *const value)
-{
-    return { .name = name, .type = CFGT_FLOAT, .simple_value = value };
-}
-
 /** Initialize a boolean option
  */
 constexpr cfg_opt_t CFG_BOOL(const char *const name, const bool def, const cfg_flag_t flags)
@@ -321,13 +273,6 @@ constexpr cfg_opt_t CFG_BOOL(const char *const name, const bool def, const cfg_f
 constexpr cfg_opt_t CFG_BOOL_CB(const char *const name, const bool def, const cfg_flag_t flags, const cfg_callback_t cb)
 {
     return { .name = name, .type = CFGT_BOOL, .flags = flags, .bdef = def, .cb = cb };
-}
-
-/** Initialize a "simple" boolean option.
- */
-constexpr cfg_opt_t CFG_SIMPLE_BOOL(const char *const name, void *const value)
-{
-    return { .name = name, .type = CFGT_BOOL, .simple_value = value };
 }
 
 /** Initialize a section

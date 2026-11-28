@@ -482,45 +482,37 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
 
     cfg_assert(cfg && opt);
 
-    if(opt->simple_value)
-    {
-        cfg_assert(opt->type != CFGT_SEC);
-        val = (cfg_value_t *)opt->simple_value;
-    }
-    else
-    {
-        // haleyjd: code from 2.0: check for sections with same name
+    // haleyjd: code from 2.0: check for sections with same name
 
-        if(opt->nvalues == 0 || is_set(CFGF_MULTI, opt->flags) || is_set(CFGF_LIST, opt->flags))
+    if(opt->nvalues == 0 || is_set(CFGF_MULTI, opt->flags) || is_set(CFGF_LIST, opt->flags))
+    {
+        val = nullptr;
+        if(opt->type == CFGT_SEC && is_set(CFGF_TITLE, opt->flags))
         {
-            val = nullptr;
-            if(opt->type == CFGT_SEC && is_set(CFGF_TITLE, opt->flags))
-            {
-                unsigned int ii;
+            unsigned int ii;
 
-                /* check if there is already a section with the same title */
-                cfg_assert(value);
-                for(ii = 0; ii < opt->nvalues; ii++)
+            /* check if there is already a section with the same title */
+            cfg_assert(value);
+            for(ii = 0; ii < opt->nvalues; ii++)
+            {
+                cfg_t *sec = opt->values[ii]->section;
+                if(is_set(CFGF_NOCASE, cfg->flags))
                 {
-                    cfg_t *sec = opt->values[ii]->section;
-                    if(is_set(CFGF_NOCASE, cfg->flags))
-                    {
-                        if(strcasecmp(value, sec->title) == 0)
-                            val = opt->values[ii];
-                    }
-                    else
-                    {
-                        if(strcmp(value, sec->title) == 0)
-                            val = opt->values[ii];
-                    }
+                    if(strcasecmp(value, sec->title) == 0)
+                        val = opt->values[ii];
+                }
+                else
+                {
+                    if(strcmp(value, sec->title) == 0)
+                        val = opt->values[ii];
                 }
             }
-            if(val == nullptr)
-                val = cfg_addval(opt);
         }
-        else
-            val = opt->values[0];
+        if(val == nullptr)
+            val = cfg_addval(opt);
     }
+    else
+        val = opt->values[0];
 
     switch(opt->type)
     {
@@ -1502,26 +1494,19 @@ static cfg_value_t *cfg_getval(cfg_opt_t *opt, unsigned int index)
 
     cfg_assert(index == 0 || is_set(CFGF_LIST, opt->flags));
 
-    if(opt->simple_value)
+    /*
+    if(is_set(CFGF_RESET, opt->flags))
     {
-        val = (cfg_value_t *)opt->simple_value;
+       cfg_free_value(opt);
+       opt->flags &= ~CFGF_RESET;
+    }
+    */
+    if(index >= opt->nvalues)
+    {
+        val = cfg_addval(opt);
     }
     else
-    {
-        /*
-        if(is_set(CFGF_RESET, opt->flags))
-        {
-           cfg_free_value(opt);
-           opt->flags &= ~CFGF_RESET;
-        }
-        */
-        if(index >= opt->nvalues)
-        {
-            val = cfg_addval(opt);
-        }
-        else
-            val = opt->values[index];
-    }
+        val = opt->values[index];
 
     return val;
 }
